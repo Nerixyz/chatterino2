@@ -531,7 +531,7 @@ void Application::initPubSub()
 void Application::initEventApi()
 {
     this->twitch->eventApi->signals_.emoteAdded.connect([&](const auto &data) {
-        auto chan = this->twitch->getChannelOrEmpty(data.channelName);
+        auto chan = this->twitch->getChannelOrEmpty(data.channel);
         postToThread([chan, data] {
             if (auto channel = dynamic_cast<TwitchChannel *>(chan.get()))
             {
@@ -541,7 +541,7 @@ void Application::initEventApi()
     });
     this->twitch->eventApi->signals_.emoteUpdated.connect(
         [&](const auto &data) {
-            auto chan = this->twitch->getChannelOrEmpty(data.channelName);
+            auto chan = this->twitch->getChannelOrEmpty(data.channel);
             postToThread([chan, data] {
                 if (auto channel = dynamic_cast<TwitchChannel *>(chan.get()))
                 {
@@ -551,7 +551,7 @@ void Application::initEventApi()
         });
     this->twitch->eventApi->signals_.emoteRemoved.connect(
         [&](const auto &data) {
-            auto chan = this->twitch->getChannelOrEmpty(data.channelName);
+            auto chan = this->twitch->getChannelOrEmpty(data.channel);
             postToThread([chan, data] {
                 if (auto channel = dynamic_cast<TwitchChannel *>(chan.get()))
                 {
