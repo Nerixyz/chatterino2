@@ -213,12 +213,12 @@ SOURCES += \
     src/providers/LinkResolver.cpp \
     src/providers/seventv/SeventvBadges.cpp \
     src/providers/seventv/SeventvEmotes.cpp \
-    src/providers/seventv/SeventvWebSocket.cpp \
     src/providers/seventv/SeventvEventApiClient.cpp \
     src/providers/seventv/SeventvEventApiManager.cpp \
-    src/providers/seventv/eventapimessages/Base.cpp \
-    src/providers/seventv/eventapimessages/EventApiEmoteUpdate.cpp \
+    src/providers/seventv/SeventvWebSocket.cpp \
+    src/providers/seventv/eventapimessages/EventApiMessage.cpp \
     src/providers/seventv/eventapimessages/EventApiEmoteData.cpp \
+    src/providers/seventv/eventapimessages/EventApiEmoteUpdate.cpp \
     src/providers/twitch/api/Helix.cpp \
     src/providers/twitch/ChannelPointReward.cpp \
     src/providers/twitch/IrcMessageHandler.cpp \
@@ -477,12 +477,12 @@ HEADERS += \
     src/providers/LinkResolver.hpp \
     src/providers/seventv/SeventvBadges.hpp \
     src/providers/seventv/SeventvEmotes.hpp \
-    src/providers/seventv/SeventvWebSocket.hpp \
     src/providers/seventv/SeventvEventApiClient.hpp \
     src/providers/seventv/SeventvEventApiManager.hpp \
     src/providers/seventv/SeventvEventApiMessages.hpp \
     src/providers/seventv/SeventvEventApiWebsocket.hpp \
-    src/providers/seventv/eventapimessages/Base.hpp \
+    src/providers/seventv/SeventvWebSocket.hpp \
+    src/providers/seventv/eventapimessages/EventApiMessage.hpp \
     src/providers/seventv/eventapimessages/EventApiEmoteUpdate.hpp \
     src/providers/seventv/eventapimessages/EventApiEmoteData.hpp \
     src/providers/twitch/api/Helix.hpp \
