@@ -585,8 +585,11 @@ void TwitchChannel::addSeventvEmote(const EventApiEmoteUpdate &action)
     }
     auto result =
         SeventvEmotes::addEmote(this->seventvEmotes_, action.emote->json);
-    this->addMessage(makeSeventvEmoteAddedMessage(
-        action.actor, action.emote->json["name"].toString(), result));
+    if (getSettings()->showEmoteUpdates)
+    {
+        this->addMessage(makeSeventvEmoteAddedMessage(
+            action.actor, action.emote->json["name"].toString(), result));
+    }
 }
 
 void TwitchChannel::updateSeventvEmote(const EventApiEmoteUpdate &action)
@@ -597,17 +600,23 @@ void TwitchChannel::updateSeventvEmote(const EventApiEmoteUpdate &action)
     }
     auto result = SeventvEmotes::updateEmote(
         this->seventvEmotes_, action.emote->baseName, action.emote->json);
-    this->addMessage(makeSeventvEmoteUpdatedMessage(
-        action.actor, result.has_value(), action.emote->baseName,
-        action.emote->json["name"].toString()));
+    if (getSettings()->showEmoteUpdates)
+    {
+        this->addMessage(makeSeventvEmoteUpdatedMessage(
+            action.actor, result.has_value(), action.emote->baseName,
+            action.emote->json["name"].toString()));
+    }
 }
 
 void TwitchChannel::removeSeventvEmote(const EventApiEmoteUpdate &action)
 {
     bool removed =
         SeventvEmotes::removeEmote(this->seventvEmotes_, action.emoteName);
-    this->addMessage(makeSeventvEmoteRemovedMessage(action.actor,
-                                                    action.emoteName, removed));
+    if (getSettings()->showEmoteUpdates)
+    {
+        this->addMessage(makeSeventvEmoteRemovedMessage(
+            action.actor, action.emoteName, removed));
+    }
 }
 
 const QString &TwitchChannel::subscriptionUrl()

@@ -334,6 +334,8 @@ void GeneralPage::initLayout(GeneralPageView &layout)
                 });
         },
         false);
+    layout.addCheckbox("Show added/updated/removed emotes in chat (7TV only)",
+                       s.showEmoteUpdates);
     layout.addDropdown<int>(
         "Show info on hover", {"Don't show", "Always show", "Hold shift"},
         s.emotesTooltipPreview,
