@@ -24,7 +24,7 @@
 using namespace std::chrono_literals;
 
 #define TWITCH_PUBSUB_URL "wss://pubsub-edge.twitch.tv"
-#define SEVENTV_EVENTAPI_URL "wss://events.7tv.app/v1/channel-emotes"
+#define SEVENTV_EVENTAPI_URL "wss://events.7tv.dev/v1/channel-emotes"
 
 namespace chatterino {
 
