@@ -456,6 +456,8 @@ public:
                                                true};
     BoolSetting lockNotebookLayout = {"/misc/lockNotebookLayout", false};
 
+    BoolSetting enableSevenTVEventApi = {"/misc/enableSevenTVEventApi", true};
+
     /// Debug
     BoolSetting showUnhandledIrcMessages = {"/debug/showUnhandledIrcMessages",
                                             false};

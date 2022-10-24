@@ -214,10 +214,27 @@ set(SOURCE_FILES
         providers/irc/IrcServer.cpp
         providers/irc/IrcServer.hpp
 
+        providers/liveupdates/BasicPubSubClient.cpp
+        providers/liveupdates/BasicPubSubClient.hpp
+        providers/liveupdates/BasicPubSubManager.cpp
+        providers/liveupdates/BasicPubSubManager.hpp
+        providers/liveupdates/BasicPubSubWebsocket.hpp
+
         providers/seventv/SeventvBadges.cpp
         providers/seventv/SeventvBadges.hpp
         providers/seventv/SeventvEmotes.cpp
         providers/seventv/SeventvEmotes.hpp
+        providers/seventv/SeventvEventApi.cpp
+        providers/seventv/SeventvEventApi.hpp
+
+        providers/seventv/eventapi/SeventvEventApiClient.cpp
+        providers/seventv/eventapi/SeventvEventApiClient.hpp
+        providers/seventv/eventapi/SeventvEventApiDispatch.cpp
+        providers/seventv/eventapi/SeventvEventApiDispatch.hpp
+        providers/seventv/eventapi/SeventvEventApiMessage.cpp
+        providers/seventv/eventapi/SeventvEventApiMessage.hpp
+        providers/seventv/eventapi/SeventvEventApiSubscription.cpp
+        providers/seventv/eventapi/SeventvEventApiSubscription.hpp
 
         providers/twitch/ChannelPointReward.cpp
         providers/twitch/ChannelPointReward.hpp

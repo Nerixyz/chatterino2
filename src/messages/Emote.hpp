@@ -3,6 +3,7 @@
 #include "messages/Image.hpp"
 #include "messages/ImageSet.hpp"
 
+#include <boost/optional.hpp>
 #include <functional>
 #include <memory>
 #include <unordered_map>
@@ -15,6 +16,9 @@ struct Emote {
     Tooltip tooltip;
     Url homePage;
     bool zeroWidth;
+    EmoteId id;
+    EmoteAuthor author;
+    boost::optional<EmoteName> baseName;
 
     // FOURTF: no solution yet, to be refactored later
     const QString &getCopyString() const

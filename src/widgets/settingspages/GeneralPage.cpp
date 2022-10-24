@@ -834,6 +834,9 @@ void GeneralPage::initLayout(GeneralPageView &layout)
     helixTimegateVIPs->setMinimumWidth(
         helixTimegateVIPs->minimumSizeHint().width());
 
+    layout.addCheckbox("Enable 7TV EventApi (requires restart)",
+                       s.enableSevenTVEventApi);
+
     layout.addStretch();
 
     // invisible element for width

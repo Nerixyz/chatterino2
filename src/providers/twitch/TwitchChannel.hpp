@@ -9,6 +9,7 @@
 #include "common/Outcome.hpp"
 #include "common/UniqueAccess.hpp"
 #include "messages/MessageThread.hpp"
+#include "providers/seventv/eventapi/SeventvEventApiDispatch.hpp"
 #include "providers/twitch/ChannelPointReward.hpp"
 #include "providers/twitch/TwitchEmotes.hpp"
 #include "providers/twitch/api/Helix.hpp"
@@ -115,6 +116,16 @@ public:
     std::shared_ptr<const EmoteMap> ffzEmotes() const;
     std::shared_ptr<const EmoteMap> seventvEmotes() const;
 
+    const QString &seventvUserId() const;
+    const QString &seventvEmoteSetId() const;
+
+    void addSeventvEmote(const SeventvEventApiEmoteAddDispatch &action);
+    void updateSeventvEmote(const SeventvEventApiEmoteUpdateDispatch &action);
+    void removeSeventvEmote(const SeventvEventApiEmoteRemoveDispatch &action);
+    void updateSeventvUser(
+        const SeventvEventApiUserConnectionUpdateDispatch &dispatch);
+    void updateSeventvData(const QString &userId, const QString &emoteSetId);
+
     virtual void refreshBTTVChannelEmotes(bool manualRefresh);
     virtual void refreshFFZChannelEmotes(bool manualRefresh);
     virtual void refreshSevenTVChannelEmotes(bool manualRefresh);
@@ -187,6 +198,9 @@ private:
 
     QString prepareMessage(const QString &message) const;
 
+    void addOrReplaceLiveUpdatesAddRemove(MessagePtr message,
+                                          const QString &platform);
+
     // Data
     const QString subscriptionUrl_;
     const QString channelUrl_;
@@ -224,6 +238,9 @@ private:
     QElapsedTimer titleRefreshedTimer_;
     QElapsedTimer clipCreationTimer_;
     bool isClipCreationInProgress{false};
+
+    QString seventvUserId_;
+    QString seventvEmoteSetId_;
 
     pajlada::Signals::SignalHolder signalHolder_;
     std::vector<boost::signals2::scoped_connection> bSignals_;

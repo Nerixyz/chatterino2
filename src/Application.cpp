@@ -20,6 +20,7 @@
 #include "providers/irc/Irc2.hpp"
 #include "providers/seventv/SeventvBadges.hpp"
 #include "providers/seventv/SeventvEmotes.hpp"
+#include "providers/seventv/SeventvEventApi.hpp"
 #include "providers/twitch/PubSubManager.hpp"
 #include "providers/twitch/TwitchIrcServer.hpp"
 #include "providers/twitch/TwitchMessageBuilder.hpp"
@@ -149,6 +150,11 @@ void Application::initialize(Settings &settings, Paths &paths)
         this->initNm(paths);
     }
     this->initPubSub();
+
+    if (settings.enableSevenTVEventApi)
+    {
+        this->initSeventvEventApi();
+    }
 }
 
 int Application::run(QApplication &qtApp)
@@ -556,6 +562,43 @@ void Application::initPubSub()
     this->accounts->twitch.currentUserChanged.connect(RequestModerationActions);
 
     RequestModerationActions();
+}
+
+void Application::initSeventvEventApi()
+{
+    this->twitch->eventApi->signals_.emoteAdded.connect([&](const auto &data) {
+        postToThread([this, data] {
+            this->twitch->forEachSeventvEmoteSet(data.emoteSetId,
+                                                 [data](TwitchChannel &chan) {
+                                                     chan.addSeventvEmote(data);
+                                                 });
+        });
+    });
+    this->twitch->eventApi->signals_.emoteUpdated.connect(
+        [&](const auto &data) {
+            postToThread([this, data] {
+                this->twitch->forEachSeventvEmoteSet(
+                    data.emoteSetId, [data](TwitchChannel &chan) {
+                        chan.updateSeventvEmote(data);
+                    });
+            });
+        });
+    this->twitch->eventApi->signals_.emoteRemoved.connect(
+        [&](const auto &data) {
+            postToThread([this, data] {
+                this->twitch->forEachSeventvEmoteSet(
+                    data.emoteSetId, [data](TwitchChannel &chan) {
+                        chan.removeSeventvEmote(data);
+                    });
+            });
+        });
+    this->twitch->eventApi->signals_.userUpdated.connect([&](const auto &data) {
+        this->twitch->forEachSeventvUser(data.userId,
+                                         [data](TwitchChannel &chan) {
+                                             chan.updateSeventvUser(data);
+                                         });
+    });
+    this->twitch->eventApi->start();
 }
 
 Application *getApp()

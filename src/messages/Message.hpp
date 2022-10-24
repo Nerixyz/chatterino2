@@ -45,6 +45,10 @@ enum class MessageFlag : int64_t {
     ElevatedMessage = (1LL << 25),
     ParticipatedThread = (1LL << 26),
     CheerMessage = (1LL << 27),
+    LiveUpdatesAdd = (1LL << 28),
+    LiveUpdatesRemove = (1LL << 29),
+    LiveUpdatesUpdate = (1LL << 30),
+    LiveUpdatesPlatform = (1LL << 31),  // 0 => BTTV, 1 => 7TV
 };
 using MessageFlags = FlagsEnum<MessageFlag>;
 
@@ -79,6 +83,7 @@ struct Message : boost::noncopyable {
     std::shared_ptr<MessageThread> replyThread;
     uint32_t count = 1;
     std::vector<std::unique_ptr<MessageElement>> elements;
+    std::vector<QString> liveUpdateEmoteNames;
 
     ScrollbarHighlight getScrollBarHighlight() const;
 };
