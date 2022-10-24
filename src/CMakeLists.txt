@@ -180,6 +180,12 @@ set(SOURCE_FILES
 
         providers/bttv/BttvEmotes.cpp
         providers/bttv/BttvEmotes.hpp
+        providers/bttv/BttvLiveUpdates.cpp
+        providers/bttv/BttvLiveUpdates.hpp
+        providers/bttv/liveupdate/BttvLiveUpdateMessages.cpp
+        providers/bttv/liveupdate/BttvLiveUpdateMessages.hpp
+        providers/bttv/liveupdate/BttvLiveUpdateSubscription.cpp
+        providers/bttv/liveupdate/BttvLiveUpdateSubscription.hpp
         providers/bttv/LoadBttvChannelEmote.cpp
         providers/bttv/LoadBttvChannelEmote.hpp
 

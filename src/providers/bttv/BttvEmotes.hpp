@@ -4,6 +4,7 @@
 #include "boost/optional.hpp"
 #include "common/Aliases.hpp"
 #include "common/Atomic.hpp"
+#include "providers/bttv/liveupdate/BttvLiveUpdateMessages.hpp"
 #include "providers/twitch/TwitchChannel.hpp"
 
 namespace chatterino {
@@ -30,6 +31,13 @@ public:
                             const QString &channelDisplayName,
                             std::function<void(EmoteMap &&)> callback,
                             bool manualRefresh);
+
+    static EmotePtr addEmote(const QString &channelDisplayName,
+                             Atomic<std::shared_ptr<const EmoteMap>> &map,
+                             const BttvLiveUpdateEmoteAddMessage &message);
+    static boost::optional<QString> removeEmote(
+        Atomic<std::shared_ptr<const EmoteMap>> &map,
+        const BttvLiveUpdateEmoteRemoveMessage &message);
 
 private:
     Atomic<std::shared_ptr<const EmoteMap>> global_;

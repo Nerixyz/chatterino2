@@ -457,6 +457,7 @@ public:
     BoolSetting lockNotebookLayout = {"/misc/lockNotebookLayout", false};
 
     BoolSetting enableSevenTVEventApi = {"/misc/enableSevenTVEventApi", true};
+    BoolSetting enableBttvLiveUpdates = {"/misc/enableBttvLiveUpdates", true};
 
     /// Debug
     BoolSetting showUnhandledIrcMessages = {"/debug/showUnhandledIrcMessages",

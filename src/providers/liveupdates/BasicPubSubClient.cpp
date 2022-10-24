@@ -1,6 +1,7 @@
 #include "providers/liveupdates/BasicPubSubClient.hpp"
 
 #include "common/QLogging.hpp"
+#include "providers/bttv/liveupdate/BttvLiveUpdateSubscription.hpp"
 #include "providers/seventv/eventapi/SeventvEventApiSubscription.hpp"
 #include "singletons/Settings.hpp"
 #include "util/DebugCount.hpp"
@@ -130,5 +131,6 @@ bool BasicPubSubClient<Subscription>::send(const char *payload)
 }
 
 template class BasicPubSubClient<SeventvEventApiSubscription>;
+template class BasicPubSubClient<BttvLiveUpdateSubscription>;
 
 }  // namespace chatterino

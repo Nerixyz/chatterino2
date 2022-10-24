@@ -23,6 +23,44 @@ QRegularExpression IRC_COLOR_PARSE_REGEX(
     "(\u0003(\\d{1,2})?(,(\\d{1,2}))?|\u000f)",
     QRegularExpression::UseUnicodePropertiesOption);
 
+QString makeUpdatedEmoteList(const QString &platform,
+                             const std::vector<QString> &emoteNames, bool isAdd,
+                             bool isFirst)
+{
+    QString text = "";
+    if (isAdd)
+    {
+        text += isFirst ? "Added" : "added";
+    }
+    else
+    {
+        text += isFirst ? "Removed" : "removed";
+    }
+
+    if (emoteNames.size() == 1)
+    {
+        text += QString(" %1 emote ").arg(platform);
+    }
+    else
+    {
+        text += QString(" %1 %2 emotes ").arg(emoteNames.size()).arg(platform);
+    }
+
+    auto i = 0;
+    for (const auto &emoteName : emoteNames)
+    {
+        if (i++)
+        {
+            text += i == emoteNames.size() ? " and " : ", ";
+        }
+        text += emoteName;
+    }
+
+    text += ".";
+
+    return text;
+}
+
 }  // namespace
 
 namespace chatterino {
@@ -310,32 +348,28 @@ MessageBuilder::MessageBuilder(LiveUpdatesAddEmoteMessageTag,
                                std::vector<QString> emoteNames)
     : MessageBuilder()
 {
-    auto text = emoteNames.size() == 1
-                    ? QString("added %1 emote ").arg(platform)
-                    : QString("added %1 %2 emotes ")
-                          .arg(emoteNames.size())
-                          .arg(platform);
-
-    auto i = 0;
-    for (const auto &emoteName : emoteNames)
-    {
-        if (i++)
-        {
-            text += i == emoteNames.size() ? " and " : ", ";
-        }
-        text += emoteName;
-    }
-
-    text += ".";
+    auto text =
+        makeUpdatedEmoteList(platform, emoteNames, true, actor.isEmpty());
 
     this->emplace<TimestampElement>();
-    this->emplace<TextElement>(actor, MessageElementFlag::Username,
-                               MessageColor::System)
-        ->setLink({Link::UserInfo, actor});
+    if (!actor.isEmpty())
+    {
+        this->emplace<TextElement>(actor, MessageElementFlag::Username,
+                                   MessageColor::System)
+            ->setLink({Link::UserInfo, actor});
+    }
     this->emplace<TextElement>(text, MessageElementFlag::Text,
                                MessageColor::System);
 
-    auto finalText = QString("%1 %2").arg(actor, text);
+    QString finalText;
+    if (actor.isEmpty())
+    {
+        finalText = text;
+    }
+    else
+    {
+        finalText = QString("%1 %2").arg(actor, text);
+    }
 
     this->message().loginName = actor;
     this->message().messageText = finalText;
@@ -352,32 +386,28 @@ MessageBuilder::MessageBuilder(LiveUpdatesRemoveEmoteMessageTag,
                                std::vector<QString> emoteNames)
     : MessageBuilder()
 {
-    auto text = emoteNames.size() == 1
-                    ? QString("removed %1 emote ").arg(platform)
-                    : QString("removed %1 %2 emotes ")
-                          .arg(emoteNames.size())
-                          .arg(platform);
-
-    auto i = 0;
-    for (const auto &emoteName : emoteNames)
-    {
-        if (i++)
-        {
-            text += i == emoteNames.size() ? " and " : ", ";
-        }
-        text += emoteName;
-    }
-
-    text += ".";
+    auto text =
+        makeUpdatedEmoteList(platform, emoteNames, false, actor.isEmpty());
 
     this->emplace<TimestampElement>();
-    this->emplace<TextElement>(actor, MessageElementFlag::Username,
-                               MessageColor::System)
-        ->setLink({Link::UserInfo, actor});
+    if (!actor.isEmpty())
+    {
+        this->emplace<TextElement>(actor, MessageElementFlag::Username,
+                                   MessageColor::System)
+            ->setLink({Link::UserInfo, actor});
+    }
     this->emplace<TextElement>(text, MessageElementFlag::Text,
                                MessageColor::System);
 
-    auto finalText = QString("%1 %2").arg(actor, text);
+    QString finalText;
+    if (actor.isEmpty())
+    {
+        finalText = text;
+    }
+    else
+    {
+        finalText = QString("%1 %2").arg(actor, text);
+    }
 
     this->message().loginName = actor;
     this->message().messageText = finalText;

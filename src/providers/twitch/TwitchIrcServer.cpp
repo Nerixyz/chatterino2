@@ -10,6 +10,7 @@
 #include "controllers/accounts/AccountController.hpp"
 #include "messages/Message.hpp"
 #include "messages/MessageBuilder.hpp"
+#include "providers/bttv/BttvLiveUpdates.hpp"
 #include "providers/seventv/SeventvEventApi.hpp"
 #include "providers/twitch/IrcMessageHandler.hpp"
 #include "providers/twitch/PubSubManager.hpp"
@@ -27,6 +28,7 @@ using namespace std::chrono_literals;
 
 #define TWITCH_PUBSUB_URL "wss://pubsub-edge.twitch.tv"
 #define SEVENTV_EVENTAPI_URL "wss://events.7tv.io/v3"
+#define BTTV_LIVE_UPDATES_URL "wss://sockets.betterttv.net/ws"
 
 namespace chatterino {
 
@@ -41,8 +43,14 @@ TwitchIrcServer::TwitchIrcServer()
     this->pubsub = new PubSub(TWITCH_PUBSUB_URL);
     if (getSettings()->enableSevenTVEventApi)
     {
-        this->eventApi =
+        this->seventvEventApi =
             std::make_unique<SeventvEventApi>(SEVENTV_EVENTAPI_URL);
+    }
+
+    if (getSettings()->enableBttvLiveUpdates)
+    {
+        this->bttvLiveUpdates =
+            std::make_unique<BttvLiveUpdates>(BTTV_LIVE_UPDATES_URL);
     }
 
     // getSettings()->twitchSeperateWriteConnection.connect([this](auto, auto) {
@@ -568,9 +576,9 @@ void TwitchIrcServer::dropSeventvEmoteSet(const QString &id)
         }
     }
 
-    if (this->eventApi)
+    if (this->seventvEventApi)
     {
-        this->eventApi->unsubscribeEmoteSet(id);
+        this->seventvEventApi->unsubscribeEmoteSet(id);
     }
 }
 
@@ -593,9 +601,9 @@ void TwitchIrcServer::dropSeventvUser(const QString &id)
         }
     }
 
-    if (this->eventApi)
+    if (this->seventvEventApi)
     {
-        this->eventApi->unsubscribeUser(id);
+        this->seventvEventApi->unsubscribeUser(id);
     }
 }
 

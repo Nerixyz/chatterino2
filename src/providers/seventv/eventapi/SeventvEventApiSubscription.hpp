@@ -3,7 +3,6 @@
 #include <QByteArray>
 #include <QHash>
 #include <QString>
-#include <ostream>
 #include "magic_enum.hpp"
 
 namespace chatterino {

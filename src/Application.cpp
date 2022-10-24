@@ -13,7 +13,7 @@
 #include "controllers/notifications/NotificationController.hpp"
 #include "debug/AssertInGuiThread.hpp"
 #include "messages/MessageBuilder.hpp"
-#include "providers/bttv/BttvEmotes.hpp"
+#include "providers/bttv/BttvLiveUpdates.hpp"
 #include "providers/chatterino/ChatterinoBadges.hpp"
 #include "providers/ffz/FfzBadges.hpp"
 #include "providers/ffz/FfzEmotes.hpp"
@@ -154,6 +154,11 @@ void Application::initialize(Settings &settings, Paths &paths)
     if (settings.enableSevenTVEventApi)
     {
         this->initSeventvEventApi();
+    }
+
+    if (settings.enableBttvLiveUpdates)
+    {
+        this->initBttvLiveUpdates();
     }
 }
 
@@ -564,17 +569,45 @@ void Application::initPubSub()
     RequestModerationActions();
 }
 
+void Application::initBttvLiveUpdates()
+{
+    this->twitch->bttvLiveUpdates->signals_.emoteAdded.connect(
+        [&](const auto &data) {
+            auto chan = this->twitch->getChannelOrEmptyByID(data.channelId);
+
+            postToThread([chan, data] {
+                if (auto channel = dynamic_cast<TwitchChannel *>(chan.get()))
+                {
+                    channel->addBttvEmote(data);
+                }
+            });
+        });
+    this->twitch->bttvLiveUpdates->signals_.emoteRemoved.connect(
+        [&](const auto &data) {
+            auto chan = this->twitch->getChannelOrEmptyByID(data.channelId);
+
+            postToThread([chan, data] {
+                if (auto channel = dynamic_cast<TwitchChannel *>(chan.get()))
+                {
+                    channel->removeBttvEmote(data);
+                }
+            });
+        });
+    this->twitch->bttvLiveUpdates->start();
+}
+
 void Application::initSeventvEventApi()
 {
-    this->twitch->eventApi->signals_.emoteAdded.connect([&](const auto &data) {
-        postToThread([this, data] {
-            this->twitch->forEachSeventvEmoteSet(data.emoteSetId,
-                                                 [data](TwitchChannel &chan) {
-                                                     chan.addSeventvEmote(data);
-                                                 });
+    this->twitch->seventvEventApi->signals_.emoteAdded.connect(
+        [&](const auto &data) {
+            postToThread([this, data] {
+                this->twitch->forEachSeventvEmoteSet(
+                    data.emoteSetId, [data](TwitchChannel &chan) {
+                        chan.addSeventvEmote(data);
+                    });
+            });
         });
-    });
-    this->twitch->eventApi->signals_.emoteUpdated.connect(
+    this->twitch->seventvEventApi->signals_.emoteUpdated.connect(
         [&](const auto &data) {
             postToThread([this, data] {
                 this->twitch->forEachSeventvEmoteSet(
@@ -583,7 +616,7 @@ void Application::initSeventvEventApi()
                     });
             });
         });
-    this->twitch->eventApi->signals_.emoteRemoved.connect(
+    this->twitch->seventvEventApi->signals_.emoteRemoved.connect(
         [&](const auto &data) {
             postToThread([this, data] {
                 this->twitch->forEachSeventvEmoteSet(
@@ -592,13 +625,14 @@ void Application::initSeventvEventApi()
                     });
             });
         });
-    this->twitch->eventApi->signals_.userUpdated.connect([&](const auto &data) {
-        this->twitch->forEachSeventvUser(data.userId,
-                                         [data](TwitchChannel &chan) {
-                                             chan.updateSeventvUser(data);
-                                         });
-    });
-    this->twitch->eventApi->start();
+    this->twitch->seventvEventApi->signals_.userUpdated.connect(
+        [&](const auto &data) {
+            this->twitch->forEachSeventvUser(data.userId,
+                                             [data](TwitchChannel &chan) {
+                                                 chan.updateSeventvUser(data);
+                                             });
+        });
+    this->twitch->seventvEventApi->start();
 }
 
 Application *getApp()

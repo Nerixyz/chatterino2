@@ -220,12 +220,6 @@ EmoteMap parseEmotes(const QJsonArray &emoteSetEmotes, bool isGlobal)
     return emotes;
 }
 
-void updateEmoteMapPtr(Atomic<std::shared_ptr<const EmoteMap>> &map,
-                       EmoteMap &&updatedMap)
-{
-    map.set(std::make_shared<EmoteMap>(std::move(updatedMap)));
-}
-
 EmotePtr createUpdatedEmote(const EmotePtr &oldEmote,
                             const SeventvEventApiEmoteUpdateDispatch &dispatch)
 {
@@ -242,20 +236,6 @@ EmotePtr createUpdatedEmote(const EmotePtr &oldEmote,
          oldEmote->homePage, oldEmote->zeroWidth, oldEmote->id,
          oldEmote->author, boost::make_optional(!toNonAliased, baseName)}));
     return emote;
-}
-
-EmoteMap::const_iterator findEmote(const EmoteMap &map,
-                                   const QString &emoteName,
-                                   const QString &emoteId)
-{
-    auto it = map.find(EmoteName{emoteName});
-    if (it == map.end() || it->second->id.string != emoteId)
-    {
-        it = std::find_if(map.begin(), map.end(), [emoteId](const auto entry) {
-            return entry.second->id.string == emoteId;
-        });
-    }
-    return it;
 }
 
 }  // namespace
@@ -436,7 +416,7 @@ boost::optional<EmotePtr> SeventvEmotes::updateEmote(
     const SeventvEventApiEmoteUpdateDispatch &dispatch)
 {
     auto oldMap = map.get();
-    auto oldEmote = findEmote(*oldMap, dispatch.emoteName, dispatch.emoteId);
+    auto oldEmote = oldMap->findEmote(dispatch.emoteName, dispatch.emoteId);
     if (oldEmote == oldMap->end())
     {
         return boost::none;
@@ -456,7 +436,7 @@ bool SeventvEmotes::removeEmote(
     const SeventvEventApiEmoteRemoveDispatch &dispatch)
 {
     EmoteMap updatedMap = *map.get();
-    auto it = findEmote(updatedMap, dispatch.emoteName, dispatch.emoteId);
+    auto it = updatedMap.findEmote(dispatch.emoteName, dispatch.emoteId);
     if (it == updatedMap.end())
     {
         // We already copied the map at this point and are now discarding the copy.

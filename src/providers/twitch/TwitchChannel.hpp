@@ -9,6 +9,7 @@
 #include "common/Outcome.hpp"
 #include "common/UniqueAccess.hpp"
 #include "messages/MessageThread.hpp"
+#include "providers/bttv/liveupdate/BttvLiveUpdateMessages.hpp"
 #include "providers/seventv/eventapi/SeventvEventApiDispatch.hpp"
 #include "providers/twitch/ChannelPointReward.hpp"
 #include "providers/twitch/TwitchEmotes.hpp"
@@ -119,6 +120,9 @@ public:
     const QString &seventvUserId() const;
     const QString &seventvEmoteSetId() const;
 
+    void addBttvEmote(const BttvLiveUpdateEmoteAddMessage &message);
+    void removeBttvEmote(const BttvLiveUpdateEmoteRemoveMessage &message);
+
     void addSeventvEmote(const SeventvEventApiEmoteAddDispatch &action);
     void updateSeventvEmote(const SeventvEventApiEmoteUpdateDispatch &action);
     void removeSeventvEmote(const SeventvEventApiEmoteRemoveDispatch &action);
@@ -183,6 +187,7 @@ private:
     void fetchDisplayName();
     void cleanUpReplyThreads();
     void showLoginMessage();
+    void joinBttvChannel();
 
     void setLive(bool newLiveStatus);
     void setMod(bool value);

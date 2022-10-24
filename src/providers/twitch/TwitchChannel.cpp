@@ -9,6 +9,7 @@
 #include "messages/Message.hpp"
 #include "providers/RecentMessagesApi.hpp"
 #include "providers/bttv/BttvEmotes.hpp"
+#include "providers/bttv/BttvLiveUpdates.hpp"
 #include "providers/bttv/LoadBttvChannelEmote.hpp"
 #include "providers/seventv/SeventvEmotes.hpp"
 #include "providers/seventv/SeventvEventApi.hpp"
@@ -111,13 +112,19 @@ TwitchChannel::TwitchChannel(const QString &name)
         this->refreshFFZChannelEmotes(false);
         this->refreshBTTVChannelEmotes(false);
         this->refreshSevenTVChannelEmotes(false);
+        this->joinBttvChannel();
     });
 
     this->destroyed.connect([this]() {
-        if (getApp()->twitch->eventApi)
+        if (getApp()->twitch->seventvEventApi)
         {
             getApp()->twitch->dropSeventvUser(this->seventvUserId_);
             getApp()->twitch->dropSeventvEmoteSet(this->seventvEmoteSetId_);
+        }
+
+        if (getApp()->twitch->bttvLiveUpdates)
+        {
+            getApp()->twitch->bttvLiveUpdates->partChannel(this->roomId());
         }
     });
 
@@ -625,6 +632,30 @@ const QString &TwitchChannel::seventvEmoteSetId() const
     return this->seventvEmoteSetId_;
 }
 
+void TwitchChannel::addBttvEmote(const BttvLiveUpdateEmoteAddMessage &message)
+{
+    auto added = BttvEmotes::addEmote(this->getDisplayName(), this->bttvEmotes_,
+                                      message);
+    this->addOrReplaceLiveUpdatesAddRemove(
+        MessageBuilder(liveUpdatesAddEmoteMessage, "BTTV", QString(),
+                       {added->name.string})
+            .release(),
+        "BTTV");
+}
+
+void TwitchChannel::removeBttvEmote(
+    const BttvLiveUpdateEmoteRemoveMessage &message)
+{
+    if (auto removedName = BttvEmotes::removeEmote(this->bttvEmotes_, message))
+    {
+        this->addOrReplaceLiveUpdatesAddRemove(
+            MessageBuilder(liveUpdatesRemoveEmoteMessage, "BTTV", QString(),
+                           {*removedName})
+                .release(),
+            "BTTV");
+    }
+}
+
 void TwitchChannel::addSeventvEmote(
     const SeventvEventApiEmoteAddDispatch &dispatch)
 {
@@ -734,10 +765,10 @@ void TwitchChannel::updateSeventvData(const QString &userId,
     this->seventvUserId_ = userId;
     this->seventvEmoteSetId_ = emoteSetId;
     auto fn = [this, oldUserId, oldEmoteSetId]() {
-        if (getApp()->twitch->eventApi)
+        if (getApp()->twitch->seventvEventApi)
         {
-            getApp()->twitch->eventApi->subscribeUser(this->seventvUserId_,
-                                                      this->seventvEmoteSetId_);
+            getApp()->twitch->seventvEventApi->subscribeUser(
+                this->seventvUserId_, this->seventvEmoteSetId_);
 
             if (oldUserId)
             {
@@ -855,6 +886,14 @@ void TwitchChannel::addOrReplaceLiveUpdatesAddRemove(MessagePtr message,
     if (addMessage)
     {
         this->addMessage(message);
+    }
+}
+
+void TwitchChannel::joinBttvChannel()
+{
+    if (getApp()->twitch->bttvLiveUpdates)
+    {
+        getApp()->twitch->bttvLiveUpdates->joinChannel(this->roomId());
     }
 }
 

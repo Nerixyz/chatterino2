@@ -1,6 +1,7 @@
 #include "providers/liveupdates/BasicPubSubManager.hpp"
 
 #include "common/QLogging.hpp"
+#include "providers/bttv/liveupdate/BttvLiveUpdateSubscription.hpp"
 #include "providers/seventv/eventapi/SeventvEventApiSubscription.hpp"
 #include "providers/twitch/PubSubHelpers.hpp"
 #include "util/DebugCount.hpp"
@@ -295,5 +296,6 @@ std::shared_ptr<BasicPubSubClient<Subscription>>
 }
 
 template class BasicPubSubManager<SeventvEventApiSubscription>;
+template class BasicPubSubManager<BttvLiveUpdateSubscription>;
 
 }  // namespace chatterino

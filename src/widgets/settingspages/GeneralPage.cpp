@@ -836,6 +836,8 @@ void GeneralPage::initLayout(GeneralPageView &layout)
 
     layout.addCheckbox("Enable 7TV EventApi (requires restart)",
                        s.enableSevenTVEventApi);
+    layout.addCheckbox("Enable BTTV Live Updates (requires restart)",
+                       s.enableBttvLiveUpdates);
 
     layout.addStretch();
 
