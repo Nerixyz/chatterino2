@@ -3,6 +3,8 @@
 #include "providers/seventv/eventapi/SeventvEventApiClient.hpp"
 #include "providers/seventv/eventapi/SeventvEventApiMessage.hpp"
 
+#include <QJsonArray>
+
 namespace chatterino {
 
 SeventvEventApi::SeventvEventApi(const QString &host)
