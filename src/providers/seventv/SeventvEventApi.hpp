@@ -4,6 +4,7 @@
 #include "providers/liveupdates/BasicPubSubManager.hpp"
 #include "providers/seventv/eventapi/SeventvEventApiDispatch.hpp"
 #include "providers/seventv/eventapi/SeventvEventApiSubscription.hpp"
+#include "util/QStringHash.hpp"
 
 #include <pajlada/signals/signal.hpp>
 
