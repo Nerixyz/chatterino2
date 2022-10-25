@@ -58,8 +58,8 @@ QByteArray BttvLiveUpdateSubscription::encodeUnsubscribe() const
 
 QDebug &operator<<(QDebug &dbg, const BttvLiveUpdateSubscription &subscription)
 {
-    dbg << "twitchId:" << subscription.twitchId
-        << "type:" << (int)subscription.type;
+    dbg << "BttvLiveUpdateSubscription{ twitchId:" << subscription.twitchId
+        << "type:" << (int)subscription.type << '}';
     return dbg;
 }
 }  // namespace chatterino

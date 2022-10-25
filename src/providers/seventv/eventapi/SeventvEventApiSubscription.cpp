@@ -68,8 +68,8 @@ QByteArray SeventvEventApiSubscription::encodeUnsubscribe() const
 
 QDebug &operator<<(QDebug &dbg, const SeventvEventApiSubscription &subscription)
 {
-    dbg << "condition:" << subscription.condition
-        << "type:" << (int)subscription.type;
+    dbg << "SeventvEventApiSubscription{ condition:" << subscription.condition
+        << "type:" << (int)subscription.type << '}';
     return dbg;
 }
 
