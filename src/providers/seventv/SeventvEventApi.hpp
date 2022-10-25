@@ -23,7 +23,7 @@ public:
         Signal<SeventvEventApiEmoteUpdateDispatch> emoteUpdated;
         Signal<SeventvEventApiEmoteRemoveDispatch> emoteRemoved;
         Signal<SeventvEventApiUserConnectionUpdateDispatch> userUpdated;
-    } signals_;
+    } signals_;  // NOLINT(readability-identifier-naming)
 
     void subscribeUser(const QString &userId, const QString &emoteSetId);
     void unsubscribeUser(const QString &id);

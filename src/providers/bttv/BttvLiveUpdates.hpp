@@ -21,7 +21,7 @@ public:
     struct {
         Signal<BttvLiveUpdateEmoteAddMessage> emoteAdded;
         Signal<BttvLiveUpdateEmoteRemoveMessage> emoteRemoved;
-    } signals_;
+    } signals_;  // NOLINT(readability-identifier-naming)
 
     void joinChannel(const QString &id);
     void partChannel(const QString &id);
