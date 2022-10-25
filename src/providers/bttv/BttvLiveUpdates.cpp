@@ -26,7 +26,7 @@ void BttvLiveUpdates::partChannel(const QString &id)
 }
 
 void BttvLiveUpdates::onMessage(
-    websocketpp::connection_hdl hdl,
+    websocketpp::connection_hdl /*hdl*/,
     BasicPubSubManager<BttvLiveUpdateSubscription>::WebsocketMessagePtr msg)
 {
     const auto &payload = QString::fromStdString(msg->get_payload());
