@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "providers/seventv/eventapi/SeventvEventApiClient.hpp"
 
 #include "providers/twitch/PubSubHelpers.hpp"
@@ -7,7 +9,8 @@ namespace chatterino {
 SeventvEventApiClient::SeventvEventApiClient(
     liveupdates::WebsocketClient &websocketClient,
     liveupdates::WebsocketHandle handle)
-    : BasicPubSubClient<SeventvEventApiSubscription>(websocketClient, handle)
+    : BasicPubSubClient<SeventvEventApiSubscription>(websocketClient,
+                                                     std::move(handle))
     , lastHeartbeat_(std::chrono::steady_clock::now())
     , heartbeatInterval_(std::chrono::milliseconds(25000))
 {

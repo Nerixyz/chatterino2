@@ -13,7 +13,7 @@ BasicPubSubClient<Subscription>::BasicPubSubClient(
     liveupdates::WebsocketClient &websocketClient,
     liveupdates::WebsocketHandle handle)
     : websocketClient_(websocketClient)
-    , handle_(handle)
+    , handle_(std::move(handle))
 {
 }
 
