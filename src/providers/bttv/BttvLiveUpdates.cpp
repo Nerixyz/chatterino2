@@ -1,5 +1,7 @@
 #include "providers/bttv/BttvLiveUpdates.hpp"
 
+#include <QJsonDocument>
+
 namespace chatterino {
 
 BttvLiveUpdates::BttvLiveUpdates(const QString &host)
