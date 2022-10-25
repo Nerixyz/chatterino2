@@ -17,7 +17,6 @@ class SeventvEventApi : public BasicPubSubManager<SeventvEventApiSubscription>
 
 public:
     SeventvEventApi(const QString &host);
-    ~SeventvEventApi() override = default;
 
     struct {
         Signal<SeventvEventApiEmoteAddDispatch> emoteAdded;

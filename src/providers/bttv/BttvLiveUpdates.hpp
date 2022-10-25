@@ -17,7 +17,6 @@ class BttvLiveUpdates : public BasicPubSubManager<BttvLiveUpdateSubscription>
 
 public:
     BttvLiveUpdates(const QString &host);
-    ~BttvLiveUpdates() override = default;
 
     struct {
         Signal<BttvLiveUpdateEmoteAddMessage> emoteAdded;
