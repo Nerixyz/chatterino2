@@ -63,9 +63,11 @@ public:
                    const QString &durationInSeconds, bool multipleTimes,
                    const QTime &time = QTime::currentTime());
     MessageBuilder(LiveUpdatesAddEmoteMessageTag, const QString &platform,
-                   const QString &actor, std::vector<QString> emoteNames);
+                   const QString &actor,
+                   const std::vector<QString> &emoteNames);
     MessageBuilder(LiveUpdatesRemoveEmoteMessageTag, const QString &platform,
-                   const QString &actor, std::vector<QString> emoteNames);
+                   const QString &actor,
+                   const std::vector<QString> &emoteNames);
     MessageBuilder(LiveUpdatesUpdateEmoteMessageTag, const QString &platform,
                    const QString &actor, const QString &emoteName,
                    const QString &oldEmoteName);

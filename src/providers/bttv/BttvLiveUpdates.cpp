@@ -1,11 +1,12 @@
 #include "providers/bttv/BttvLiveUpdates.hpp"
 
 #include <QJsonDocument>
+#include <utility>
 
 namespace chatterino {
 
-BttvLiveUpdates::BttvLiveUpdates(const QString &host)
-    : BasicPubSubManager(host)
+BttvLiveUpdates::BttvLiveUpdates(QString host)
+    : BasicPubSubManager(std::move(host))
 {
 }
 

@@ -4,11 +4,12 @@
 #include "providers/seventv/eventapi/SeventvEventApiMessage.hpp"
 
 #include <QJsonArray>
+#include <utility>
 
 namespace chatterino {
 
-SeventvEventApi::SeventvEventApi(const QString &host)
-    : BasicPubSubManager(host)
+SeventvEventApi::SeventvEventApi(QString host)
+    : BasicPubSubManager(std::move(host))
 {
 }
 
@@ -115,9 +116,9 @@ void SeventvEventApi::handleDispatch(const SeventvEventApiDispatch &dispatch)
     switch (dispatch.type)
     {
         case SeventvEventApiSubscriptionType::UpdateEmoteSet: {
-            for (const auto pushed_ : dispatch.body["pushed"].toArray())
+            for (const auto pushedRef : dispatch.body["pushed"].toArray())
             {
-                auto pushed = pushed_.toObject();
+                auto pushed = pushedRef.toObject();
                 if (pushed["key"].toString() != "emotes")
                 {
                     continue;
@@ -126,9 +127,9 @@ void SeventvEventApi::handleDispatch(const SeventvEventApiDispatch &dispatch)
                     dispatch, pushed["value"].toObject());
                 this->signals_.emoteAdded.invoke(added);
             }
-            for (const auto updated_ : dispatch.body["updated"].toArray())
+            for (const auto updatedRef : dispatch.body["updated"].toArray())
             {
-                auto updated = updated_.toObject();
+                auto updated = updatedRef.toObject();
                 if (updated["key"].toString() != "emotes")
                 {
                     continue;
@@ -139,9 +140,9 @@ void SeventvEventApi::handleDispatch(const SeventvEventApiDispatch &dispatch)
                     this->signals_.emoteUpdated.invoke(update);
                 }
             }
-            for (const auto pulled_ : dispatch.body["pulled"].toArray())
+            for (const auto pulledRef : dispatch.body["pulled"].toArray())
             {
-                auto pulled = pulled_.toObject();
+                auto pulled = pulledRef.toObject();
                 if (pulled["key"].toString() != "emotes")
                 {
                     continue;
@@ -153,16 +154,16 @@ void SeventvEventApi::handleDispatch(const SeventvEventApiDispatch &dispatch)
         }
         break;
         case SeventvEventApiSubscriptionType::UpdateUser: {
-            for (const auto updated_ : dispatch.body["updated"].toArray())
+            for (const auto updatedRef : dispatch.body["updated"].toArray())
             {
-                auto updated = updated_.toObject();
+                auto updated = updatedRef.toObject();
                 if (updated["key"].toString() != "connections")
                 {
                     continue;
                 }
-                for (const auto value_ : updated["value"].toArray())
+                for (const auto valueRef : updated["value"].toArray())
                 {
-                    auto value = value_.toObject();
+                    auto value = valueRef.toObject();
                     if (value["key"].toString() != "emote_set")
                     {
                         continue;

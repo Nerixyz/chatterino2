@@ -820,7 +820,7 @@ void TwitchChannel::addOrReplaceLiveUpdatesAddRemove(MessagePtr message,
 
     for (int i = snapshotLength - 1; i >= end; --i)
     {
-        auto &s = snapshot[i];
+        const auto &s = snapshot[i];
 
         if (s->parseTime < minimumTime)
         {
@@ -849,7 +849,9 @@ void TwitchChannel::addOrReplaceLiveUpdatesAddRemove(MessagePtr message,
                 });
 
             if (anyMatchingEmote)
+            {
                 break;
+            }
         }
 
         if (s->flags.has(currentFlag))

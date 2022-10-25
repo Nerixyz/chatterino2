@@ -10,12 +10,13 @@
 #include <algorithm>
 #include <exception>
 #include <thread>
+#include <utility>
 
 namespace chatterino {
 
 template <class Subscription>
-BasicPubSubManager<Subscription>::BasicPubSubManager(const QString &host)
-    : host_(host)
+BasicPubSubManager<Subscription>::BasicPubSubManager(QString host)
+    : host_(std::move(host))
 {
     this->websocketClient_.set_access_channels(websocketpp::log::alevel::all);
     this->websocketClient_.clear_access_channels(
@@ -48,8 +49,9 @@ void BasicPubSubManager<Subscription>::start()
 {
     this->work_ = std::make_shared<boost::asio::io_service::work>(
         this->websocketClient_.get_io_service());
-    this->mainThread_.reset(
-        new std::thread(std::bind(&BasicPubSubManager::runThread, this)));
+    this->mainThread_.reset(new std::thread([this] {
+        runThread();
+    }));
 }
 
 template <class Subscription>
@@ -74,7 +76,8 @@ void BasicPubSubManager<Subscription>::stop()
 
 template <class Subscription>
 typename BasicPubSubManager<Subscription>::WebsocketContextPtr
-    BasicPubSubManager<Subscription>::onTLSInit(websocketpp::connection_hdl hdl)
+    BasicPubSubManager<Subscription>::onTLSInit(
+        websocketpp::connection_hdl /*hdl*/)
 {
     WebsocketContextPtr ctx(
         new boost::asio::ssl::context(boost::asio::ssl::context::tlsv12));
@@ -161,7 +164,7 @@ void BasicPubSubManager<Subscription>::onConnectionFail(
     if (!this->pendingSubscriptions_.empty())
     {
         runAfter(this->websocketClient_.get_io_service(),
-                 this->connectBackoff_.next(), [this](auto timer) {
+                 this->connectBackoff_.next(), [this](auto /*timer*/) {
                      this->addClient();
                  });
     }
@@ -289,10 +292,8 @@ std::shared_ptr<BasicPubSubClient<Subscription>>
     {
         return {};
     }
-    else
-    {
-        return clientIt->second;
-    }
+
+    return clientIt->second;
 }
 
 template class BasicPubSubManager<SeventvEventApiSubscription>;

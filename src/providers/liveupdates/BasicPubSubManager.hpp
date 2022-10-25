@@ -23,7 +23,7 @@ template <class Subscription>
 class BasicPubSubManager
 {
 public:
-    BasicPubSubManager(const QString &host);
+    BasicPubSubManager(QString host);
     virtual ~BasicPubSubManager() = default;
 
     BasicPubSubManager(const BasicPubSubManager &) = delete;

@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "providers/seventv/eventapi/SeventvEventApiDispatch.hpp"
 
 namespace chatterino {
@@ -19,7 +21,7 @@ SeventvEventApiEmoteAddDispatch::SeventvEventApiEmoteAddDispatch(
     const SeventvEventApiDispatch &dispatch, QJsonObject emote)
     : emoteSetId(dispatch.id)
     , actorName(dispatch.actorName)
-    , emoteJson(emote)
+    , emoteJson(std::move(emote))
     , emoteId(this->emoteJson["id"].toString())
 {
 }

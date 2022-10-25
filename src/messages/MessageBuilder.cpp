@@ -49,7 +49,8 @@ QString makeUpdatedEmoteList(const QString &platform,
     auto i = 0;
     for (const auto &emoteName : emoteNames)
     {
-        if (i++)
+        i++;
+        if (i > 1)
         {
             text += i == emoteNames.size() ? " and " : ", ";
         }
@@ -343,9 +344,9 @@ MessageBuilder::MessageBuilder(TimeoutMessageTag, const QString &username,
     this->message().searchText = fullText;
 }
 
-MessageBuilder::MessageBuilder(LiveUpdatesAddEmoteMessageTag,
+MessageBuilder::MessageBuilder(LiveUpdatesAddEmoteMessageTag /*unused*/,
                                const QString &platform, const QString &actor,
-                               std::vector<QString> emoteNames)
+                               const std::vector<QString> &emoteNames)
     : MessageBuilder()
 {
     auto text =
@@ -381,9 +382,9 @@ MessageBuilder::MessageBuilder(LiveUpdatesAddEmoteMessageTag,
     this->message().flags.set(MessageFlag::DoNotTriggerNotification);
 }
 
-MessageBuilder::MessageBuilder(LiveUpdatesRemoveEmoteMessageTag,
+MessageBuilder::MessageBuilder(LiveUpdatesRemoveEmoteMessageTag /*unused*/,
                                const QString &platform, const QString &actor,
-                               std::vector<QString> emoteNames)
+                               const std::vector<QString> &emoteNames)
     : MessageBuilder()
 {
     auto text =
@@ -419,7 +420,7 @@ MessageBuilder::MessageBuilder(LiveUpdatesRemoveEmoteMessageTag,
     this->message().flags.set(MessageFlag::DoNotTriggerNotification);
 }
 
-MessageBuilder::MessageBuilder(LiveUpdatesUpdateEmoteMessageTag,
+MessageBuilder::MessageBuilder(LiveUpdatesUpdateEmoteMessageTag /*unused*/,
                                const QString &platform, const QString &actor,
                                const QString &emoteName,
                                const QString &oldEmoteName)
@@ -446,7 +447,7 @@ MessageBuilder::MessageBuilder(LiveUpdatesUpdateEmoteMessageTag,
     this->message().flags.set(MessageFlag::DoNotTriggerNotification);
 }
 
-MessageBuilder::MessageBuilder(LiveUpdatesUpdateEmoteSetMessageTag,
+MessageBuilder::MessageBuilder(LiveUpdatesUpdateEmoteSetMessageTag /*unused*/,
                                const QString &platform, const QString &actor,
                                const QString &emoteSetName)
     : MessageBuilder()

@@ -16,7 +16,7 @@ class BttvLiveUpdates : public BasicPubSubManager<BttvLiveUpdateSubscription>
         pajlada::Signals::Signal<T>;  // type-id is vector<T, Alloc<T>>
 
 public:
-    BttvLiveUpdates(const QString &host);
+    BttvLiveUpdates(QString host);
 
     struct {
         Signal<BttvLiveUpdateEmoteAddMessage> emoteAdded;

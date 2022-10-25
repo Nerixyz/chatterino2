@@ -17,7 +17,7 @@ class SeventvEventApi : public BasicPubSubManager<SeventvEventApiSubscription>
         pajlada::Signals::Signal<T>;  // type-id is vector<T, Alloc<T>>
 
 public:
-    SeventvEventApi(const QString &host);
+    SeventvEventApi(QString host);
 
     struct {
         Signal<SeventvEventApiEmoteAddDispatch> emoteAdded;

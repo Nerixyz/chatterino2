@@ -123,9 +123,9 @@ public:
     void addBttvEmote(const BttvLiveUpdateEmoteAddMessage &message);
     void removeBttvEmote(const BttvLiveUpdateEmoteRemoveMessage &message);
 
-    void addSeventvEmote(const SeventvEventApiEmoteAddDispatch &action);
-    void updateSeventvEmote(const SeventvEventApiEmoteUpdateDispatch &action);
-    void removeSeventvEmote(const SeventvEventApiEmoteRemoveDispatch &action);
+    void addSeventvEmote(const SeventvEventApiEmoteAddDispatch &dispatch);
+    void updateSeventvEmote(const SeventvEventApiEmoteUpdateDispatch &dispatch);
+    void removeSeventvEmote(const SeventvEventApiEmoteRemoveDispatch &dispatch);
     void updateSeventvUser(
         const SeventvEventApiUserConnectionUpdateDispatch &dispatch);
     void updateSeventvData(const QString &userId, const QString &emoteSetId);

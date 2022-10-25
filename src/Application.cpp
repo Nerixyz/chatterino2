@@ -576,7 +576,7 @@ void Application::initBttvLiveUpdates()
             auto chan = this->twitch->getChannelOrEmptyByID(data.channelId);
 
             postToThread([chan, data] {
-                if (auto channel = dynamic_cast<TwitchChannel *>(chan.get()))
+                if (auto *channel = dynamic_cast<TwitchChannel *>(chan.get()))
                 {
                     channel->addBttvEmote(data);
                 }
@@ -587,7 +587,7 @@ void Application::initBttvLiveUpdates()
             auto chan = this->twitch->getChannelOrEmptyByID(data.channelId);
 
             postToThread([chan, data] {
-                if (auto channel = dynamic_cast<TwitchChannel *>(chan.get()))
+                if (auto *channel = dynamic_cast<TwitchChannel *>(chan.get()))
                 {
                     channel->removeBttvEmote(data);
                 }
