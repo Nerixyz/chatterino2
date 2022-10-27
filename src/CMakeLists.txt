@@ -220,9 +220,7 @@ set(SOURCE_FILES
         providers/irc/IrcServer.cpp
         providers/irc/IrcServer.hpp
 
-        providers/liveupdates/BasicPubSubClient.cpp
         providers/liveupdates/BasicPubSubClient.hpp
-        providers/liveupdates/BasicPubSubManager.cpp
         providers/liveupdates/BasicPubSubManager.hpp
         providers/liveupdates/BasicPubSubWebsocket.hpp
 
