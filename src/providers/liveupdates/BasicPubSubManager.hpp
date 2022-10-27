@@ -25,7 +25,7 @@
 
 namespace chatterino {
 
-template <class Subscription>
+template <typename Subscription>
 class BasicPubSubManager
 {
 public:
@@ -74,6 +74,7 @@ public:
             runThread();
         }));
     }
+
     void stop()
     {
         this->stopping_ = true;

@@ -12,7 +12,8 @@
 #include "util/Helpers.hpp"
 
 namespace chatterino {
-template <class Subscription>
+
+template <typename Subscription>
 class BasicPubSubClient
     : public std::enable_shared_from_this<BasicPubSubClient<Subscription>>
 {
@@ -144,4 +145,5 @@ private:
 
     std::atomic<bool> started_{false};
 };
+
 }  // namespace chatterino
