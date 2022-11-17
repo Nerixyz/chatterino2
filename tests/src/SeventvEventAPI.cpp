@@ -101,3 +101,13 @@ TEST(SeventvEventAPI, NoHeartbeat)
 
     eventApi->stop();
 }
+
+TEST(SeventvAsan, Asan)
+{
+    int a[20];
+    int b[20];
+    for (int i = 0; i <= 20; i++)
+    {
+        b[i] = a[i];
+    }
+}

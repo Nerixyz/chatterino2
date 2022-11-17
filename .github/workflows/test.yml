@@ -73,7 +73,7 @@ jobs:
       - name: Build (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
         run: |
-            cmake -DBUILD_TESTS=On -DBUILD_APP=OFF ..
+            cmake -DBUILD_TESTS=On -DBUILD_APP=OFF -DSANITIZE_ADDRESS=TRUE ..
             cmake --build . --config Release
         working-directory: build-test
         shell: bash
