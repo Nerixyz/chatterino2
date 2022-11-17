@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
+
 using namespace chatterino;
 using namespace std::chrono_literals;
 
@@ -30,7 +32,7 @@ TEST(TwitchPubSubClient, ServerRespondsToPings)
     auto pingInterval = std::chrono::seconds(1);
     const QString host("wss://127.0.0.1:9050");
 
-    auto *pubSub = new PubSub(host, pingInterval);
+    auto pubSub = std::make_unique<PubSub>(host, pingInterval);
     pubSub->setAccountData("token", "123456");
     pubSub->start();
 
@@ -72,7 +74,7 @@ TEST(TwitchPubSubClient, ServerDoesntRespondToPings)
     auto pingInterval = std::chrono::seconds(1);
     const QString host("wss://127.0.0.1:9050/dont-respond-to-ping");
 
-    auto *pubSub = new PubSub(host, pingInterval);
+    auto pubSub = std::make_unique<PubSub>(host, pingInterval);
     pubSub->setAccountData("token", "123456");
     pubSub->start();
     pubSub->listenToTopic("test");
@@ -104,7 +106,7 @@ TEST(TwitchPubSubClient, DisconnectedAfter1s)
     auto pingInterval = std::chrono::seconds(10);
     const QString host("wss://127.0.0.1:9050/disconnect-client-after-1s");
 
-    auto *pubSub = new PubSub(host, pingInterval);
+    auto pubSub = std::make_unique<PubSub>(host, pingInterval);
     pubSub->setAccountData("token", "123456");
     pubSub->start();
 
@@ -149,7 +151,7 @@ TEST(TwitchPubSubClient, ExceedTopicLimit)
     auto pingInterval = std::chrono::seconds(1);
     const QString host("wss://127.0.0.1:9050");
 
-    auto *pubSub = new PubSub(host, pingInterval);
+    auto pubSub = std::make_unique<PubSub>(host, pingInterval);
     pubSub->setAccountData("token", "123456");
     pubSub->start();
 
@@ -192,7 +194,7 @@ TEST(TwitchPubSubClient, ExceedTopicLimitSingleStep)
     auto pingInterval = std::chrono::seconds(1);
     const QString host("wss://127.0.0.1:9050");
 
-    auto *pubSub = new PubSub(host, pingInterval);
+    auto pubSub = std::make_unique<PubSub>(host, pingInterval);
     pubSub->setAccountData("token", "123456");
     pubSub->start();
 
@@ -224,7 +226,7 @@ TEST(TwitchPubSubClient, ReceivedWhisper)
     auto pingInterval = std::chrono::seconds(1);
     const QString host("wss://127.0.0.1:9050/receive-whisper");
 
-    auto *pubSub = new PubSub(host, pingInterval);
+    auto pubSub = std::make_unique<PubSub>(host, pingInterval);
     pubSub->setAccountData("token", "123456");
     pubSub->start();
 
@@ -265,7 +267,7 @@ TEST(TwitchPubSubClient, ModeratorActionsUserBanned)
     auto pingInterval = std::chrono::seconds(1);
     const QString host("wss://127.0.0.1:9050/moderator-actions-user-banned");
 
-    auto *pubSub = new PubSub(host, pingInterval);
+    auto pubSub = std::make_unique<PubSub>(host, pingInterval);
     pubSub->setAccountData("token", "123456");
     pubSub->start();
 
@@ -313,7 +315,7 @@ TEST(TwitchPubSubClient, MissingToken)
     // The token that's required is "xD"
     const QString host("wss://127.0.0.1:9050/authentication-required");
 
-    auto *pubSub = new PubSub(host, pingInterval);
+    auto pubSub = std::make_unique<PubSub>(host, pingInterval);
     // pubSub->setAccountData("", "123456");
     pubSub->start();
 
@@ -341,7 +343,7 @@ TEST(TwitchPubSubClient, WrongToken)
     // The token that's required is "xD"
     const QString host("wss://127.0.0.1:9050/authentication-required");
 
-    auto *pubSub = new PubSub(host, pingInterval);
+    auto pubSub = std::make_unique<PubSub>(host, pingInterval);
     pubSub->setAccountData("wrongtoken", "123456");
     pubSub->start();
 
@@ -369,7 +371,7 @@ TEST(TwitchPubSubClient, CorrectToken)
     // The token that's required is "xD"
     const QString host("wss://127.0.0.1:9050/authentication-required");
 
-    auto *pubSub = new PubSub(host, pingInterval);
+    auto pubSub = std::make_unique<PubSub>(host, pingInterval);
     pubSub->setAccountData("xD", "123456");
     pubSub->start();
 
@@ -396,7 +398,7 @@ TEST(TwitchPubSubClient, AutoModMessageHeld)
     auto pingInterval = std::chrono::seconds(1);
     const QString host("wss://127.0.0.1:9050/automod-held");
 
-    auto *pubSub = new PubSub(host, pingInterval);
+    auto pubSub = std::make_unique<PubSub>(host, pingInterval);
     pubSub->setAccountData("xD", "123456");
     pubSub->start();
 

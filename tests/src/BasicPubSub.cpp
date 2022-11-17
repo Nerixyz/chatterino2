@@ -8,6 +8,7 @@
 #include <QString>
 
 #include <deque>
+#include <memory>
 #include <mutex>
 #include <optional>
 
@@ -116,7 +117,7 @@ private:
 TEST(BasicPubSub, SubscriptionCycle)
 {
     const QString host("wss://127.0.0.1:9050/liveupdates/sub-unsub");
-    auto *manager = new MyManager(host);
+    auto manager = std::make_unique<MyManager>(host);
     manager->start();
 
     std::this_thread::sleep_for(50ms);

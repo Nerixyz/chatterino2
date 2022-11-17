@@ -69,7 +69,8 @@ public:
         this->userID_ = userID;
     }
 
-    ~PubSub() = delete;
+    // TODO: why?
+    //~PubSub() = delete;
 
     enum class State {
         Connected,

@@ -4,6 +4,8 @@
 #include <QString>
 #include <boost/optional.hpp>
 
+#include <memory>
+
 using namespace chatterino;
 using namespace std::chrono_literals;
 
@@ -14,7 +16,8 @@ const QString TARGET_USER_ID = "60b39e943e203cc169dfc106";
 TEST(SeventvEventAPI, AllEvents)
 {
     const QString host("wss://127.0.0.1:9050/liveupdates/seventv/all-events");
-    auto *eventAPI = new SeventvEventAPI(host, std::chrono::milliseconds(1000));
+    auto eventAPI = std::make_unique<SeventvEventAPI>(
+        host, std::chrono::milliseconds(1000));
     eventAPI->start();
 
     boost::optional<SeventvEventAPIEmoteAddDispatch> addDispatch;
@@ -89,7 +92,8 @@ TEST(SeventvEventAPI, AllEvents)
 TEST(SeventvEventAPI, NoHeartbeat)
 {
     const QString host("wss://127.0.0.1:9050/liveupdates/seventv/no-heartbeat");
-    auto *eventApi = new SeventvEventAPI(host, std::chrono::milliseconds(1000));
+    auto eventApi = std::make_unique<SeventvEventAPI>(
+        host, std::chrono::milliseconds(1000));
     eventApi->start();
 
     std::this_thread::sleep_for(50ms);
