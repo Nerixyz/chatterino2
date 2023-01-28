@@ -85,13 +85,11 @@ jobs:
         run: |
           Get-Command ninja
           python -m pip install conan
-          conan profile new --detect --force default
-          conan profile update conf.tools.cmake.cmaketoolchain:generator=Ninja default
 
       - name: Build (Windows)
         if: startsWith(matrix.os, 'windows')
         run: |
-          Get-Command ninja
+          ninja --version
           mkdir build
           cd build
           conan install .. -s build_type=Release -b missing -pr:b=default
