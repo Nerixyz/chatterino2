@@ -101,8 +101,7 @@ jobs:
               -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake" `
               -DCHATTERINO_LTO="$Env:C2_ENABLE_LTO" `
               ..
-          set cl=/MP
-          nmake /S /NOLOGO
+          ninja
           windeployqt bin/chatterino.exe --release --no-compiler-runtime --no-translations --no-opengl-sw --dir Chatterino2/
           cp bin/chatterino.exe Chatterino2/
           echo nightly > Chatterino2/modes
