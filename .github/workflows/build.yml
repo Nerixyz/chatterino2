@@ -79,7 +79,7 @@ jobs:
       - name: Install dependencies (Windows)
         if: startsWith(matrix.os, 'windows')
         run: |
-          choco install conan -y
+          python -m pip install conan
 
       - name: Enable Developer Command Prompt
         if: startsWith(matrix.os, 'windows')
@@ -90,9 +90,9 @@ jobs:
         run: |
           mkdir build
           cd build
-          conan install .. -b missing
+          conan install .. -s build_type=Debug -b missing -pr:b=default
           cmake `
-              -G"NMake Makefiles" `
+              -GNinja `
               -DCMAKE_BUILD_TYPE=Release `
               -DCHATTERINO_LTO="$Env:C2_ENABLE_LTO" `
               ..
