@@ -92,11 +92,11 @@ jobs:
         run: |
           mkdir build
           cd build
-          conan install .. -s build_type=Debug -b missing -pr:b=default
+          conan install .. -s build_type=Release -b missing -pr:b=default
           cmake `
               -GNinja `
               -DCMAKE_BUILD_TYPE=Release `
-              -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake `
+              -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake" `
               -DCHATTERINO_LTO="$Env:C2_ENABLE_LTO" `
               ..
           set cl=/MP
