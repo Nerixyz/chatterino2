@@ -80,6 +80,7 @@ jobs:
         if: startsWith(matrix.os, 'windows')
         run: |
           python -m pip install conan
+          conan profile update conf.tools.cmake.cmaketoolchain:generator=Ninja default
 
       - name: Enable Developer Command Prompt
         if: startsWith(matrix.os, 'windows')
@@ -94,6 +95,7 @@ jobs:
           cmake `
               -GNinja `
               -DCMAKE_BUILD_TYPE=Release `
+              -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake `
               -DCHATTERINO_LTO="$Env:C2_ENABLE_LTO" `
               ..
           set cl=/MP
