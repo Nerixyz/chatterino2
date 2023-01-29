@@ -1,12 +1,12 @@
-cmake_minimum_required(VERSION 3.12)
-cmake_policy(SET CMP0087 NEW)
-cmake_policy(SET CMP0091 NEW)
+cmake_minimum_required(VERSION 3.15)
+cmake_policy(SET CMP0087 NEW) # evaluates generator expressions in `install(CODE/SCRIPT)`
+cmake_policy(SET CMP0091 NEW) # select MSVC runtime library through `CMAKE_MSVC_RUNTIME_LIBRARY`
 include(FeatureSummary)
 
 list(APPEND CMAKE_MODULE_PATH
-    "${CMAKE_SOURCE_DIR}/cmake"
-    "${CMAKE_SOURCE_DIR}/cmake/sanitizers-cmake/cmake"
-    )
+        "${CMAKE_SOURCE_DIR}/cmake"
+        "${CMAKE_SOURCE_DIR}/cmake/sanitizers-cmake/cmake"
+        )
 
 project(chatterino VERSION 2.4.0)
 

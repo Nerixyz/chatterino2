@@ -84,8 +84,12 @@ jobs:
         if: startsWith(matrix.os, 'windows')
         run: |
           choco install conan -y
-      #         conan profile new --detect --force default
-      #         conan profile update conf.tools.cmake.cmaketoolchain:generator=Ninja default
+
+      - name: Setup Conan (Windows)
+        if: startsWith(matrix.os, 'windows')
+        run: |
+          conan profile new --detect --force default
+          conan profile update conf.tools.cmake.cmaketoolchain:generator=Ninja default
 
       - name: Build (Windows)
         if: startsWith(matrix.os, 'windows')
