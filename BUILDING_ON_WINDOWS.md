@@ -5,7 +5,7 @@ For a detailed walkthrough and instructions for specific editors [consult the wi
 
 ## Requirements
 
-You need to have [git], a recent (14.20 - Visual Studio 2019 and later) version of MSVC, and a Windows SDK (both through [Visual Studio](https://visualstudio.microsoft.com/downloads/)) for your system installed. Additionally, you need to have [CMake](https://cmake.org/) installed - this is done by default when you're installing Visual Studio with "Desktop development with C++" enabled.
+You need to have [git](https://git-scm.com/), a recent (14.20 - Visual Studio 2019 and later) version of MSVC, and a Windows SDK (both through [Visual Studio](https://visualstudio.microsoft.com/downloads/)) for your system installed. Additionally, you need to have [CMake](https://cmake.org/) installed - this is done by default when you're installing Visual Studio with "Desktop development with C++" enabled.
 
 ## Dependencies
 
@@ -43,6 +43,8 @@ Create a `build` folder and inside it, run `conan install .. -b missing -s build
 
 When configuring your build with CMake, you need to set the `CMAKE_TOOLCHAIN_FILE` to `conan_toolchain.cmake`.
 
+**Useful links:** [Conan documentation](https://docs.conan.io), [`CMakeToolchain` workflow](https://docs.conan.io/en/latest/reference/conanfile/tools/cmake/cmaketoolchain.html#using-the-toolchain-in-developer-flow), [profile reference](https://docs.conan.io/en/latest/reference/profiles.html), [`conan.conf` reference](https://docs.conan.io/en/latest/reference/config_files/conan.conf.html).
+
 #### Using vcpkg
 
 Install [vcpkg](https://vcpkg.io/). Set the `VCPKG_DEFAULT_TRIPLET` to `x64-windows`.
@@ -50,6 +52,8 @@ Install [vcpkg](https://vcpkg.io/). Set the `VCPKG_DEFAULT_TRIPLET` to `x64-wind
 Inside your cloned repository, run `vcpkg install`.
 
 When configuring your build with CMake, you need to set the `CMAKE_TOOLCHAIN_FILE` to `$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake` (`$VCPKG_ROOT` is the path to your vcpkg installation).
+
+**Useful links:** [Installing vcpkg](https://vcpkg.io/en/getting-started.html), [vcpkg documentation](https://vcpkg.io/en/docs/README.html), [CMake integration](https://vcpkg.io/en/docs/users/buildsystems/cmake-integration.html), [vcpkg configuration/environment](https://vcpkg.io/en/docs/users/config-environment.html).
 
 #### Without a package manager
 
@@ -62,10 +66,14 @@ There, select your version of MSVC (`14.3` corresponds to MSVC 2022, `14.2` to 2
 When prompted where to install Boost, leave the location as is (`C:\local\boost_<version>`).
 After the installation finishes, rename the `C:\local\boost_<version>\lib64-msvc-14.3` (or similar) directory to `lib` (`C:\local\boost_<version>\lib`).
 
+**Useful links:** [`FindBoost` documentation](https://cmake.org/cmake/help/latest/module/FindBoost.html) (how CMake searches for your Boost installation).
+
 ##### OpenSSL
 
 Install OpenSSL from [slproweb.com](https://slproweb.com/download/Win64OpenSSL-1_1_1s.exe).
-OpenSSL should be installed to `C:\local\openssl`. When prompted, copy the OpenSSL DLLs to "The OpenSSL binaries (/bin) directory"
+OpenSSL should be installed to `C:\local\openssl`. When prompted, copy the OpenSSL DLLs to "The OpenSSL binaries (/bin) directory".
+
+**Useful links:** [`FindOpenSSL` documentation](https://cmake.org/cmake/help/latest/module/FindOpenSSL.html) (how CMake searches for your OpenSSL installation).
 
 ## Building
 
@@ -75,7 +83,7 @@ In PowerShell, use the script provided [here](https://gist.github.com/Nerixyz/4b
 
 If you haven't done already, create a folder called `build` inside the cloned repository and `cd` inside it.
 
-From there, configure the build with `cmake ..`. Here you need to set any CMake flags (e.g. `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake`).
+From there, configure the build with `cmake ..`. Here you need to set any CMake flags using `-D<name>=<value>` (e.g. `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake`).
 
 Now you can use `cmake --build .` to build the project. The final executable will be stored inside `bin/`.
 
