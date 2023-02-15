@@ -89,6 +89,20 @@ Now you can use `cmake --build .` to build the project. The final executable wil
 
 If you're not using vcpkg, you need to deploy the Qt libraries with `windeployqt bin/chatterino.exe --release --no-compiler-runtime --no-translations --no-opengl-sw --dir bin/`. `windeployqt` is from your Qt installation (by default `C:\Qt\5.15.2\msvc2019_64\bin`).
 
+### Crashpad
+
+Chatterino can capture crashes using [crashpad](https://chromium.googlesource.com/crashpad/crashpad). This is disabled by default. To enable support in your build for this, enable `BUILD_WITH_CRASHPAD` in your Chatterino build when configuring (`-DBUILD_WITH_CRASHPAD=On`).
+
+After your build, you need to build the crash handler using `cmake --build . crashpad_handler` - the handler will be located in `bin/crashpad`.
+
+### Qt 6
+
+Although not yet fully supported, you can try to build Chatterino with Qt 6 instead of Qt 5 (_Note: Chatterino might not yet compile, so you might need to make changes. Feel free to open a PR with your changes!_). To do this, enable `BUILD_WITH_QT6` in your Chatterino build when configuring (`-DBUILD_WITH_QT6=On`). You need to have the Qt 5 compatibility module installed. To make CMake aware of your installation, set `CMAKE_PREFIX_PATH` to `<qt-location>/msvc2019_64` (e.g. `C:/Qt/6.4.2/msvc2019_64` - notice the missing `msvc2019_64/lib/cmake`).
+
+### Link Time Optimization
+
+Chatterino can be built with [link time optimization](https://en.wikipedia.org/wiki/Interprocedural_optimization). This is disabled by default. You can enable this by enabling `CHATTERINO_LTO` (`-DCHATTERINO_LTO=On`).
+
 ## Installing
 
 To install Chatterino in your system or any folder, configure your build with `CMAKE_INSTALL_PREFIX` set to your desired folder.
