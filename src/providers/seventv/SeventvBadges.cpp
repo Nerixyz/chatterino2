@@ -42,7 +42,8 @@ void SeventvBadges::loadSeventvBadges()
     url.setQuery(urlQuery);
 
     NetworkRequest(url)
-        .onSuccess([this](const NetworkResult &result) -> Outcome {
+        // to test clang-tidy
+        .onSuccess([this](NetworkResult result) -> Outcome {
             auto root = result.parseJson();
 
             std::unique_lock lock(this->mutex_);

@@ -246,7 +246,7 @@ jobs:
 
       - name: clang-tidy review
         if: (startsWith(matrix.os, 'ubuntu') && matrix.pch == false && matrix.qt-version == '5.15.2' && github.event_name == 'pull_request')
-        uses: ZedThree/clang-tidy-review@v0.10.1
+        uses: Nerixyz/clang-tidy-review@9226f1f19d6e8397445708539956b077b3d5ba4c
         id: review
         with:
           build_dir: build
