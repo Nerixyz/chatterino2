@@ -1066,7 +1066,7 @@ void Split::showViewerList()
 
                 auto label = formatListItemText(QString("%1 (%2)").arg(
                     labels.at(i), localizeNumbers(currentCategory.size())));
-                label->setForeground(this->theme->accent);
+                label->setForeground(this->theme->colors.accentColor);
                 chattersList->addItem(label);
                 foreach (const QJsonValue &v, currentCategory)
                 {
@@ -1128,7 +1128,7 @@ void Split::showViewerList()
     dockVbox->addWidget(resultList);
     resultList->hide();
 
-    multiWidget->setStyleSheet(this->theme->splits.input.styleSheet);
+    multiWidget->setStyleSheet(this->theme->inputStyleSheet());
     multiWidget->setLayout(dockVbox);
     viewerDock->setWidget(multiWidget);
     viewerDock->setFloating(true);

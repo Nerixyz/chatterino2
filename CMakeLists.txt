@@ -167,6 +167,9 @@ if (BUILD_TESTS OR BUILD_BENCHMARKS)
     add_definitions(-DCHATTERINO_TEST)
 endif ()
 
+# Generate theme files
+include(cmake/resources/generate_theme.cmake)
+
 # Generate resource files
 include(cmake/resources/generate_resources.cmake)
 

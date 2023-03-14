@@ -45,6 +45,7 @@ jobs:
       - name: Install dependencies (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
         run: |
+          curl -fsSL https://github.com/Nerixyz/cstylegen/releases/download/v0.2.0/cstylegen-v0.2.0-installer.sh | sh
           sudo apt-get update
           sudo apt-get -y install \
               cmake \

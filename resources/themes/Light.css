@@ -1,0 +1,174 @@
+@chatterino {
+  author: "Forsen";
+  icon-set: "light";
+}
+
+:root {
+  --gray50: hsl(0, 0%, 90%); /* 1.0 */
+  --gray100: hsl(0, 0%, 86%); /* 0.96 */
+  --gray200: hsl(0, 0%, 86%); /* 0.95 */
+  --gray300: hsl(0, 0%, 82%); /* 0.9 */
+  --gray400: hsl(0, 0%, 78%); /* 0.85 */
+  --gray500: hsl(0, 0%, 73%); /* 0.79 */
+  --gray600: hsl(0, 0%, 72%); /* 0.78 */
+  --gray700: hsl(0, 0%, 66%); /* 0.7 */
+  --gray800: hsl(0, 0%, 62%); /* 0.65 */
+  --gray900: hsl(0, 0%, 58%); /* 0.6 */
+
+  --text-bright: #000;
+  --text: #222;
+  --text-dimmed: #444;
+
+  --highlight-color: #ff0000;
+  --highlight-color-muted: #ee6166;
+  --sub-color: #c466ff;
+
+  --link-text-color: rgb(66, 134, 244);
+  --system-text-color: #8c7f7f;
+  --placeholder-text-color: rgb(175, 159, 159);
+
+  --scrollbar-thumb: hsl(0, 0%, 66%);
+  --scrollbar-thumb-selected: hsl(0, 0%, 62%);
+
+  --split-header-selected: hsl(210, 100%, 32%);
+
+  --window-bg: #fff;
+
+  --tab-bg: #fff;
+  --tab-bg-hover: #eee;
+  --tab-bg-selected: #b4d7ff;
+
+  --accent: #00aeef;
+}
+
+Tabs {
+  border: white;
+  divider-line: var(--tab-bg-selected);
+  @nest regular {
+    text: var(--text-dimmed);
+    @nest backgrounds {
+      regular: var(--tab-bg);
+      hover: var(--tab-bg-hover);
+      unfocused: var(--tab-bg);
+    }
+    @nest line {
+      regular: white;
+      hover: white;
+      unfocused: white;
+    }
+  }
+
+  @nest new-message {
+    text: var(--text);
+    @nest backgrounds {
+      regular: var(--tab-bg);
+      hover: var(--tab-bg-hover);
+      unfocused: var(--tab-bg);
+    }
+    @nest line {
+      regular: #bbb;
+      hover: #bbb;
+      unfocused: #bbb;
+    }
+  }
+
+  @nest highlighted {
+    text: var(--text-bright);
+    @nest backgrounds {
+      regular: var(--tab-bg);
+      hover: var(--tab-bg-hover);
+      unfocused: var(--tab-bg);
+    }
+    @nest line {
+      regular: var(--highlight-color);
+      hover: var(--highlight-color);
+      unfocused: var(--highlight-color);
+    }
+  }
+
+  @nest selected {
+    text: var(--text-bright);
+    @nest backgrounds {
+      regular: var(--tab-bg-selected);
+      hover: var(--tab-bg-selected);
+      unfocused: var(--tab-bg-selected);
+    }
+    @nest line {
+      regular: var(--accent);
+      hover: var(--accent);
+      unfocused: var(--accent);
+    }
+  }
+}
+
+Messages {
+  disabled: hsla(0, 0%, 90%, 0.6); /* 1 */
+  selection: rgba(0, 0, 0, 0.251);
+  highlight-animation-start: hsla(0, 0%, 8%, 0.431);
+  highlight-animation-end: hsla(0, 0%, 8%, 0);
+  @nest text-colors {
+    regular: var(--text-bright);
+    caret: var(--text-bright);
+    link: var(--link-text-color);
+    system: var(--system-text-color);
+    chat-placeholder: var(--placeholder-text-color);
+  }
+  @nest backgrounds {
+    regular: var(--gray50);
+    alternate: var(--gray100);
+  }
+}
+
+Scrollbars {
+  background: transparent;
+  thumb: var(--scrollbar-thumb);
+  thumbselected: var(--scrollbar-thumb-selected);
+  @nest highlights {
+    highlight: var(--highlight-color-muted);
+    subscription: var(--sub-color);
+  }
+}
+
+Tooltip {
+  text: var(--text-bright);
+  background: black;
+}
+
+Splits {
+  message-seperator: var(--gray900);
+  background: var(--gray50);
+  drop-preview: hsla(205, 100%, 50%, 0.18);
+  drop-preview-border: hsl(205, 100%, 50%);
+  drop-target-rect: hsla(205, 0%, 100%, 0);
+  drop-target-rect-border: hsla(205, 100%, 50%, 0);
+  resize-handle: hsl(205, 100%, 50%);
+  resize-handle-background: hsla(205, 100%, 50%, 0.313);
+
+  @nest header {
+    border: var(--gray50);
+    focused-border: var(--gray300);
+    background: var(--gray50);
+    focused-background: var(--gray200);
+    text: var(--text-bright);
+    focused-text: var(--split-header-selected);
+  }
+
+  @nest input {
+    border: var(--gray50);
+    background: var(--gray200);
+    selection: transparent; /* unused? */
+    focused-line: var(--highlight-color);
+    text: var(--text-bright);
+  }
+}
+
+Colors {
+  accent-color: var(--accent);
+}
+
+Window {
+  text: var(--text);
+  background: var(--window-bg);
+  border-focused: var(--gray100);
+  border-unfocused: var(--gray100);
+}

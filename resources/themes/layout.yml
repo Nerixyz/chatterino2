@@ -1,0 +1,97 @@
+definitions:
+  TabColors:
+    fields:
+      text:
+      backgrounds:
+        fields:
+          - regular
+          - hover
+          - unfocused
+      line:
+        fields:
+          - regular
+          - hover
+          - unfocused
+
+layout:
+  colors:
+    fields:
+      - accentColor
+  tabs:
+    fields:
+      border:
+      dividerLine:
+      regular:
+        ref: TabColors
+      newMessage:
+        ref: TabColors
+      highlighted:
+        ref: TabColors
+      selected:
+        ref: TabColors
+
+  messages:
+    fields:
+      disabled:
+      selection:
+      highlightAnimationStart:
+      highlightAnimationEnd:
+      textColors:
+        fields:
+          - regular
+          - caret
+          - link
+          - system
+          - chatPlaceholder
+      backgrounds:
+        fields:
+          - regular
+          - alternate
+
+  scrollbars:
+    fields:
+      background:
+      thumb:
+      thumbSelected:
+      highlights:
+        fields:
+          - highlight
+          - subscription
+
+  tooltip:
+    fields:
+      - text
+      - background
+
+  window:
+    fields:
+      - text
+      - background
+      - borderUnfocused
+      - borderFocused
+
+  splits:
+    fields:
+      messageSeperator:
+      background:
+      dropPreview:
+      dropPreviewBorder:
+      dropTargetRect:
+      dropTargetRectBorder:
+      resizeHandle:
+      resizeHandleBackground:
+      header:
+        fields:
+          - border
+          - focusedBorder
+          - background
+          - focusedBackground
+          - text
+          - focusedText
+      input:
+        fields:
+          - border
+          - background
+          - selection
+          - focusedLine
+          - text

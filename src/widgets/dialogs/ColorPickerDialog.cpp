@@ -162,8 +162,7 @@ void ColorPickerDialog::themeChangedEvent()
         spinBoxLabel->setStyleSheet(labelStyle);
     }
 
-    this->ui_.picker.htmlEdit->setStyleSheet(
-        this->theme->splits.input.styleSheet);
+    this->ui_.picker.htmlEdit->setStyleSheet(this->theme->inputStyleSheet());
 
     // Styling spin boxes is too much effort
 }

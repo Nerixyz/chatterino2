@@ -210,7 +210,7 @@ void SplitInput::themeChangedEvent()
     this->updateCancelReplyButton();
     this->ui_.textEditLength->setPalette(palette);
 
-    this->ui_.textEdit->setStyleSheet(this->theme->splits.input.styleSheet);
+    this->ui_.textEdit->setStyleSheet(this->theme->inputStyleSheet());
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 12, 0))
     this->ui_.textEdit->setPalette(placeholderPalette);
 #endif

@@ -149,7 +149,7 @@ void QuickSwitcherPopup::themeChangedEvent()
     const QString selCol =
         (this->theme->isLightTheme()
              ? "#68B1FF"  // Copied from Theme::splits.input.styleSheet
-             : this->theme->tabs.selected.backgrounds.regular.color().name());
+             : this->theme->tabs.selected.backgrounds.regular.name());
 
     const QString listStyle =
         QString(
@@ -158,7 +158,7 @@ void QuickSwitcherPopup::themeChangedEvent()
             .arg(bgCol)
             .arg(selCol);
 
-    this->ui_.searchEdit->setStyleSheet(this->theme->splits.input.styleSheet);
+    this->ui_.searchEdit->setStyleSheet(this->theme->inputStyleSheet());
     this->ui_.list->refreshTheme(*this->theme);
 }
 

@@ -1,0 +1,173 @@
+@chatterino {
+  author: "Forsen";
+  icon-set: "dark";
+}
+
+:root {
+  --gray50: #555555;
+  --gray100: #666666; /* 0.6 */
+  --gray200: #595959; /* 0.65 */
+  --gray300: #4d4d4d; /* 0.7 */
+  --gray400: #383838; /* 0.78 */
+  --gray500: #363636; /* 0.79 */
+  --gray600: #262626; /* 0.85 */
+  --gray700: #1a1a1a; /* 0.9 */
+  --gray800: #0d0d0d; /* 0.95 */
+  --gray900: #0a0a0a; /* 0.96 */
+  --gray950: #000000; /* 1.0 */
+
+  --text-bright: #fff;
+  --text: #eee;
+  --text-dimmed: #aaa;
+
+  --highlight-color: #ee6166;
+  --sub-color: #c466ff;
+
+  --link-text-color: #4286f4;
+  --system-text-color: #8c7f7f;
+  --placeholder-text-color: #5d5555;
+
+  --scrollbar-thumb: #b3b3b3;
+  --scrollbar-thumb-selected: #a6a6a6;
+
+  --split-header-selected: hsl(210, 100%, 70%);
+
+  --window-bg: #111;
+
+  --tab-bg: #4d4d4d;
+  --tab-bg-selected: #595959;
+
+  --accent: #00aeef;
+}
+
+Tabs {
+  border: white;
+  divider-line: var(--tab-bg-selected);
+  @nest regular {
+    text: var(--text-dimmed);
+    @nest backgrounds {
+      regular: var(--tab-bg);
+      hover: var(--tab-bg);
+      unfocused: var(--tab-bg);
+    }
+    @nest line {
+      regular: var(--gray400);
+      hover: var(--gray400);
+      unfocused: var(--gray400);
+    }
+  }
+
+  @nest new-message {
+    text: var(--text);
+    @nest backgrounds {
+      regular: var(--tab-bg);
+      hover: var(--tab-bg);
+      unfocused: var(--tab-bg);
+    }
+    @nest line {
+      regular: #888;
+      hover: #888;
+      unfocused: #888;
+    }
+  }
+
+  @nest highlighted {
+    text: var(--text);
+    @nest backgrounds {
+      regular: var(--tab-bg);
+      hover: var(--tab-bg);
+      unfocused: var(--tab-bg);
+    }
+    @nest line {
+      regular: var(--highlight-color);
+      hover: var(--highlight-color);
+      unfocused: var(--highlight-color);
+    }
+  }
+
+  @nest selected {
+    text: var(--text-bright);
+    @nest backgrounds {
+      regular: var(--tab-bg-selected);
+      hover: var(--tab-bg-selected);
+      unfocused: var(--tab-bg-selected);
+    }
+    @nest line {
+      regular: var(--accent);
+      hover: var(--accent);
+      unfocused: var(--accent);
+    }
+  }
+}
+
+Messages {
+  disabled: hsla(0, 0%, 0%, 0.6); /* 1 */
+  selection: hsla(0, 0%, 100%, 0.251);
+  highlight-animation-start: hsla(0, 0%, 90%, 0.431);
+  highlight-animation-end: hsla(0, 0%, 90%, 0);
+  @nest text-colors {
+    regular: var(--text-bright);
+    caret: var(--text-bright);
+    link: var(--link-text-color);
+    system: var(--system-text-color);
+    chat-placeholder: var(--placeholder-text-color);
+  }
+  @nest backgrounds {
+    regular: var(--gray950);
+    alternate: var(--gray900);
+  }
+}
+
+Scrollbars {
+  background: transparent;
+  thumb: var(--scrollbar-thumb);
+  thumbselected: var(--scrollbar-thumb-selected);
+  @nest highlights {
+    highlight: var(--highlight-color);
+    subscription: var(--sub-color);
+  }
+}
+
+Tooltip {
+  text: var(--text-bright);
+  background: black;
+}
+
+Splits {
+  message-seperator: var(--gray600);
+  background: var(--gray950);
+  drop-preview: hsla(205, 100%, 50%, 0.18);
+  drop-preview-border: hsl(205, 100%, 50%);
+  drop-target-rect: hsla(205, 100%, 50%, 0);
+  drop-target-rect-border: hsla(205, 100%, 50%, 0);
+  resize-handle: hsla(205, 100%, 50%, 0.44);
+  resize-handle-background: hsla(205, 100%, 50%, 0.125);
+
+  @nest header {
+    border: var(--gray600);
+    focused-border: var(--gray500);
+    background: var(--gray700);
+    focused-background: var(--gray500);
+    text: var(--text-bright);
+    focused-text: var(--split-header-selected);
+  }
+
+  @nest input {
+    border: var(--gray950);
+    background: var(--gray800);
+    selection: transparent; /* unused? */
+    focused-line: var(--highlight-color);
+    text: var(--highlight-color);
+  }
+}
+
+Colors {
+  accent-color: var(--accent);
+}
+
+Window {
+  text: var(--text);
+  background: var(--window-bg);
+  border-focused: var(--accent);
+  border-unfocused: var(--gray100);
+}
