@@ -73,7 +73,9 @@ void registerNmHost(Paths &paths)
         QJsonDocument document;
 
         auto obj = getBaseDocument();
-        QJsonArray allowed_extensions = {"chatterino_native@chatterino.com"};
+        QJsonArray allowed_extensions = {
+            "chatterino_native@chatterino.com",
+            "chatterino_native_hacklin2@chatterino.com"};
         obj.insert("allowed_extensions", allowed_extensions);
         document.setObject(obj);
 
