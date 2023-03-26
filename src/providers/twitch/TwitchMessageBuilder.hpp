@@ -130,6 +130,19 @@ private:
     bool historicalMessage_ = false;
     std::shared_ptr<MessageThread> thread_;
 
+    enum class BttvModifier : uint8_t {
+        None,
+        Wide,
+        FlipH,
+        FlipV,
+        ZeroSpace,
+    };
+    BttvModifier bttvModifier_ = BttvModifier::None;
+    bool parseBttvModifiers_;
+
+    static BttvModifier tryParseBttvModifier(const QString &word);
+    static QString stringifyBttvModifier(BttvModifier modifier);
+
     /**
      * Starting offset to be used on index-based operations on `originalMessage_`.
      *

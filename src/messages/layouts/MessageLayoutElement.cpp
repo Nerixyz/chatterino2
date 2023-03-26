@@ -20,6 +20,7 @@
 #include <QPixmap>
 
 namespace {
+using namespace chatterino;
 
 const QChar RTL_EMBED(0x202B);
 
@@ -28,6 +29,56 @@ void alignRectBottomCenter(QRectF &rect, const QRectF &reference)
     QPointF newCenter(reference.center().x(),
                       reference.bottom() - (rect.height() / 2.0));
     rect.moveCenter(newCenter);
+}
+
+void applyBttvTransformation(QPainter &painter, QRectF rect,
+                             MessageElementFlags flags)
+{
+    if (flags.has(MessageElementFlag::BttvModifierFlipV))  // vertical
+    {
+        auto scale = QTransform::fromScale(1.0, -1.0);
+        auto tl = rect.topLeft();
+        painter.setTransform(
+            QTransform::fromTranslate(-tl.x(), -tl.y()) * scale *
+            QTransform::fromTranslate(tl.x(), tl.y() + rect.height()));
+    }
+    else  // horizontal
+    {
+        auto scale = QTransform::fromScale(-1.0, 1.0);
+        auto tl = rect.topLeft();
+        painter.setTransform(
+            QTransform::fromTranslate(-tl.x(), -tl.y()) * scale *
+            QTransform::fromTranslate(tl.x() + rect.width(), tl.y()));
+    }
+}
+
+void paintImage(QPainter &painter, QRectF rect, MessageElementFlags flags,
+                const QPixmap &pixmap)
+{
+    bool anyTransform = flags.has(MessageElementFlag::BttvModifierAnyFlipMask);
+    bool wideEmote = flags.has(MessageElementFlag::BttvModifierWide);
+    auto prevHints = painter.renderHints();
+
+    if (anyTransform)
+    {
+        applyBttvTransformation(painter, rect, flags);
+    }
+    if (wideEmote)
+    {
+        painter.setRenderHint(QPainter::SmoothPixmapTransform);
+    }
+
+    // fourtf: make it use qreal values
+    painter.drawPixmap(QRectF(rect), pixmap, QRectF());
+
+    if (anyTransform)
+    {
+        painter.resetTransform();
+    }
+    if (wideEmote)
+    {
+        painter.setRenderHints(prevHints);
+    }
 }
 
 }  // namespace
@@ -130,7 +181,7 @@ void ImageLayoutElement::addCopyTextToString(QString &str, uint32_t from,
         dynamic_cast<EmoteElement *>(&this->getCreator());
     if (emoteElement)
     {
-        str += emoteElement->getEmote()->getCopyString();
+        str += emoteElement->getCopyString();
         str = TwitchEmotes::cleanUpEmoteCode(str);
         if (this->hasTrailingSpace())
         {
@@ -154,8 +205,8 @@ void ImageLayoutElement::paint(QPainter &painter)
     auto pixmap = this->image_->pixmapOrLoad();
     if (pixmap && !this->image_->animated())
     {
-        // fourtf: make it use qreal values
-        painter.drawPixmap(QRectF(this->getRect()), *pixmap, QRectF());
+        paintImage(painter, this->getRect(), this->getCreator().getFlags(),
+                   *pixmap);
     }
 }
 
@@ -172,7 +223,8 @@ void ImageLayoutElement::paintAnimated(QPainter &painter, int yOffset)
         {
             auto rect = this->getRect();
             rect.moveTop(rect.y() + yOffset);
-            painter.drawPixmap(QRectF(rect), *pixmap, QRectF());
+
+            paintImage(painter, rect, this->getCreator().getFlags(), *pixmap);
         }
     }
 }
@@ -265,7 +317,8 @@ void LayeredImageLayoutElement::paint(QPainter &painter)
             QRectF destRect(0, 0, size.width(), size.height());
             alignRectBottomCenter(destRect, fullRect);
 
-            painter.drawPixmap(destRect, *pixmap, QRectF());
+            paintImage(painter, destRect, this->getCreator().getFlags(),
+                       *pixmap);
         }
     }
 }
@@ -297,7 +350,8 @@ void LayeredImageLayoutElement::paintAnimated(QPainter &painter, int yOffset)
                 QRectF destRect(0, 0, size.width(), size.height());
                 alignRectBottomCenter(destRect, fullRect);
 
-                painter.drawPixmap(destRect, *pixmap, QRectF());
+                paintImage(painter, destRect, this->getCreator().getFlags(),
+                           *pixmap);
                 animatedFlag = true;
             }
         }
