@@ -76,6 +76,7 @@ find_package(Qt${MAJOR_QT_VERSION} REQUIRED
     Network
     Svg
     Concurrent
+    WebSockets
     )
 
 if (BUILD_WITH_QT6)

@@ -6,6 +6,7 @@
 #include "providers/irc/Irc2.hpp"
 #include "providers/irc/IrcChannel2.hpp"
 #include "providers/irc/IrcServer.hpp"
+#include "providers/kick/KickRealtime.hpp"
 #include "providers/twitch/TwitchIrcServer.hpp"
 #include "singletons/Settings.hpp"
 #include "singletons/Theme.hpp"
@@ -27,6 +28,7 @@
 
 #define TAB_TWITCH 0
 #define TAB_IRC 1
+constexpr const size_t TAB_KICK = 2;
 
 namespace chatterino {
 
@@ -220,6 +222,25 @@ SelectChannelDialog::SelectChannelDialog(QWidget *parent)
         }
     }
 
+    // kick
+    {
+        LayoutCreator<QWidget> obj(new QWidget());
+        auto vbox = obj.setLayoutType<QVBoxLayout>();
+
+        // channel_btn
+        vbox.emplace<QRadioButton>("ID").assign(&this->ui_.kick.channelOpt);
+        auto channelLbl =
+            vbox.emplace<QLabel>("Join a Kick channel by its id.");
+        channelLbl->setWordWrap(true);
+        vbox.emplace<QLineEdit>().assign(&this->ui_.kick.channelID);
+
+        vbox->addStretch(1);
+
+        // tab
+        auto *tab = notebook->addPage(obj.getElement());
+        tab->setCustomTitle("Kick");
+    }
+
     layout->setStretchFactor(notebook.getElement(), 1);
 
     auto buttons =
@@ -329,6 +350,12 @@ void SelectChannelDialog::setSelectedChannel(IndirectChannel _channel)
             this->ui_.irc.channel->setFocus();
         }
         break;
+        case Channel::Type::Kick: {
+            this->ui_.notebook->selectIndex(TAB_KICK);
+            this->ui_.kick.channelOpt->setFocus();
+            this->ui_.kick.channelID->setText(channel->getName());
+        }
+        break;
         default: {
             this->ui_.notebook->selectIndex(TAB_TWITCH);
             this->ui_.twitch.channel->setFocus();
@@ -389,6 +416,20 @@ IndirectChannel SelectChannelDialog::getSelectedChannel() const
             else
             {
                 return Channel::getEmpty();
+            }
+        }
+        break;
+        case TAB_KICK: {
+            if (this->ui_.kick.channelOpt->isChecked())
+            {
+                bool ok = false;
+                size_t id = QStringView(this->ui_.kick.channelID->text())
+                                .trimmed()
+                                .toULongLong(&ok);
+                if (ok)
+                {
+                    return app->kick->getOrAddChannel(id);
+                }
             }
         }
             //break;

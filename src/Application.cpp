@@ -22,6 +22,7 @@
 #include "providers/chatterino/ChatterinoBadges.hpp"
 #include "providers/ffz/FfzBadges.hpp"
 #include "providers/irc/Irc2.hpp"
+#include "providers/kick/KickRealtime.hpp"
 #include "providers/seventv/eventapi/Dispatch.hpp"
 #include "providers/seventv/eventapi/Subscription.hpp"
 #include "providers/seventv/SeventvBadges.hpp"
@@ -92,6 +93,7 @@ Application::Application(Settings &_settings, Paths &_paths)
     , seventvPersonalEmotes(&this->emplace<SeventvPersonalEmotes>())
     , userData(&this->emplace<UserDataController>())
     , sound(&this->emplace<SoundController>())
+    , kick(&this->emplace<KickRealtime>())
 #ifdef CHATTERINO_HAVE_PLUGINS
     , plugins(&this->emplace<PluginController>())
 #endif

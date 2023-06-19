@@ -292,6 +292,29 @@ set(SOURCE_FILES
         providers/irc/IrcServer.cpp
         providers/irc/IrcServer.hpp
 
+        providers/kick/api/Client.cpp
+        providers/kick/api/Client.hpp
+        providers/kick/api/Types.cpp
+        providers/kick/api/Types.hpp
+        providers/kick/pusher/PusherMessage.cpp
+        providers/kick/pusher/PusherMessage.hpp
+        providers/kick/pusher/PusherSocket.cpp
+        providers/kick/pusher/PusherSocket.hpp
+        providers/kick/util/Deserialize.cpp
+        providers/kick/util/Deserialize.hpp
+        providers/kick/util/Serialize.cpp
+        providers/kick/util/Serialize.hpp
+        providers/kick/KickAccount.cpp
+        providers/kick/KickAccount.hpp
+        providers/kick/KickChannel.cpp
+        providers/kick/KickChannel.hpp
+        providers/kick/KickMessage.cpp
+        providers/kick/KickMessage.hpp
+        providers/kick/KickRealtime.cpp
+        providers/kick/KickRealtime.hpp
+        providers/kick/KickMessageBuilder.cpp
+        providers/kick/KickMessageBuilder.hpp
+
         providers/liveupdates/BasicPubSubClient.hpp
         providers/liveupdates/BasicPubSubManager.hpp
         providers/liveupdates/BasicPubSubWebsocket.hpp
@@ -673,6 +696,7 @@ target_link_libraries(${LIBRARY_PROJECT}
         Qt${MAJOR_QT_VERSION}::Network
         Qt${MAJOR_QT_VERSION}::Svg
         Qt${MAJOR_QT_VERSION}::Concurrent
+        Qt${MAJOR_QT_VERSION}::WebSockets
 
         LibCommuni::LibCommuni
         Pajlada::Serialize

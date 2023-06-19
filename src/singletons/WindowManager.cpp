@@ -8,6 +8,7 @@
 #include "providers/irc/Irc2.hpp"
 #include "providers/irc/IrcChannel2.hpp"
 #include "providers/irc/IrcServer.hpp"
+#include "providers/kick/KickRealtime.hpp"
 #include "providers/twitch/TwitchIrcServer.hpp"
 #include "singletons/Fonts.hpp"
 #include "singletons/Paths.hpp"
@@ -635,6 +636,11 @@ void WindowManager::encodeChannel(IndirectChannel channel, QJsonObject &obj)
             obj.insert("type", "misc");
             obj.insert("name", channel.get()->getName());
         }
+        break;
+        case Channel::Type::Kick: {
+            obj["type"] = QStringLiteral("kick");
+            obj["name"] = channel.get()->getName();
+        }
     }
 }
 
@@ -683,6 +689,15 @@ IndirectChannel WindowManager::decodeChannel(const SplitDescriptor &descriptor)
     else if (descriptor.type_ == "misc")
     {
         return app->twitch->getChannelOrEmpty(descriptor.channelName_);
+    }
+    else if (descriptor.type_ == "kick")
+    {
+        bool ok = false;
+        size_t id = descriptor.channelName_.toULongLong(&ok);
+        if (ok)
+        {
+            return app->kick->getOrAddChannel(id);
+        }
     }
 
     return Channel::getEmpty();

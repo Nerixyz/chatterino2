@@ -3,6 +3,7 @@
 #include "common/NetworkCommon.hpp"
 
 #include <QHttpMultiPart>
+#include <qnetworkaccessmanager.h>
 
 #include <memory>
 
@@ -74,6 +75,8 @@ public:
     NetworkRequest json(const QJsonArray &root) &&;
     NetworkRequest json(const QJsonDocument &document) &&;
     NetworkRequest json(const QByteArray &payload) &&;
+
+    NetworkRequest accessManager(QNetworkAccessManager *manager) &&;
 
     void execute();
 

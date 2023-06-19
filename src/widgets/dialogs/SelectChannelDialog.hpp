@@ -54,6 +54,10 @@ private:
             QLineEdit *channel;
             EditableModelView *servers;
         } irc;
+        struct {
+            QRadioButton *channelOpt;
+            QLineEdit *channelID;
+        } kick;
     } ui_;
 
     EventFilter tabFilter_;

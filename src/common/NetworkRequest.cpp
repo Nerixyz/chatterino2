@@ -164,6 +164,12 @@ NetworkRequest NetworkRequest::cache() &&
     return std::move(*this);
 }
 
+NetworkRequest NetworkRequest::accessManager(QNetworkAccessManager *manager) &&
+{
+    this->data->manager_ = manager;
+    return std::move(*this);
+}
+
 void NetworkRequest::execute()
 {
     this->executed_ = true;

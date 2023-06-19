@@ -11,8 +11,10 @@
 
 #include <QCryptographicHash>
 #include <QFile>
+#include <qnetworkaccessmanager.h>
 #include <QNetworkReply>
 #include <QtConcurrent>
+
 
 namespace chatterino {
 
@@ -89,49 +91,48 @@ void loadUncached(std::shared_ptr<NetworkData> &&data)
             data->timer_->start(data->timeoutMS_);
         }
 
-        auto *reply = [&]() -> QNetworkReply * {
+        auto *reply =
+            [&](QNetworkAccessManager *accessManager) -> QNetworkReply * {
             switch (data->requestType_)
             {
                 case NetworkRequestType::Get:
-                    return NetworkManager::accessManager.get(data->request_);
+                    return accessManager->get(data->request_);
 
                 case NetworkRequestType::Put:
-                    return NetworkManager::accessManager.put(data->request_,
-                                                             data->payload_);
+                    return accessManager->put(data->request_, data->payload_);
 
                 case NetworkRequestType::Delete:
-                    return NetworkManager::accessManager.deleteResource(
-                        data->request_);
+                    return accessManager->deleteResource(data->request_);
 
                 case NetworkRequestType::Post:
                     if (data->multiPartPayload_)
                     {
                         assert(data->payload_.isNull());
 
-                        return NetworkManager::accessManager.post(
-                            data->request_, data->multiPartPayload_);
+                        return accessManager->post(data->request_,
+                                                   data->multiPartPayload_);
                     }
                     else
                     {
-                        return NetworkManager::accessManager.post(
-                            data->request_, data->payload_);
+                        return accessManager->post(data->request_,
+                                                   data->payload_);
                     }
                 case NetworkRequestType::Patch:
                     if (data->multiPartPayload_)
                     {
                         assert(data->payload_.isNull());
 
-                        return NetworkManager::accessManager.sendCustomRequest(
+                        return accessManager->sendCustomRequest(
                             data->request_, "PATCH", data->multiPartPayload_);
                     }
                     else
                     {
-                        return NetworkManager::accessManager.sendCustomRequest(
+                        return accessManager->sendCustomRequest(
                             data->request_, "PATCH", data->payload_);
                     }
             }
             return nullptr;
-        }();
+        }(data->manager_ ? data->manager_ : &NetworkManager::accessManager);
 
         if (reply == nullptr)
         {

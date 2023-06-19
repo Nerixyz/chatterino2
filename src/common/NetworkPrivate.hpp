@@ -41,6 +41,7 @@ struct NetworkData {
     QPointer<QObject> caller_;
     bool cache_{};
     bool executeConcurrently_{};
+    QNetworkAccessManager *manager_ = nullptr;
 
     NetworkReplyCreatedCallback onReplyCreated_;
     NetworkErrorCallback onError_;

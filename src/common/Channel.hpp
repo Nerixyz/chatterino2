@@ -40,7 +40,8 @@ public:
         TwitchLive,
         TwitchEnd,
         Irc,
-        Misc
+        Misc,
+        Kick,
     };
 
     explicit Channel(const QString &name, Type type);

@@ -42,6 +42,7 @@ class SeventvPaints;
 class FfzBadges;
 class SeventvBadges;
 class SeventvPersonalEmotes;
+class KickRealtime;
 
 class IApplication
 {
@@ -105,6 +106,7 @@ public:
     SeventvPersonalEmotes *const seventvPersonalEmotes{};
     UserDataController *const userData{};
     SoundController *const sound{};
+    KickRealtime *kick{};
 
 #ifdef CHATTERINO_HAVE_PLUGINS
     PluginController *const plugins{};
