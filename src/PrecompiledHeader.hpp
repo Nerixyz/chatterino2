@@ -1,5 +1,4 @@
 #ifdef __cplusplus
-#    include <boost/asio.hpp>
 #    include <boost/circular_buffer.hpp>
 #    include <boost/current_function.hpp>
 #    include <boost/foreach.hpp>
