@@ -103,7 +103,6 @@
 #    include <rapidjson/document.h>
 #    include <rapidjson/error/en.h>
 #    include <rapidjson/error/error.h>
-#    include <websocketpp/transport/asio/endpoint.hpp>
 
 #    include <algorithm>
 #    include <cassert>
