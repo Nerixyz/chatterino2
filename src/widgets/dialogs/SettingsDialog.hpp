@@ -5,13 +5,13 @@
 #include <pajlada/settings/setting.hpp>
 #include <QFrame>
 #include <QPushButton>
-#include <QStackedLayout>
 #include <QVBoxLayout>
 #include <QWidget>
 
 #include <functional>
 
 class QLineEdit;
+class QStackedLayout;
 
 namespace chatterino {
 

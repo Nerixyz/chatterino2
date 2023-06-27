@@ -1,20 +1,13 @@
 #pragma once
 
-#include "widgets/BaseWidget.hpp"
-
-#include <QAction>
-#include <QApplication>
-#include <QButtonGroup>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QFormLayout>
 #include <QHBoxLayout>
-#include <QHeaderView>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QTabWidget>
-#include <QtCore/QVariant>
 #include <QVBoxLayout>
 
 namespace chatterino {

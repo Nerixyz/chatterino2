@@ -25,6 +25,7 @@
 #include <QDialogButtonBox>
 #include <QFile>
 #include <QLineEdit>
+#include <QStackedLayout>
 
 namespace chatterino {
 

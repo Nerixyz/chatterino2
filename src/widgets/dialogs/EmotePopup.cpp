@@ -23,6 +23,7 @@
 
 #include <QAbstractButton>
 #include <QHBoxLayout>
+#include <QLineEdit>
 #include <QRegularExpression>
 #include <QTabWidget>
 

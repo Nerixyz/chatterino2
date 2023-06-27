@@ -2,8 +2,12 @@
 
 #include "controllers/filters/lang/Tokenizer.hpp"
 
+#include <QComboBox>
+#include <QHBoxLayout>
 #include <QLabel>
+#include <QLineEdit>
 #include <QPushButton>
+#include <QVBoxLayout>
 
 namespace chatterino {
 

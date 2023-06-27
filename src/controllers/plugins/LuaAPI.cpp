@@ -12,9 +12,11 @@
 #    include <lauxlib.h>
 #    include <lua.h>
 #    include <lualib.h>
+#    include <QFile>
 #    include <QFileInfo>
 #    include <QLoggingCategory>
 #    include <QTextCodec>
+#    include <QUrl>
 
 namespace {
 using namespace chatterino;

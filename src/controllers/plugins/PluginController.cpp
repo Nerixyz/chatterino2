@@ -15,6 +15,7 @@
 #    include <lua.h>
 #    include <lualib.h>
 #    include <QJsonDocument>
+#    include <QJsonObject>
 
 #    include <memory>
 #    include <utility>

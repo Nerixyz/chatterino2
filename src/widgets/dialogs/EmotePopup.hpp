@@ -3,7 +3,8 @@
 #include "widgets/BasePopup.hpp"
 
 #include <pajlada/signals/signal.hpp>
-#include <QLineEdit>
+
+class QLineEdit;
 
 namespace chatterino {
 

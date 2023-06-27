@@ -15,6 +15,8 @@
 #include "widgets/splits/SplitContainer.hpp"
 #include "widgets/Window.hpp"
 
+#include <QLineEdit>
+
 namespace chatterino {
 
 namespace {

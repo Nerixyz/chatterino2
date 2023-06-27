@@ -49,6 +49,7 @@
 #include <QDrag>
 #include <QJsonArray>
 #include <QLabel>
+#include <QLineEdit>
 #include <QListWidget>
 #include <QMimeData>
 #include <QMovie>

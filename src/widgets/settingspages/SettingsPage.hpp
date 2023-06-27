@@ -5,10 +5,11 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QLabel>
-#include <QLineEdit>
 #include <QPainter>
 #include <QPushButton>
-#include <QSpinBox>
+
+class QSpinBox;
+class QLineEdit;
 
 #define SETTINGS_PAGE_WIDGET_BOILERPLATE(type, parent) \
     class type : public parent                         \

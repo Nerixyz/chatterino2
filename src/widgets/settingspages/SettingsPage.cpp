@@ -6,6 +6,8 @@
 #include "util/RapidJsonSerializeQString.hpp"
 
 #include <QDebug>
+#include <QLineEdit>
+#include <QSpinBox>
 
 namespace chatterino {
 

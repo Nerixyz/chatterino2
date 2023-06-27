@@ -6,12 +6,6 @@
 #    include "controllers/commands/CommandContext.hpp"
 #    include "controllers/plugins/Plugin.hpp"
 
-#    include <QDir>
-#    include <QFileInfo>
-#    include <QJsonArray>
-#    include <QJsonObject>
-#    include <QString>
-
 #    include <algorithm>
 #    include <map>
 #    include <memory>

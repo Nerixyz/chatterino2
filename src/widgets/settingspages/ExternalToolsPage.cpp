@@ -8,6 +8,7 @@
 #include <QFormLayout>
 #include <QGroupBox>
 #include <QLabel>
+#include <QLineEdit>
 
 #define STREAMLINK_QUALITY \
     "Choose", "Source", "High", "Medium", "Low", "Audio only"

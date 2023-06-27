@@ -7,7 +7,6 @@
 #include "widgets/splits/SplitContainer.hpp"
 
 #include <QEvent>
-#include <QGraphicsBlurEffect>
 #include <QGraphicsEffect>
 #include <QGraphicsOpacityEffect>
 #include <QGridLayout>

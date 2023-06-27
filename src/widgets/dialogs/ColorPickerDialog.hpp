@@ -4,10 +4,11 @@
 
 #include <pajlada/signals/signal.hpp>
 #include <QLabel>
-#include <QLineEdit>
 #include <QRegularExpressionValidator>
 
 #include <array>
+
+class QLineEdit;
 
 namespace chatterino {
 

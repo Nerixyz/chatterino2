@@ -6,7 +6,6 @@
 #include <boost/noncopyable.hpp>
 #include <pajlada/signals/signal.hpp>
 #include <QFont>
-#include <QFontDatabase>
 #include <QFontMetrics>
 
 #include <array>

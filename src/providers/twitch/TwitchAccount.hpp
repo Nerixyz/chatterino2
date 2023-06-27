@@ -8,7 +8,6 @@
 #include "util/QStringHash.hpp"
 
 #include <QColor>
-#include <QElapsedTimer>
 #include <QString>
 #include <rapidjson/document.h>
 

@@ -4,6 +4,8 @@
 #include "common/CompletionModel.hpp"
 #include "singletons/Settings.hpp"
 
+#include <QCompleter>
+#include <QKeyEvent>
 #include <QMimeData>
 #include <QMimeDatabase>
 

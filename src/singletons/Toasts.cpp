@@ -21,7 +21,6 @@
 
 #include <QDesktopServices>
 #include <QFileInfo>
-#include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QUrl>
 

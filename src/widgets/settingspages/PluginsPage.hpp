@@ -4,10 +4,10 @@
 #    include "util/LayoutCreator.hpp"
 #    include "widgets/settingspages/SettingsPage.hpp"
 
-#    include <QDebug>
-#    include <QFormLayout>
-#    include <QGroupBox>
 #    include <QWidget>
+
+class QFrame;
+class QGroupBox;
 
 namespace chatterino {
 class Plugin;

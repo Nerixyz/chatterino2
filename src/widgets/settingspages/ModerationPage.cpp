@@ -1,10 +1,8 @@
 #include "ModerationPage.hpp"
 
-#include "Application.hpp"
 #include "controllers/logging/ChannelLoggingModel.hpp"
 #include "controllers/moderationactions/ModerationAction.hpp"
 #include "controllers/moderationactions/ModerationActionModel.hpp"
-#include "singletons/Logging.hpp"
 #include "singletons/Paths.hpp"
 #include "singletons/Settings.hpp"
 #include "util/Helpers.hpp"
@@ -15,6 +13,7 @@
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QLabel>
+#include <QLineEdit>
 #include <QPushButton>
 #include <QTableView>
 #include <QtConcurrent/QtConcurrent>

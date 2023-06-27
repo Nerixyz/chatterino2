@@ -17,7 +17,6 @@
 #include <boost/functional/hash.hpp>
 #include <QBuffer>
 #include <QImageReader>
-#include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QTimer>

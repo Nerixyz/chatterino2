@@ -3,9 +3,9 @@
 #include "widgets/BasePopup.hpp"
 #include "widgets/dialogs/switcher/QuickSwitcherModel.hpp"
 
-#include <QLineEdit>
-
 #include <functional>
+
+class QLineEdit;
 
 namespace chatterino {
 
