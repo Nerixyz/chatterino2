@@ -1340,7 +1340,7 @@ void Split::showViewerList()
         // it's a category label so don't show a usercard
         if (!itemText.contains("(") && !itemText.isEmpty())
         {
-            this->view_->showUserInfoPopup(itemText);
+            this->view_->showUserInfoPopup(UserInfoSourceData::Name, itemText);
         }
     };
 

@@ -2623,7 +2623,8 @@ void ChannelView::hideEvent(QHideEvent *)
     this->messagesOnScreen_.clear();
 }
 
-void ChannelView::showUserInfoPopup(const QString &userName,
+void ChannelView::showUserInfoPopup(UserInfoSourceData role,
+                                    const QString &data,
                                     QString alternativePopoutChannel)
 {
     auto *userCardParent =
@@ -2635,7 +2636,7 @@ void ChannelView::showUserInfoPopup(const QString &userName,
         getApp()->twitch->getChannelOrEmpty(alternativePopoutChannel);
     auto openingChannel = this->hasSourceChannel() ? this->sourceChannel_
                                                    : this->underlyingChannel_;
-    userPopup->setData(userName, contextChannel, openingChannel);
+    userPopup->setData(role, data, contextChannel, openingChannel);
 
     QPoint offset(int(150 * this->scale()), int(70 * this->scale()));
     userPopup->move(QCursor::pos() - offset);
@@ -2680,7 +2681,8 @@ void ChannelView::handleLinkClick(QMouseEvent *event, const Link &link,
         case Link::UserWhisper:
         case Link::UserInfo: {
             auto user = link.value;
-            this->showUserInfoPopup(user, layout->getMessage()->channelName);
+            this->showUserInfoPopup(UserInfoSourceData::Name, user,
+                                    layout->getMessage()->channelName);
         }
         break;
 

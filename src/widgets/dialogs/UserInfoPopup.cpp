@@ -1,4 +1,4 @@
-#include "UserInfoPopup.hpp"
+#include "widgets/dialogs/UserInfoPopup.hpp"
 
 #include "Application.hpp"
 #include "common/Channel.hpp"
@@ -683,16 +683,36 @@ void UserInfoPopup::installEvents()
         });
 }
 
-void UserInfoPopup::setData(const QString &name, const ChannelPtr &channel)
+void UserInfoPopup::setName(const QString &name)
 {
-    this->setData(name, channel, channel);
+    this->userName_ = name;
+    this->ui_.nameLabel->setText(name);
+    this->ui_.nameLabel->setProperty("copy-text", name);
 }
 
-void UserInfoPopup::setData(const QString &name,
+void UserInfoPopup::setId(const QString &id)
+{
+    this->userId_ = id;
+    this->ui_.userIDLabel->setText(TEXT_USER_ID + id);
+    this->ui_.userIDLabel->setProperty("copy-text", id);
+}
+
+void UserInfoPopup::setUsercardTitle(const QString &username)
+{
+    this->setWindowTitle(
+        TEXT_TITLE.arg(username, this->underlyingChannel_->getName()));
+}
+
+void UserInfoPopup::setData(UserInfoSourceData role, const QString &data,
+                            const ChannelPtr &channel)
+{
+    this->setData(role, data, channel, channel);
+}
+
+void UserInfoPopup::setData(UserInfoSourceData role, const QString &data,
                             const ChannelPtr &contextChannel,
                             const ChannelPtr &openingChannel)
 {
-    this->userName_ = name;
     this->channel_ = openingChannel;
 
     if (!contextChannel->isEmpty())
@@ -704,17 +724,28 @@ void UserInfoPopup::setData(const QString &name,
         this->underlyingChannel_ = openingChannel;
     }
 
-    this->setWindowTitle(
-        TEXT_TITLE.arg(name, this->underlyingChannel_->getName()));
+    this->source_ = role;
+    switch (role)
+    {
+        case UserInfoSourceData::Name:
+            this->setName(data);
+            break;
+        case UserInfoSourceData::Id:
+            this->setId(data);
+            break;
+    }
 
-    this->ui_.nameLabel->setText(name);
-    this->ui_.nameLabel->setProperty("copy-text", name);
+    this->setUsercardTitle(data);
 
     this->updateUserData();
 
     this->userStateChanged_.invoke();
 
-    this->updateLatestMessages();
+    if (this->source_ == UserInfoSourceData::Name)
+    {
+        this->updateLatestMessages();
+    }
+
     QTimer::singleShot(1, this, [this] {
         this->setStayInScreenRect(true);
     });
@@ -786,7 +817,7 @@ void UserInfoPopup::updateUserData()
             return;
         }
 
-        this->userId_ = user.id;
+        this->userName_ = user.login;
         this->avatarUrl_ = user.profileImageUrl;
 
         // copyable button for login name of users with a localized username
@@ -804,12 +835,10 @@ void UserInfoPopup::updateUserData()
             this->ui_.nameLabel->setProperty("copy-text", user.displayName);
         }
 
-        this->setWindowTitle(TEXT_TITLE.arg(
-            user.displayName, this->underlyingChannel_->getName()));
+        this->setUsercardTitle(user.displayName);
         this->ui_.createdDateLabel->setText(
             TEXT_CREATED.arg(user.createdAt.section("T", 0, 0)));
-        this->ui_.userIDLabel->setText(TEXT_USER_ID + user.id);
-        this->ui_.userIDLabel->setProperty("copy-text", user.id);
+        this->setId(user.id);
 
         if (isInStreamerMode() &&
             getSettings()->streamerModeHideUsercardAvatars)
@@ -819,6 +848,11 @@ void UserInfoPopup::updateUserData()
         else
         {
             this->loadAvatar(user.profileImageUrl);
+        }
+
+        if (this->source_ == UserInfoSourceData::Id)
+        {
+            this->updateLatestMessages();
         }
 
         getHelix()->getUserFollowers(
@@ -908,8 +942,17 @@ void UserInfoPopup::updateUserData()
             [] {});
     };
 
-    getHelix()->getUserByName(this->userName_, onUserFetched,
-                              onUserFetchFailed);
+    switch (this->source_)
+    {
+        case UserInfoSourceData::Id:
+            getHelix()->getUserById(this->userId_, onUserFetched,
+                                    onUserFetchFailed);
+            break;
+        case UserInfoSourceData::Name:
+            getHelix()->getUserByName(this->userName_, onUserFetched,
+                                      onUserFetchFailed);
+            break;
+    }
 
     this->ui_.block->setEnabled(false);
     this->ui_.ignoreHighlights->setEnabled(false);

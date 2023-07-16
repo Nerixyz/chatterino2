@@ -17,6 +17,11 @@ class Label;
 class ChannelView;
 class Split;
 
+enum class UserInfoSourceData : uint8_t {
+    Name,
+    Id,
+};
+
 class UserInfoPopup final : public DraggablePopup
 {
     Q_OBJECT
@@ -25,8 +30,10 @@ public:
     UserInfoPopup(bool closeAutomatically, QWidget *parent,
                   Split *split = nullptr);
 
-    void setData(const QString &name, const ChannelPtr &channel);
-    void setData(const QString &name, const ChannelPtr &contextChannel,
+    void setData(UserInfoSourceData role, const QString &daty,
+                 const ChannelPtr &channel);
+    void setData(UserInfoSourceData role, const QString &data,
+                 const ChannelPtr &contextChannel,
                  const ChannelPtr &openingChannel);
 
 protected:
@@ -38,11 +45,17 @@ private:
     void updateUserData();
     void updateLatestMessages();
 
+    void setName(const QString &name);
+    void setId(const QString &id);
+    void setUsercardTitle(const QString &username);
+
     void loadAvatar(const QUrl &url);
     bool isMod_;
     bool isBroadcaster_;
 
     Split *split_;
+
+    UserInfoSourceData source_ = UserInfoSourceData::Name;
 
     QString userName_;
     QString userId_;

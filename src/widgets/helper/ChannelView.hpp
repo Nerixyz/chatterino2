@@ -61,6 +61,8 @@ enum class FromTwitchLinkOpenChannelIn {
 
 using SteadyClock = std::chrono::steady_clock;
 
+enum class UserInfoSourceData : uint8_t;
+
 class ChannelView final : public BaseWidget
 {
     Q_OBJECT
@@ -137,10 +139,11 @@ public:
     /**
      * @brief Creates and shows a UserInfoPopup dialog
      *
-     * @param userName The login name of the user
+     * @param role The role/type of `data`
+     * @param data The initial data for the popup
      * @param alternativePopoutChannel Optional parameter containing the channel name to use for context
      **/
-    void showUserInfoPopup(const QString &userName,
+    void showUserInfoPopup(UserInfoSourceData role, const QString &data,
                            QString alternativePopoutChannel = QString());
 
     /**

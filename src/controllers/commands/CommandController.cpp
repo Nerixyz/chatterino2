@@ -849,14 +849,8 @@ void CommandController::initialize(Settings &, Paths &paths)
         return "";
     });
 
-    this->registerCommand("/usercard", [](const auto &words, auto channel) {
-        if (words.size() < 2)
-        {
-            channel->addMessage(
-                makeSystemMessage("Usage: /usercard <user> [channel]"));
-            return "";
-        }
-
+    auto runUsercardCommand = [](auto role, const auto &words,
+                                 auto channel) -> QString {
         QString userName = words[1];
         stripUserName(userName);
 
@@ -873,7 +867,7 @@ void CommandController::initialize(Settings &, Paths &paths)
                 channel->addMessage(makeSystemMessage(
                     "A usercard can only be displayed for a channel that is "
                     "currently opened in Chatterino."));
-                return "";
+                return {};
             }
 
             channel = channelTemp;
@@ -922,11 +916,37 @@ void CommandController::initialize(Settings &, Paths &paths)
             getSettings()->autoCloseUserPopup,
             static_cast<QWidget *>(&(getApp()->windows->getMainWindow())),
             currentSplit);
-        userPopup->setData(userName, channel);
+        userPopup->setData(role, userName, channel);
         userPopup->move(QCursor::pos());
         userPopup->show();
-        return "";
-    });
+        return {};
+    };
+
+    this->registerCommand(
+        "/usercard",
+        [runUsercardCommand](const auto &words, auto channel) -> QString {
+            if (words.size() < 2)
+            {
+                channel->addMessage(
+                    makeSystemMessage("Usage: /usercard <user> [channel]"));
+                return {};
+            }
+
+            return runUsercardCommand(UserInfoSourceData::Name, words, channel);
+        });
+
+    this->registerCommand(
+        "/usercardid",
+        [runUsercardCommand](const auto &words, auto channel) -> QString {
+            if (words.size() < 2)
+            {
+                channel->addMessage(
+                    makeSystemMessage("Usage: /usercardid <id> [channel]"));
+                return {};
+            }
+
+            return runUsercardCommand(UserInfoSourceData::Id, words, channel);
+        });
 
     this->registerCommand("/requests", [](const QStringList &words,
                                           ChannelPtr channel) {
