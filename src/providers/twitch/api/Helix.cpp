@@ -122,6 +122,22 @@ void Helix::getUserById(QString userId,
         failureCallback);
 }
 
+void Helix::getCurrentUser(ResultCallback<HelixUser> successCallback,
+                           HelixFailureCallback failureCallback)
+{
+    this->fetchUsers(
+        {}, {},
+        [successCallback, failureCallback](const auto &users) {
+            if (users.empty())
+            {
+                failureCallback();
+                return;
+            }
+            successCallback(users[0]);
+        },
+        failureCallback);
+}
+
 void Helix::fetchUsersFollows(
     QString fromId, QString toId,
     ResultCallback<HelixUsersFollowsResponse> successCallback,

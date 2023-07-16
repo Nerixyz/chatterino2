@@ -61,6 +61,30 @@ public:
     } ui_;
 };
 
+class AutomaticLoginWidget : public QWidget
+{
+public:
+    AutomaticLoginWidget();
+
+    const QString &state() const;
+    void setStatus(QString status);
+
+    void tryLogin(QString accessToken);
+
+private:
+    struct {
+        QVBoxLayout layout;
+        QLabel status;
+
+        struct {
+            QHBoxLayout layout;
+            QPushButton openInBrowser;
+            QPushButton copyURL;
+        } buttons;
+    } ui_;
+    QString const state_;
+};
+
 class LoginDialog : public QDialog
 {
 public:
@@ -77,6 +101,8 @@ private:
         BasicLoginWidget basic;
 
         AdvancedLoginWidget advanced;
+
+        AutomaticLoginWidget automatic;
     } ui_;
 };
 

@@ -25,6 +25,7 @@ Q_LOGGING_CATEGORY(chatterinoIvr, "chatterino.ivr", logThreshold);
 Q_LOGGING_CATEGORY(chatterinoLiveupdates, "chatterino.liveupdates",
                    logThreshold);
 Q_LOGGING_CATEGORY(chatterinoLua, "chatterino.lua", logThreshold);
+Q_LOGGING_CATEGORY(chatterinoLunar, "chatterino.lunar", logThreshold);
 Q_LOGGING_CATEGORY(chatterinoMain, "chatterino.main", logThreshold);
 Q_LOGGING_CATEGORY(chatterinoMessage, "chatterino.message", logThreshold);
 Q_LOGGING_CATEGORY(chatterinoNativeMessage, "chatterino.nativemessage",

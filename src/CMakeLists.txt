@@ -283,6 +283,11 @@ set(SOURCE_FILES
         providers/liveupdates/BasicPubSubManager.hpp
         providers/liveupdates/BasicPubSubWebsocket.hpp
 
+        providers/lunar/Response.hpp
+        providers/lunar/Router.hpp
+        providers/lunar/Server.cpp
+        providers/lunar/Server.hpp
+
         providers/seventv/SeventvBadges.cpp
         providers/seventv/SeventvBadges.hpp
         providers/seventv/SeventvEmotes.cpp

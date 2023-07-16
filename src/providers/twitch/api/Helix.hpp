@@ -737,6 +737,8 @@ public:
     virtual void getUserById(QString userId,
                              ResultCallback<HelixUser> successCallback,
                              HelixFailureCallback failureCallback) = 0;
+    virtual void getCurrentUser(ResultCallback<HelixUser> successCallback,
+                                HelixFailureCallback failureCallback) = 0;
 
     // https://dev.twitch.tv/docs/api/reference#get-users-follows
     virtual void fetchUsersFollows(
@@ -1060,6 +1062,8 @@ public:
                        HelixFailureCallback failureCallback) final;
     void getUserById(QString userId, ResultCallback<HelixUser> successCallback,
                      HelixFailureCallback failureCallback) final;
+    void getCurrentUser(ResultCallback<HelixUser> successCallback,
+                        HelixFailureCallback failureCallback) final;
 
     // https://dev.twitch.tv/docs/api/reference#get-users-follows
     void fetchUsersFollows(

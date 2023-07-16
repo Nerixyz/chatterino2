@@ -29,6 +29,10 @@ public:
                 (QString userId, ResultCallback<HelixUser> successCallback,
                  HelixFailureCallback failureCallback),
                 (override));
+    MOCK_METHOD(void, getCurrentUser,
+                (ResultCallback<HelixUser> successCallback,
+                 HelixFailureCallback failureCallback),
+                (override));
 
     MOCK_METHOD(void, fetchUsersFollows,
                 (QString fromId, QString toId,
