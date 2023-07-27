@@ -87,6 +87,10 @@ if (_compiler_launcher)
     endif()
 endif()
 
+if (MSVC)
+    set(CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION 10.0.19041.0)
+endif()
+
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/GIT.cmake)
 
 find_package(Qt${MAJOR_QT_VERSION} REQUIRED
