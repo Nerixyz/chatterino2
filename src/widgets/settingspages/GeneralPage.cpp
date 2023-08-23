@@ -569,6 +569,11 @@ void GeneralPage::initLayout(GeneralPageView &layout)
                        "When enabled, channel emotes will get updated "
                        "automatically (no reload required) and cosmetics "
                        "(badges/paints/personal emotes) will get updated.");
+    layout.addCheckbox("Send activity to 7TV", s.sendSevenTVActivity, false,
+                       "When enabled, Chatterino will signal an activity to "
+                       "7TV when you send a chat mesage. This is used for "
+                       "badges, paints, and personal emotes. When disabled, no "
+                       "activity is sent and others won't see your cosmetics.");
 
     layout.addTitle("Streamer Mode");
     layout.addDescription(
@@ -600,8 +605,9 @@ void GeneralPage::initLayout(GeneralPageView &layout)
     layout.addCheckbox(
         "Hide viewer count and stream length while hovering over split header",
         s.streamerModeHideViewerCountAndDuration);
-    layout.addCheckbox("Hide moderation actions", s.streamerModeHideModActions,
-                       false, "Hide bans & timeouts from appearing in chat.");
+    layout.addCheckbox(
+        "Hide moderation actions", s.streamerModeHideModActions, false,
+        "Hide bans, timeouts, and automod messages from appearing in chat.");
     layout.addCheckbox("Mute mention sounds", s.streamerModeMuteMentions, false,
                        "Mute your ping sound from playing.");
     layout.addCheckbox(
@@ -889,6 +895,10 @@ void GeneralPage::initLayout(GeneralPageView &layout)
 
     layout.addCheckbox("Show 7TV Animated Profile Picture",
                        s.displaySevenTVAnimatedProfile);
+    layout.addCheckbox(
+        "Load AVIF images", s.allowAvifImages, false,
+        "When enabled and an AVIF decoder is found, AVIF images will be "
+        "preferred over WEBP on 7TV. This saves bandwidth.");
     layout.addCheckbox(
         "Show moderation messages", s.hideModerationActions, true,
         "Show messages for timeouts, bans, and other moderator actions.");

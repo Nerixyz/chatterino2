@@ -19,8 +19,9 @@
 #include "providers/bttv/BttvEmotes.hpp"
 #include "providers/bttv/BttvLiveUpdates.hpp"
 #include "providers/bttv/liveupdates/BttvLiveUpdateMessages.hpp"
-#include "providers/RecentMessagesApi.hpp"
+#include "providers/recentmessages/Api.hpp"
 #include "providers/seventv/eventapi/Dispatch.hpp"
+#include "providers/seventv/SeventvAPI.hpp"
 #include "providers/seventv/SeventvEmotes.hpp"
 #include "providers/seventv/SeventvEventAPI.hpp"
 #include "providers/twitch/api/Helix.hpp"
@@ -1110,7 +1111,7 @@ void TwitchChannel::loadRecentMessages()
     }
 
     auto weak = weakOf<Channel>(this);
-    RecentMessagesApi::loadRecentMessages(
+    recentmessages::load(
         this->getName(), weak,
         [weak](const auto &messages) {
             auto shared = weak.lock();
@@ -1123,6 +1124,21 @@ void TwitchChannel::loadRecentMessages()
 
             tc->addMessagesAtStart(messages);
             tc->loadingRecentMessages_.clear();
+
+            std::vector<MessagePtr> msgs;
+            for (MessagePtr msg : messages)
+            {
+                const auto highlighted =
+                    msg->flags.has(MessageFlag::Highlighted);
+                const auto showInMentions =
+                    msg->flags.has(MessageFlag::ShowInMentions);
+                if (highlighted && showInMentions)
+                {
+                    msgs.push_back(msg);
+                }
+            }
+
+            getApp()->twitch->mentionsChannel->fillInMissingMessages(msgs);
         },
         [weak]() {
             auto shared = weak.lock();
@@ -1150,7 +1166,7 @@ void TwitchChannel::loadRecentMessagesReconnect()
     }
 
     auto weak = weakOf<Channel>(this);
-    RecentMessagesApi::loadRecentMessages(
+    recentmessages::load(
         this->getName(), weak,
         [weak](const auto &messages) {
             auto shared = weak.lock();
@@ -1588,7 +1604,8 @@ void TwitchChannel::updateSevenTVActivity()
         return;
     }
 
-    if (!getSettings()->enableSevenTVEventAPI)
+    if (!getSettings()->enableSevenTVEventAPI ||
+        !getSettings()->sendSevenTVActivity)
     {
         return;
     }
@@ -1603,33 +1620,23 @@ void TwitchChannel::updateSevenTVActivity()
 
     qCDebug(chatterinoSeventv) << "Sending activity in" << this->getName();
 
-    QJsonObject payload;
-    payload["kind"] = 1;
-
-    QJsonObject data;
-    data["id"] = this->roomId();
-    data["platform"] = "TWITCH";
-
-    payload["data"] = data;
-
-    NetworkRequest(seventvActivityUrl.arg(currentSeventvUserID),
-                   NetworkRequestType::Post)
-        .header("Content-Type", "application/json")
-        .payload(QJsonDocument(payload).toJson(QJsonDocument::Compact))
-        .onSuccess([chan = weakOf<Channel>(this)](const auto &response) {
+    getSeventvAPI().updatePresence(
+        this->roomId(), currentSeventvUserID,
+        [chan = weakOf<Channel>(this)]() {
             const auto self =
                 std::dynamic_pointer_cast<TwitchChannel>(chan.lock());
             if (!self)
             {
                 return Success;
             }
-            const auto json = response.parseJson();
             self->nextSeventvActivity_ =
-                QDateTime::currentDateTimeUtc().addSecs(10);
+                QDateTime::currentDateTimeUtc().addSecs(60);
             return Success;
-        })
-        .concurrent()
-        .execute();
+        },
+        [](const auto &result) {
+            qCDebug(chatterinoSeventv)
+                << "Failed to update 7TV activity:" << result.formatError();
+        });
 }
 
 void TwitchChannel::listenSevenTVCosmetics()

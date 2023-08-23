@@ -274,7 +274,7 @@ void Application::initNm(Paths &paths)
     (void)paths;
 
 #ifdef Q_OS_WIN
-#    if defined QT_NO_DEBUG || defined C_DEBUG_NM
+#    if defined QT_NO_DEBUG || defined CHATTERINO_DEBUG_NM
     registerNmHost(paths);
     this->nmServer.start();
 #    endif
@@ -527,6 +527,12 @@ void Application::initPubSub()
 
     this->twitch->pubsub->signals_.moderation.automodUserMessage.connect(
         [&](const auto &action) {
+            // This condition has been set up to execute isInStreamerMode() as the last thing
+            // as it could end up being expensive.
+            if (getSettings()->streamerModeHideModActions && isInStreamerMode())
+            {
+                return;
+            }
             auto chan = this->twitch->getChannelOrEmptyByID(action.roomID);
 
             if (chan->isEmpty())

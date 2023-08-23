@@ -3,12 +3,12 @@
 #include "Application.hpp"
 #include "messages/Emote.hpp"
 #include "messages/Image.hpp"
+#include "messages/layouts/MessageLayoutContext.hpp"
 #include "messages/MessageElement.hpp"
 #include "providers/seventv/paints/PaintDropShadow.hpp"
 #include "providers/seventv/SeventvPaints.hpp"
 #include "providers/twitch/TwitchEmotes.hpp"
 #include "singletons/Settings.hpp"
-#include "singletons/Theme.hpp"
 #include "util/DebugCount.hpp"
 
 #include <QDebug>
@@ -195,7 +195,8 @@ int ImageLayoutElement::getSelectionIndexCount() const
     return this->trailingSpace ? 2 : 1;
 }
 
-void ImageLayoutElement::paint(QPainter &painter)
+void ImageLayoutElement::paint(QPainter &painter,
+                               const MessageColors & /*messageColors*/)
 {
     if (this->image_ == nullptr)
     {
@@ -287,7 +288,8 @@ int LayeredImageLayoutElement::getSelectionIndexCount() const
     return this->trailingSpace ? 2 : 1;
 }
 
-void LayeredImageLayoutElement::paint(QPainter &painter)
+void LayeredImageLayoutElement::paint(QPainter &painter,
+                                      const MessageColors & /*messageColors*/)
 {
     auto fullRect = QRectF(this->getRect());
 
@@ -390,7 +392,8 @@ ImageWithBackgroundLayoutElement::ImageWithBackgroundLayoutElement(
 {
 }
 
-void ImageWithBackgroundLayoutElement::paint(QPainter &painter)
+void ImageWithBackgroundLayoutElement::paint(
+    QPainter &painter, const MessageColors & /*messageColors*/)
 {
     if (this->image_ == nullptr)
     {
@@ -421,7 +424,8 @@ ImageWithCircleBackgroundLayoutElement::ImageWithCircleBackgroundLayoutElement(
 {
 }
 
-void ImageWithCircleBackgroundLayoutElement::paint(QPainter &painter)
+void ImageWithCircleBackgroundLayoutElement::paint(
+    QPainter &painter, const MessageColors & /*messageColors*/)
 {
     if (this->image_ == nullptr)
     {
@@ -484,7 +488,8 @@ int TextLayoutElement::getSelectionIndexCount() const
     return this->getText().length() + (this->trailingSpace ? 1 : 0);
 }
 
-void TextLayoutElement::paint(QPainter &painter)
+void TextLayoutElement::paint(QPainter &painter,
+                              const MessageColors & /*messageColors*/)
 {
     auto app = getApp();
     QString text = this->getText();
@@ -643,13 +648,14 @@ int TextIconLayoutElement::getSelectionIndexCount() const
     return this->trailingSpace ? 2 : 1;
 }
 
-void TextIconLayoutElement::paint(QPainter &painter)
+void TextIconLayoutElement::paint(QPainter &painter,
+                                  const MessageColors &messageColors)
 {
-    auto app = getApp();
+    auto *app = getApp();
 
     QFont font = app->fonts->getFont(FontStyle::Tiny, this->scale);
 
-    painter.setPen(app->themes->messages.textColors.system);
+    painter.setPen(messageColors.system);
     painter.setFont(font);
 
     QTextOption option;
@@ -709,7 +715,8 @@ ReplyCurveLayoutElement::ReplyCurveLayoutElement(MessageElement &creator,
 {
 }
 
-void ReplyCurveLayoutElement::paint(QPainter &painter)
+void ReplyCurveLayoutElement::paint(QPainter &painter,
+                                    const MessageColors & /*messageColors*/)
 {
     QRectF paintRect(this->getRect());
     QPainterPath path;
