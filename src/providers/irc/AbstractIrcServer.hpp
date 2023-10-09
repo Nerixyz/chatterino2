@@ -38,6 +38,8 @@ public:
     // channels
     ChannelPtr getOrAddChannel(const QString &dirtyChannelName);
     ChannelPtr getChannelOrEmpty(const QString &dirtyChannelName);
+    /// @returns The channel with this exact name, ignoring special channels - if none is found, returns empty channel
+    ChannelPtr getExactChannel(const QString &name);
     std::vector<std::weak_ptr<Channel>> getChannels();
 
     // signals

@@ -275,6 +275,25 @@ ChannelPtr AbstractIrcServer::getChannelOrEmpty(const QString &dirtyChannelName)
     return Channel::getEmpty();
 }
 
+ChannelPtr AbstractIrcServer::getExactChannel(const QString &name)
+{
+    std::lock_guard<std::mutex> lock(this->channelMutex);
+
+    // value exists
+    auto it = this->channels.find(name);
+    if (it != this->channels.end())
+    {
+        auto chan = it.value().lock();
+
+        if (chan)
+        {
+            return chan;
+        }
+    }
+
+    return Channel::getEmpty();
+}
+
 std::vector<std::weak_ptr<Channel>> AbstractIrcServer::getChannels()
 {
     std::lock_guard lock(this->channelMutex);

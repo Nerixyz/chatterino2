@@ -261,49 +261,80 @@ void IrcServer::readConnectionMessageReceived(Communi::IrcMessage *message)
     switch (message->type())
     {
         case Communi::IrcMessage::Join: {
-            auto x = static_cast<Communi::IrcJoinMessage *>(message);
-
-            if (auto it = this->channels.find(x->channel());
-                it != this->channels.end())
+            auto *x = static_cast<Communi::IrcJoinMessage *>(message);
+            auto chan = this->getExactChannel(x->channel());
+            if (chan->isEmpty())
             {
-                if (auto shared = it->lock())
-                {
-                    if (message->nick() == this->data_->nick)
-                    {
-                        shared->addMessage(makeSystemMessage("joined"));
-                    }
-                    else
-                    {
-                        if (auto c =
-                                dynamic_cast<ChannelChatters *>(shared.get()))
-                            c->addJoinedUser(x->nick());
-                    }
-                }
+                return;
             }
+
+            if (message->nick() == this->data_->nick)
+            {
+                chan->addMessage(makeSystemMessage("joined"));
+            }
+            else if (auto *c = dynamic_cast<ChannelChatters *>(chan.get()))
+            {
+                c->addJoinedUser(x->nick());
+            }
+
             return;
         }
 
         case Communi::IrcMessage::Part: {
-            auto x = static_cast<Communi::IrcPartMessage *>(message);
-
-            if (auto it = this->channels.find(x->channel());
-                it != this->channels.end())
+            auto *x = static_cast<Communi::IrcPartMessage *>(message);
+            auto chan = this->getExactChannel(x->channel());
+            if (chan->isEmpty())
             {
-                if (auto shared = it->lock())
+                return;
+            }
+
+            if (message->nick() == this->data_->nick)
+            {
+                chan->addMessage(makeSystemMessage("parted"));
+            }
+            else if (auto *c = dynamic_cast<ChannelChatters *>(chan.get()))
+            {
+                c->addPartedUser(x->nick());
+            }
+            return;
+        }
+
+        case Communi::IrcMessage::Quit: {
+            this->forEachChannel([&](const std::shared_ptr<Channel> &chan) {
+                if (message->nick() == this->data_->nick)
                 {
-                    if (message->nick() == this->data_->nick)
-                    {
-                        shared->addMessage(makeSystemMessage("parted"));
-                    }
-                    else
-                    {
-                        if (auto c =
-                                dynamic_cast<ChannelChatters *>(shared.get()))
-                            c->addPartedUser(x->nick());
-                    }
+                    chan->addMessage(makeSystemMessage("parted"));
+                }
+                else if (auto *c = dynamic_cast<ChannelChatters *>(chan.get()))
+                {
+                    c->addPartedUser(message->nick());
+                }
+            });
+            return;
+        }
+        case Communi::IrcMessage::Names: {
+            auto *x = static_cast<Communi::IrcNamesMessage *>(message);
+            auto chan = this->getExactChannel(x->channel());
+            if (chan->isEmpty())
+            {
+                return;
+            }
+
+            if (auto *c = dynamic_cast<ChannelChatters *>(chan.get()))
+            {
+                for (const auto &name : x->names())
+                {
+                    c->addJoinedUser(name);
                 }
             }
             return;
+        }
+        case Communi::IrcMessage::Numeric: {
+            auto *x = static_cast<Communi::IrcNumericMessage *>(message);
+            if (x->isComposed())
+            {
+                return;
+            }
         }
 
         case Communi::IrcMessage::Pong:
