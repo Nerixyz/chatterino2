@@ -7,7 +7,6 @@
 #include <QPointer>
 #include <QTimer>
 
-#include <functional>
 #include <memory>
 
 class QNetworkReply;
@@ -15,22 +14,6 @@ class QNetworkReply;
 namespace chatterino {
 
 class NetworkResult;
-
-class NetworkRequester : public QObject
-{
-    Q_OBJECT
-
-signals:
-    void requestUrl();
-};
-
-class NetworkWorker : public QObject
-{
-    Q_OBJECT
-
-signals:
-    void doneUrl();
-};
 
 struct NetworkData {
     NetworkData();
@@ -42,7 +25,6 @@ struct NetworkData {
     bool cache_{};
     bool executeConcurrently_{};
 
-    NetworkReplyCreatedCallback onReplyCreated_;
     NetworkErrorCallback onError_;
     NetworkSuccessCallback onSuccess_;
     NetworkFinallyCallback finally_;
@@ -59,13 +41,9 @@ struct NetworkData {
     // execute is called
     bool hasTimeout_{};
     int timeoutMS_{};
-    QTimer *timer_ = nullptr;
     QObject *lifetimeManager_;
 
-    QString getHash();
-
-private:
-    QString hash_;
+    QString hash() const;
 };
 
 void load(std::shared_ptr<NetworkData> &&data);
