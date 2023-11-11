@@ -71,6 +71,8 @@ void IrcServer::initializeConnectionSignals(IrcConnection *connection,
 {
     assert(type == Both);
 
+    AbstractIrcServer::initializeConnectionSignals(connection, type);
+
     QObject::connect(
         connection, &Communi::IrcConnection::socketError, this,
         [this](QAbstractSocket::SocketError error) {
