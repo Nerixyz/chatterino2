@@ -1,6 +1,9 @@
 #include "providers/twitch/TwitchAccountManager.hpp"
 
 #include "common/Common.hpp"
+#include "common/Literals.hpp"
+#include "common/network/NetworkResult.hpp"
+#include "common/Outcome.hpp"
 #include "common/QLogging.hpp"
 #include "providers/twitch/api/Helix.hpp"
 #include "providers/twitch/TwitchAccount.hpp"
@@ -10,9 +13,98 @@
 
 namespace chatterino {
 
+using namespace literals;
+
+const QString DEVICE_AUTH_CLIENT_ID = u"ows8k58flcricj1oe1pm53eb78xwql"_s;
+const QString DEVICE_AUTH_SCOPES =
+    u""_s
+    "channel:moderate"  // for seeing automod & which moderator banned/unbanned a user (felanbird unbanned weeb123)
+    " channel:read:redemptions"  // for getting the list of channel point redemptions (not currently used)
+    " chat:edit"      // for sending messages in chat
+    " chat:read"      // for viewing messages in chat
+    " whispers:read"  // for viewing recieved whispers
+
+    // https://dev.twitch.tv/docs/api/reference#start-commercial
+    " channel:edit:commercial"  // for /commercial api
+
+    // https://dev.twitch.tv/docs/api/reference#create-clip
+    " clips:edit"  // for /clip creation
+
+    // https://dev.twitch.tv/docs/api/reference#create-stream-marker
+    // https://dev.twitch.tv/docs/api/reference#modify-channel-information
+    " channel:manage:broadcast"  // for creating stream markers with /marker command, and for the /settitle and /setgame commands
+
+    // https://dev.twitch.tv/docs/api/reference#get-user-block-list
+    " user:read:blocked_users"  // for getting list of blocked users
+
+    // https://dev.twitch.tv/docs/api/reference#block-user
+    // https://dev.twitch.tv/docs/api/reference#unblock-user
+    " user:manage:blocked_users"  // for blocking/unblocking other users
+
+    // https://dev.twitch.tv/docs/api/reference#manage-held-automod-messages
+    " moderator:manage:automod"  // for approving/denying automod messages
+
+    // https://dev.twitch.tv/docs/api/reference#start-a-raid
+    // https://dev.twitch.tv/docs/api/reference#cancel-a-raid
+    " channel:manage:raids"  // for starting/canceling raids
+
+    // https://dev.twitch.tv/docs/api/reference#create-poll
+    // https://dev.twitch.tv/docs/api/reference#end-poll
+    " channel:manage:polls"  // for creating & ending polls (not currently used)
+
+    // https://dev.twitch.tv/docs/api/reference#get-polls
+    " channel:read:polls"  // for reading broadcaster poll status (not currently used)
+
+    // https://dev.twitch.tv/docs/api/reference#create-prediction
+    // https://dev.twitch.tv/docs/api/reference#end-prediction
+    " channel:manage:predictions"  // for creating & ending predictions (not currently used)
+
+    // https://dev.twitch.tv/docs/api/reference#get-predictions
+    " channel:read:predictions"  // for reading broadcaster prediction status (not currently used)
+
+    // https://dev.twitch.tv/docs/api/reference#send-chat-announcement
+    " moderator:manage:announcements"  // for /announce api
+
+    // https://dev.twitch.tv/docs/api/reference#send-whisper
+    " user:manage:whispers"  // for whispers api
+
+    // https://dev.twitch.tv/docs/api/reference#ban-user
+    // https://dev.twitch.tv/docs/api/reference#unban-user
+    " moderator:manage:banned_users"  // for ban/unban/timeout/untimeout api
+
+    // https://dev.twitch.tv/docs/api/reference#delete-chat-messages
+    " moderator:manage:chat_messages"  // for delete message api (/delete, /clear)
+
+    // https://dev.twitch.tv/docs/api/reference#update-user-chat-color
+    " user:manage:chat_color"  // for update user color api (/color coral)
+
+    // https://dev.twitch.tv/docs/api/reference#get-chat-settings
+    " moderator:manage:chat_settings"  // for roomstate api (/followersonly, /uniquechat, /slow)
+
+    // https://dev.twitch.tv/docs/api/reference#get-moderators
+    // https://dev.twitch.tv/docs/api/reference#add-channel-moderator
+    // https://dev.twitch.tv/docs/api/reference#remove-channel-vip
+    " channel:manage:moderators"  // for add/remove/view mod api
+
+    // https://dev.twitch.tv/docs/api/reference#add-channel-vip
+    // https://dev.twitch.tv/docs/api/reference#remove-channel-vip
+    // https://dev.twitch.tv/docs/api/reference#get-vips
+    " channel:manage:vips"  // for add/remove/view vip api
+
+    // https://dev.twitch.tv/docs/api/reference#get-chatters
+    " moderator:read:chatters"  // for get chatters api
+
+    // https://dev.twitch.tv/docs/api/reference#get-shield-mode-status
+    // https://dev.twitch.tv/docs/api/reference#update-shield-mode-status
+    " moderator:manage:shield_mode"  // for reading/managing the channel's shield-mode status
+
+    // https://dev.twitch.tv/docs/api/reference/#send-a-shoutout
+    " moderator:manage:shoutouts"  // for reading/managing the channel's shoutouts (not currently used)
+    ;
+
 TwitchAccountManager::TwitchAccountManager()
     : accounts(SharedPtrElementLess<TwitchAccount>{})
-    , anonymousUser_(new TwitchAccount(ANONYMOUS_USERNAME, "", "", ""))
+    , anonymousUser_(new TwitchAccount({.username = ANONYMOUS_USERNAME}))
 {
     this->currentUserChanged.connect([this] {
         auto currentUser = this->getCurrent();
@@ -24,6 +116,11 @@ TwitchAccountManager::TwitchAccountManager()
     // before TwitchAccountManager
     std::ignore = this->accounts.itemRemoved.connect([this](const auto &acc) {
         this->removeUser(acc.item.get());
+    });
+
+    this->refreshTask_.start(60000);
+    QObject::connect(&this->refreshTask_, &QTimer::timeout, [this] {
+        this->refreshAccounts(false);
     });
 }
 
@@ -76,8 +173,6 @@ void TwitchAccountManager::reloadUsers()
 {
     auto keys = pajlada::Settings::SettingManager::getObjectKeys("/accounts");
 
-    UserData userData;
-
     bool listUpdated = false;
 
     for (const auto &uid : keys)
@@ -87,39 +182,25 @@ void TwitchAccountManager::reloadUsers()
             continue;
         }
 
-        auto username = pajlada::Settings::Setting<QString>::get(
-            "/accounts/" + uid + "/username");
-        auto userID = pajlada::Settings::Setting<QString>::get("/accounts/" +
-                                                               uid + "/userID");
-        auto clientID = pajlada::Settings::Setting<QString>::get(
-            "/accounts/" + uid + "/clientID");
-        auto oauthToken = pajlada::Settings::Setting<QString>::get(
-            "/accounts/" + uid + "/oauthToken");
-
-        if (username.isEmpty() || userID.isEmpty() || clientID.isEmpty() ||
-            oauthToken.isEmpty())
+        auto userData = TwitchAccountData::loadRaw(uid);
+        if (!userData)
         {
             continue;
         }
 
-        userData.username = username.trimmed();
-        userData.userID = userID.trimmed();
-        userData.clientID = clientID.trimmed();
-        userData.oauthToken = oauthToken.trimmed();
-
-        switch (this->addUser(userData))
+        switch (this->addUser(*userData))
         {
             case AddUserResponse::UserAlreadyExists: {
                 qCDebug(chatterinoTwitch)
-                    << "User" << userData.username << "already exists";
+                    << "User" << userData->username << "already exists";
                 // Do nothing
             }
             break;
             case AddUserResponse::UserValuesUpdated: {
                 qCDebug(chatterinoTwitch)
-                    << "User" << userData.username
+                    << "User" << userData->username
                     << "already exists, and values updated!";
-                if (userData.username == this->getCurrent()->getUserName())
+                if (userData->username == this->getCurrent()->getUserName())
                 {
                     qCDebug(chatterinoTwitch)
                         << "It was the current user, so we need to "
@@ -129,7 +210,7 @@ void TwitchAccountManager::reloadUsers()
             }
             break;
             case AddUserResponse::UserAdded: {
-                qCDebug(chatterinoTwitch) << "Added user" << userData.username;
+                qCDebug(chatterinoTwitch) << "Added user" << userData->username;
                 listUpdated = true;
             }
             break;
@@ -145,6 +226,7 @@ void TwitchAccountManager::reloadUsers()
 void TwitchAccountManager::load()
 {
     this->reloadUsers();
+    this->refreshAccounts(true);
 
     this->currentUsername.connect([this](const QString &newUsername) {
         auto user = this->findUserByUsername(newUsername);
@@ -200,37 +282,99 @@ bool TwitchAccountManager::removeUser(TwitchAccount *account)
     return true;
 }
 
+void TwitchAccountManager::refreshAccounts(bool emitChanged)
+{
+    auto current = this->currentUser_;
+    auto now = QDateTime::currentDateTimeUtc();
+    for (const auto &account : *this->accounts.readOnly())
+    {
+        if (account->isAnon() ||
+            account->type() != TwitchAccount::Type::DeviceAuth)
+        {
+            continue;
+        }
+        if (now.secsTo(account->expiresAt()) >= 100)
+        {
+            continue;
+        }
+        qCDebug(chatterinoTwitch)
+            << "Refreshing user" << account->getUserName();
+
+        QUrlQuery query{
+            {u"client_id"_s, DEVICE_AUTH_CLIENT_ID},
+            {u"scope"_s, DEVICE_AUTH_SCOPES},
+            {u"refresh_token"_s, account->refreshToken()},
+            {u"grant_type"_s, u"refresh_token"_s},
+        };
+        NetworkRequest("https://id.twitch.tv/oauth2/token",
+                       NetworkRequestType::Post)
+            .payload(query.toString(QUrl::FullyEncoded).toUtf8())
+            .timeout(20000)
+            .onSuccess([this, account, current](const auto &res) -> Outcome {
+                const auto json = res.parseJson();
+                auto accessToken = json["access_token"_L1].toString();
+                auto refreshToken = json["refresh_token"_L1].toString();
+                auto expiresIn = json["expires_in"_L1].toInt(-1);
+                if (accessToken.isEmpty() || refreshToken.isEmpty() ||
+                    expiresIn <= 0)
+                {
+                    qCWarning(chatterinoTwitch)
+                        << "Received invalid OAuth response when refreshing"
+                        << account->getUserName();
+                    return Success;
+                }
+                auto expiresAt =
+                    QDateTime::currentDateTimeUtc().addSecs(expiresIn - 60);
+                TwitchAccountData data{
+                    .username = account->getUserName(),
+                    .userID = account->getUserId(),
+                    .clientID = DEVICE_AUTH_CLIENT_ID,
+                    .oauthToken = accessToken,
+                    .ty = TwitchAccount::Type::DeviceAuth,
+                    .refreshToken = refreshToken,
+                    .expiresAt = expiresAt,
+                };
+                data.save();
+                account->setData(data);
+                pajlada::Settings::SettingManager::getInstance()->save();
+                qCDebug(chatterinoTwitch)
+                    << "Refreshed user" << account->getUserName();
+
+                if (account == current)
+                {
+                    this->currentUserChanged();
+                }
+
+                return Success;
+            })
+            .onError([account](const auto &res) {
+                auto json = res.parseJson();
+                qCWarning(chatterinoTwitch)
+                    << "Received invalid OAuth response when refreshing"
+                    << account->getUserName() << "error:" << res.formatError()
+                    << json["message"_L1].toString(u"(no message)"_s);
+            })
+            .execute();
+    }
+}
+
 TwitchAccountManager::AddUserResponse TwitchAccountManager::addUser(
-    const TwitchAccountManager::UserData &userData)
+    const TwitchAccountData &userData)
 {
     auto previousUser = this->findUserByUsername(userData.username);
     if (previousUser)
     {
-        bool userUpdated = false;
-
-        if (previousUser->setOAuthClient(userData.clientID))
-        {
-            userUpdated = true;
-        }
-
-        if (previousUser->setOAuthToken(userData.oauthToken))
-        {
-            userUpdated = true;
-        }
+        bool userUpdated = previousUser->setData(userData);
 
         if (userUpdated)
         {
             return AddUserResponse::UserValuesUpdated;
         }
-        else
-        {
-            return AddUserResponse::UserAlreadyExists;
-        }
+
+        return AddUserResponse::UserAlreadyExists;
     }
 
-    auto newUser =
-        std::make_shared<TwitchAccount>(userData.username, userData.oauthToken,
-                                        userData.clientID, userData.userID);
+    auto newUser = std::make_shared<TwitchAccount>(userData);
 
     //    std::lock_guard<std::mutex> lock(this->mutex);
 

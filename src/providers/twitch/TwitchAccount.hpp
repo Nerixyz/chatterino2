@@ -25,9 +25,15 @@ namespace chatterino {
 class Channel;
 using ChannelPtr = std::shared_ptr<Channel>;
 
+struct TwitchAccountData;
+
 class TwitchAccount : public Account
 {
 public:
+    enum class Type : uint32_t {
+        Regular,
+        DeviceAuth,
+    };
     struct TwitchEmote {
         EmoteId id;
         EmoteName name;
@@ -51,8 +57,7 @@ public:
         EmoteMap emotes;
     };
 
-    TwitchAccount(const QString &username, const QString &oauthToken_,
-                  const QString &oauthClient_, const QString &_userID);
+    TwitchAccount(const TwitchAccountData &data);
 
     QString toString() const override;
 
@@ -60,6 +65,9 @@ public:
     const QString &getOAuthToken() const;
     const QString &getOAuthClient() const;
     const QString &getUserId() const;
+    [[nodiscard]] const QString &refreshToken() const;
+    [[nodiscard]] const QDateTime &expiresAt() const;
+    [[nodiscard]] Type type() const;
 
     /**
      * The Seventv user-id of the current user. 
@@ -70,13 +78,10 @@ public:
     QColor color();
     void setColor(QColor color);
 
-    // Attempts to update the users OAuth Client ID
-    // Returns true if the value has changed, otherwise false
-    bool setOAuthClient(const QString &newClientID);
-
-    // Attempts to update the users OAuth Token
-    // Returns true if the value has changed, otherwise false
-    bool setOAuthToken(const QString &newOAuthToken);
+    /// Attempts to update the account data
+    /// @pre The name and userID must match this account.
+    /// @returns true if the value has changed, otherwise false
+    bool setData(const TwitchAccountData &data);
 
     bool isAnon() const;
 
@@ -113,6 +118,9 @@ private:
     QString oauthToken_;
     QString userName_;
     QString userId_;
+    Type type_ = Type::Regular;
+    QString refreshToken_;
+    QDateTime expiresAt_;
     const bool isAnon_;
     Atomic<QColor> color_;
 
@@ -127,6 +135,19 @@ private:
     UniqueAccess<std::unordered_map<QString, EmoteMap>> localEmotes_;
 
     QString seventvUserID_;
+};
+
+struct TwitchAccountData {
+    QString username;
+    QString userID;
+    QString clientID;
+    QString oauthToken;
+    TwitchAccount::Type ty = TwitchAccount::Type::Regular;
+    QString refreshToken;
+    QDateTime expiresAt;
+
+    static std::optional<TwitchAccountData> loadRaw(const std::string &key);
+    void save() const;
 };
 
 }  // namespace chatterino
