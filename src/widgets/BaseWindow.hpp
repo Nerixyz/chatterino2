@@ -148,6 +148,7 @@ private:
     QTimer useNextBounds_;
     bool isNotMinimizedOrMaximized_{};
     bool lastEventWasNcMouseMove_ = false;
+    bool isMaximized_ = false;
 #endif
 
     pajlada::Signals::SignalHolder connections_;

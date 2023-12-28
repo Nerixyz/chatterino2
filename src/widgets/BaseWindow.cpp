@@ -28,11 +28,95 @@
 #    pragma comment(lib, "Dwmapi.lib")
 
 #    include <QHBoxLayout>
+#    include <QOperatingSystemVersion>
 
 #    define WM_DPICHANGED 0x02E0
 #endif
 
 #include "widgets/helper/TitlebarButton.hpp"
+
+namespace {
+
+#ifdef USEWINSDK
+[[nodiscard]] bool isWindows11OrGreater()
+{
+    static const auto result = [&] {
+        if (!::IsWindows10OrGreater())
+        {
+            return false;
+        }
+        auto version = QOperatingSystemVersion::current();
+        return (version.majorVersion() > 10) ||
+               (version.microVersion() >= 22000);
+    }();
+    return result;
+}
+
+[[nodiscard]] HWND findTaskbarWindow(LPRECT rcMon = nullptr)
+{
+    HWND hTaskbar = nullptr;
+    RECT rcTaskbar;
+    RECT rcMatch;
+
+    while ((hTaskbar = FindWindowEx(nullptr, hTaskbar, L"Shell_TrayWnd",
+                                    nullptr)) != nullptr)
+    {
+        if (!rcMon)
+        {
+            // no monitor was specified, return the first encountered window
+            break;
+        }
+        if (GetWindowRect(hTaskbar, &rcTaskbar) != 0 &&
+            IntersectRect(&rcMatch, &rcTaskbar, rcMon) != 0)
+        {
+            // taskbar intersects with the monitor - this is the one
+            break;
+        }
+    }
+
+    return hTaskbar;
+}
+
+[[nodiscard]] bool isTaskbarAutoHidden(LPRECT rcMon = nullptr,
+                                       PUINT pEdge = nullptr)
+{
+    HWND hTaskbar = findTaskbarWindow(rcMon);
+    if (!hTaskbar)
+    {
+        if (pEdge)
+        {
+            *pEdge = (UINT)-1;
+        }
+        return false;
+    }
+
+    APPBARDATA state = {sizeof(state), hTaskbar};
+    APPBARDATA pos = {sizeof(pos), hTaskbar};
+
+    auto lState = static_cast<LRESULT>(SHAppBarMessage(ABM_GETSTATE, &state));
+    bool bAutoHidden = (lState & ABS_AUTOHIDE) != 0;
+
+    if (SHAppBarMessage(ABM_GETTASKBARPOS, &pos) != 0)
+    {
+        if (pEdge)
+        {
+            *pEdge = pos.uEdge;
+        }
+    }
+    else
+    {
+        qDebug() << "Failed to get taskbar pos";
+        if (pEdge)
+        {
+            *pEdge = ABE_BOTTOM;
+        }
+    }
+
+    return bAutoHidden;
+}
+#endif
+
+}  // namespace
 
 namespace chatterino {
 
@@ -517,13 +601,13 @@ void BaseWindow::resizeEvent(QResizeEvent *)
         this->isResizeFixing_ = true;
         QTimer::singleShot(50, this, [this] {
             RECT rect;
-            ::GetWindowRect((HWND)this->winId(), &rect);
-            ::SetWindowPos((HWND)this->winId(), nullptr, 0, 0,
-                           rect.right - rect.left + 1, rect.bottom - rect.top,
-                           SWP_NOMOVE | SWP_NOZORDER);
-            ::SetWindowPos((HWND)this->winId(), nullptr, 0, 0,
-                           rect.right - rect.left, rect.bottom - rect.top,
-                           SWP_NOMOVE | SWP_NOZORDER);
+            // ::GetWindowRect((HWND)this->winId(), &rect);
+            // ::SetWindowPos((HWND)this->winId(), nullptr, 0, 0,
+            //                rect.right - rect.left + 1, rect.bottom - rect.top,
+            //                SWP_NOMOVE | SWP_NOZORDER);
+            // ::SetWindowPos((HWND)this->winId(), nullptr, 0, 0,
+            //                rect.right - rect.left, rect.bottom - rect.top,
+            //                SWP_NOMOVE | SWP_NOZORDER);
             QTimer::singleShot(10, this, [this] {
                 this->isResizeFixing_ = false;
             });
@@ -772,8 +856,15 @@ void BaseWindow::drawCustomWindowFrame(QPainter &painter)
     {
         QColor bg = this->overrideBackgroundColor_.value_or(
             this->theme->window.background);
-        painter.fillRect(QRect(1, 2, this->width() - 2, this->height() - 3),
-                         bg);
+        if (this->isMaximized_)
+        {
+            painter.fillRect(this->rect(), bg);
+        }
+        else
+        {
+            painter.fillRect(QRect(1, 1, this->width() - 2, this->height() - 2),
+                             bg);
+        }
     }
 #endif
 }
@@ -859,13 +950,73 @@ bool BaseWindow::handleNCCALCSIZE(MSG *msg, long *result)
     {
         if (msg->wParam == TRUE)
         {
-            // remove 1 extra pixel on top of custom frame
-            auto *ncp = reinterpret_cast<NCCALCSIZE_PARAMS *>(msg->lParam);
-            if (ncp)
+            auto *const r =
+                &(reinterpret_cast<NCCALCSIZE_PARAMS *>(msg->lParam))->rgrc[0];
+
+            const auto maximized = [&] {
+                WINDOWPLACEMENT wp;
+                wp.length = sizeof(WINDOWPLACEMENT);
+                return GetWindowPlacement(msg->hwnd, &wp) != 0 &&
+                       (wp.showCmd == SW_SHOWMAXIMIZED);
+            }();
+            this->isMaximized_ = maximized;
+
+            auto addBorders = maximized || isWindows11OrGreater();
+            if (addBorders)
             {
-                ncp->lppos->flags |= SWP_NOREDRAW;
-                ncp->rgrc[0].top -= 1;
+                auto dpi = GetDpiForWindow(msg->hwnd);
+                LONG borderWidth{};
+                if (dpi != 0)
+                {
+                    borderWidth =
+                        GetSystemMetricsForDpi(SM_CXSIZEFRAME, dpi) +
+                        GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
+                }
+                else
+                {
+                    borderWidth = GetSystemMetrics(SM_CXSIZEFRAME) +
+                                  GetSystemMetrics(SM_CXPADDEDBORDER);
+                }
+                r->left += borderWidth;
+                r->right -= borderWidth;
+                if (maximized)
+                {
+                    r->top += borderWidth;
+                }
+                r->bottom -= borderWidth;
             }
+
+            if (maximized)
+            {
+                auto *const hMonitor =
+                    MonitorFromWindow(msg->hwnd, MONITOR_DEFAULTTONEAREST);
+                MONITORINFO mi;
+                mi.cbSize = sizeof(mi);
+                UINT uEdge = (UINT)-1;
+                if (GetMonitorInfo(hMonitor, &mi) &&
+                    isTaskbarAutoHidden(&mi.rcMonitor, &uEdge))
+                {
+                    switch (uEdge)
+                    {
+                        case ABE_LEFT:
+                            r->left += 1;
+                            break;
+                        case ABE_RIGHT:
+                            r->right -= 1;
+                            break;
+                        case ABE_TOP:
+                            r->top += 1;
+                            break;
+                        case ABE_BOTTOM:
+                            r->bottom -= 1;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+            *result = addBorders ? 0 : WVR_REDRAW;
+            return true;
         }
 
         *result = 0;
@@ -888,18 +1039,18 @@ bool BaseWindow::handleSIZE(MSG *msg)
         }
         else if (this->hasCustomWindowFrame())
         {
-            if (msg->wParam == SIZE_MAXIMIZED)
-            {
-                auto offset = int(
-                    getWindowDpi(HWND(this->winId())).value_or(96) * 8 / 96);
+            // if (msg->wParam == SIZE_MAXIMIZED)
+            // {
+            //     auto offset = int(
+            //         getWindowDpi(HWND(this->winId())).value_or(96) * 8 / 96);
 
-                this->ui_.windowLayout->setContentsMargins(offset, offset,
-                                                           offset, offset);
-            }
-            else
-            {
-                this->ui_.windowLayout->setContentsMargins(0, 1, 0, 0);
-            }
+            //     this->ui_.windowLayout->setContentsMargins(offset, offset,
+            //                                                offset, offset);
+            // }
+            // else
+            // {
+            // this->ui_.windowLayout->setContentsMargins(0, 1, 0, 0);
+            // }
 
             this->isNotMinimizedOrMaximized_ = msg->wParam == SIZE_RESTORED;
 
