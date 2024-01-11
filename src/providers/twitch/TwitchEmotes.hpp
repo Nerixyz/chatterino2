@@ -2,13 +2,14 @@
 
 #include "common/Aliases.hpp"
 #include "common/UniqueAccess.hpp"
+#include "util/QStringHash.hpp"
 
+#include <boost/unordered/unordered_flat_map.hpp>
 #include <QColor>
 #include <QRegularExpression>
 #include <QString>
 
 #include <memory>
-#include <unordered_map>
 
 // NB: "default" can be replaced with "static" to always get a non-animated
 // variant
@@ -53,7 +54,7 @@ public:
 
 private:
     Url getEmoteLink(const EmoteId &id, const QString &emoteScale);
-    UniqueAccess<std::unordered_map<EmoteId, std::weak_ptr<Emote>>>
+    UniqueAccess<boost::unordered_flat_map<EmoteId, std::weak_ptr<Emote>>>
         twitchEmotesCache_;
 };
 

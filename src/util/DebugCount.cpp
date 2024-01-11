@@ -1,11 +1,11 @@
 #include "util/DebugCount.hpp"
 
 #include "common/UniqueAccess.hpp"
+#include "util/QStringHash.hpp"
 
+#include <boost/unordered/unordered_flat_map.hpp>
 #include <QLocale>
 #include <QStringBuilder>
-
-#include <map>
 
 namespace {
 
@@ -17,7 +17,7 @@ struct Count {
 };
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-UniqueAccess<std::map<QString, Count>> COUNTS;
+UniqueAccess<boost::unordered_flat_map<QString, Count>> COUNTS;
 
 }  // namespace
 

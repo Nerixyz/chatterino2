@@ -198,8 +198,6 @@ public:
     virtual void addToContainer(MessageLayoutContainer &container,
                                 MessageElementFlags flags) = 0;
 
-    pajlada::Signals::NoArgSignal linkChanged;
-
 protected:
     MessageElement(MessageElementFlags flags);
     bool trailingSpace = true;

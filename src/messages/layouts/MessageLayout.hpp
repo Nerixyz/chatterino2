@@ -112,6 +112,7 @@ private:
     int height_ = 0;
     int currentLayoutWidth_ = -1;
     int layoutState_ = -1;
+    uint32_t generation_ = 0;
     float scale_ = -1;
     MessageElementFlags currentWordFlags_;
 

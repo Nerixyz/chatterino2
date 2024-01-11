@@ -1,6 +1,4 @@
-#include "Emote.hpp"
-
-#include <unordered_map>
+#include "messages/Emote.hpp"
 
 namespace chatterino {
 
@@ -27,7 +25,7 @@ EmotePtr cachedOrMakeEmotePtr(Emote &&emote, const EmoteMap &cache)
 
 EmotePtr cachedOrMakeEmotePtr(
     Emote &&emote,
-    std::unordered_map<EmoteId, std::weak_ptr<const Emote>> &cache,
+    boost::unordered_flat_map<EmoteId, std::weak_ptr<const Emote>> &cache,
     std::mutex &mutex, const EmoteId &id)
 {
     std::lock_guard<std::mutex> guard(mutex);

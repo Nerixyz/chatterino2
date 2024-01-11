@@ -166,8 +166,6 @@ protected:
     QColor color_;
     FontStyle style_;
     float scale_;
-
-    pajlada::Signals::SignalHolder managedConnections_;
 };
 
 // TEXT ICON

@@ -159,7 +159,7 @@ bool appendWhisperMessageWordsLocally(const QStringList &words)
                         }
                     }
                 } visitor;
-                boost::apply_visitor(
+                std::visit(
                     [&b](auto &&arg) {
                         visitor(arg, b);
                     },

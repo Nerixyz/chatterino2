@@ -14,6 +14,7 @@
 #include "singletons/Emotes.hpp"
 #include "singletons/Resources.hpp"
 #include "singletons/Theme.hpp"
+#include "singletons/WindowManager.hpp"
 #include "util/FormatTime.hpp"
 #include "util/Qt.hpp"
 
@@ -661,18 +662,25 @@ void MessageBuilder::addLink(const ParsedLink &parsedLink)
                 linkMELowercase->setTooltip(tooltipText);
                 linkMEOriginal->setTooltip(tooltipText);
             }
-            if (originalLink.value != matchedLink &&
-                !originalLink.value.isEmpty())
-            {
-                linkMELowercase->setLink(originalLink)->updateLink();
-                linkMEOriginal->setLink(originalLink)->updateLink();
-            }
             linkMELowercase->setThumbnail(thumbnail);
             linkMELowercase->setThumbnailType(
                 MessageElement::ThumbnailType::Link_Thumbnail);
             linkMEOriginal->setThumbnail(thumbnail);
             linkMEOriginal->setThumbnailType(
                 MessageElement::ThumbnailType::Link_Thumbnail);
+            if (originalLink.value != matchedLink &&
+                !originalLink.value.isEmpty())
+            {
+                linkMELowercase->setLink(originalLink)->updateLink();
+                linkMEOriginal->setLink(originalLink)->updateLink();
+                shared->generation++;
+
+                // This check is for tests and benchmarks
+                if (getApp())
+                {
+                    getApp()->windows->layoutRequested.invoke(nullptr);
+                }
+            }
         });
 }
 
@@ -815,8 +823,8 @@ void MessageBuilder::addIrcWord(const QString &text, const QColor &color,
     this->textColor_ = color;
     for (auto &variant : getApp()->emotes->emojis.parse(text))
     {
-        boost::apply_visitor(
-            [&](auto &&arg) {
+        std::visit(
+            [&](const auto &arg) {
                 this->addTextOrEmoji(arg);
             },
             variant);

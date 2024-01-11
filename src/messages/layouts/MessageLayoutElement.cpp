@@ -408,10 +408,10 @@ TextLayoutElement::TextLayoutElement(MessageElement &_creator, QString &_text,
 
 void TextLayoutElement::listenToLinkChanges()
 {
-    this->managedConnections_.managedConnect(
-        static_cast<TextElement &>(this->getCreator()).linkChanged, [this]() {
-            this->setLink(this->getCreator().getLink());
-        });
+    // this->managedConnections_.managedConnect(
+    //     static_cast<TextElement &>(this->getCreator()).linkChanged, [this]() {
+    //         this->setLink(this->getCreator().getLink());
+    //     });
 }
 
 void TextLayoutElement::addCopyTextToString(QString &str, uint32_t from,

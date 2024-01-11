@@ -107,6 +107,10 @@ bool MessageLayout::layout(int width, float scale, MessageElementFlags flags)
     layoutRequired |= this->scale_ != scale;
     this->scale_ = scale;
 
+    // check if message dirty
+    layoutRequired |= this->generation_ != this->message_->generation;
+    this->generation_ = this->message_->generation;
+
     if (!layoutRequired)
     {
         return false;

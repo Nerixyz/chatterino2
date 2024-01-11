@@ -290,10 +290,10 @@ void Emojis::loadEmojiSet()
     });
 }
 
-std::vector<boost::variant<EmotePtr, QString>> Emojis::parse(
+std::vector<std::variant<EmotePtr, QString>> Emojis::parse(
     const QString &text) const
 {
-    auto result = std::vector<boost::variant<EmotePtr, QString>>();
+    auto result = std::vector<std::variant<EmotePtr, QString>>();
     QString::size_type lastParsedEmojiEndIndex = 0;
 
     for (auto i = 0; i < text.length(); ++i)

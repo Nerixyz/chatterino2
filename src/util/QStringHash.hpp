@@ -18,3 +18,12 @@ struct hash<QString> {
 #endif
 
 }  // namespace std
+
+namespace boost {
+
+inline size_t hash_value(const QString &s)
+{
+    return qHash(s);
+}
+
+}  // namespace boost

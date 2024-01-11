@@ -1,6 +1,7 @@
 #include "messages/MessageElement.hpp"
 
 #include "Application.hpp"
+#include "common/Literals.hpp"
 #include "controllers/moderationactions/ModerationAction.hpp"
 #include "debug/Benchmark.hpp"
 #include "messages/Emote.hpp"
@@ -15,6 +16,8 @@
 #include "util/Variant.hpp"
 
 namespace chatterino {
+
+using namespace literals;
 
 namespace {
 
@@ -37,12 +40,12 @@ namespace {
 MessageElement::MessageElement(MessageElementFlags flags)
     : flags_(flags)
 {
-    DebugCount::increase("message elements");
+    DebugCount::increase(u"message elements"_s);
 }
 
 MessageElement::~MessageElement()
 {
-    DebugCount::decrease("message elements");
+    DebugCount::decrease(u"message elements"_s);
 }
 
 MessageElement *MessageElement::setLink(const Link &link)
@@ -118,7 +121,7 @@ void MessageElement::addFlags(MessageElementFlags flags)
 
 MessageElement *MessageElement::updateLink()
 {
-    this->linkChanged.invoke();
+    // this->linkChanged.invoke();
     return this;
 }
 
@@ -503,9 +506,11 @@ TextElement::TextElement(const QString &text, MessageElementFlags flags,
     , color_(color)
     , style_(style)
 {
-    for (const auto &word : text.split(' '))
+    auto words = QStringView{text}.split(' ');
+    this->words_.reserve(words.size());
+    for (const auto &word : words)
     {
-        this->words_.push_back({word, -1});
+        this->words_.push_back({word.toString(), -1});
         // fourtf: add logic to store multiple spaces after message
     }
 }
@@ -679,9 +684,9 @@ void SingleLineTextElement::addToContainer(MessageLayoutContainer &container,
 
             for (const auto &parsedWord : app->emotes->emojis.parse(word.text))
             {
-                if (parsedWord.type() == typeid(QString))
+                if (std::holds_alternative<QString>(parsedWord))
                 {
-                    currentText += boost::get<QString>(parsedWord);
+                    currentText += std::get<QString>(parsedWord);
                     QString prev =
                         currentText;  // only increments the ref-count
                     currentText =
@@ -692,9 +697,9 @@ void SingleLineTextElement::addToContainer(MessageLayoutContainer &container,
                         break;
                     }
                 }
-                else if (parsedWord.type() == typeid(EmotePtr))
+                else if (std::holds_alternative<EmotePtr>(parsedWord))
                 {
-                    auto emote = boost::get<EmotePtr>(parsedWord);
+                    auto emote = std::get<EmotePtr>(parsedWord);
                     auto image =
                         emote->images.getImageOrLoaded(container.getScale());
                     if (!image->isEmpty())

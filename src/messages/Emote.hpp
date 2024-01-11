@@ -2,12 +2,14 @@
 
 #include "common/Aliases.hpp"
 #include "messages/ImageSet.hpp"
+#include "util/QStringHash.hpp"
+
+#include <boost/unordered/unordered_flat_map.hpp>
 
 #include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
-#include <unordered_map>
 
 namespace chatterino {
 
@@ -37,7 +39,7 @@ bool operator!=(const Emote &a, const Emote &b);
 
 using EmotePtr = std::shared_ptr<const Emote>;
 
-class EmoteMap : public std::unordered_map<EmoteName, EmotePtr>
+class EmoteMap : public boost::unordered_flat_map<EmoteName, EmotePtr>
 {
 public:
     /**
@@ -61,7 +63,7 @@ static const std::shared_ptr<const EmoteMap> EMPTY_EMOTE_MAP = std::make_shared<
 EmotePtr cachedOrMakeEmotePtr(Emote &&emote, const EmoteMap &cache);
 EmotePtr cachedOrMakeEmotePtr(
     Emote &&emote,
-    std::unordered_map<EmoteId, std::weak_ptr<const Emote>> &cache,
+    boost::unordered_flat_map<EmoteId, std::weak_ptr<const Emote>> &cache,
     std::mutex &mutex, const EmoteId &id);
 
 }  // namespace chatterino

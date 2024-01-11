@@ -37,6 +37,7 @@
 #include "util/Qt.hpp"
 #include "widgets/Window.hpp"
 
+#include <boost/unordered/unordered_flat_map.hpp>
 #include <boost/variant.hpp>
 #include <QColor>
 #include <QDebug>
@@ -552,8 +553,8 @@ void TwitchMessageBuilder::addWords(
             for (auto &variant :
                  getIApp()->getEmotes()->getEmojis()->parse(preText))
             {
-                boost::apply_visitor(
-                    [&](auto &&arg) {
+                std::visit(
+                    [&](const auto &arg) {
                         this->addTextOrEmoji(arg);
                     },
                     variant);
@@ -572,8 +573,8 @@ void TwitchMessageBuilder::addWords(
         // split words
         for (auto &variant : getIApp()->getEmotes()->getEmojis()->parse(word))
         {
-            boost::apply_visitor(
-                [&](auto &&arg) {
+            std::visit(
+                [&](const auto &arg) {
                     this->addTextOrEmoji(arg);
                 },
                 variant);
@@ -1257,20 +1258,81 @@ std::vector<TwitchEmoteOccurrence> TwitchMessageBuilder::parseTwitchEmotes(
     {
         return twitchEmotes;
     }
+    struct PossibleEmote {
+        EmoteId id;
+        QString::size_type start{};
+        QString::size_type end{};
+    };
+    QVarLengthArray<PossibleEmote, 4> emotes;
+    QString emoteTag = emotesTag.value().toString();
+    auto baseLength = originalMessage.length();
 
-    QStringList emoteString = emotesTag.value().toString().split('/');
-    std::vector<int> correctPositions;
-    for (int i = 0; i < originalMessage.size(); ++i)
+    for (auto part : emoteTag.tokenize(u'/'))
     {
-        if (!originalMessage.at(i).isLowSurrogate())
+        auto mid = part.indexOf(u':');
+        if (mid < 0)
         {
-            correctPositions.push_back(i);
+            continue;
+        }
+        EmoteId id(part.mid(0, mid).toString());
+        for (auto occ : part.mid(mid + 1).tokenize(u','))
+        {
+            auto dash = occ.indexOf(u'-');
+            if (dash >= 0)
+            {
+                auto from = occ.mid(0, dash).toUInt() - messageOffset;
+                auto to = occ.mid(dash + 1).toUInt() - messageOffset;
+                if (from < to && from >= 0 && to < baseLength)
+                {
+                    emotes.push_back({
+                        .id = id,
+                        .start = static_cast<QString::size_type>(from),
+                        .end = static_cast<QString::size_type>(to),
+                    });
+                }
+            }
         }
     }
-    for (const QString &emote : emoteString)
+    if (emotes.empty())
     {
-        appendTwitchEmoteOccurrences(emote, twitchEmotes, correctPositions,
-                                     originalMessage, messageOffset);
+        return twitchEmotes;
+    }
+    std::sort(emotes.begin(), emotes.end(), [](const auto &a, const auto &b) {
+        return a.start < b.start;
+    });
+
+    QString::size_type codepointPos = 0;
+    auto *it = emotes.begin();
+    int start = -1;
+    for (int i = 0; i < originalMessage.size(); ++i)
+    {
+        if (codepointPos == it->start && start == -1)
+        {
+            start = i;
+        }
+        if (!originalMessage.at(i).isLowSurrogate())
+        {
+            if (codepointPos == it->end && start != -1)
+            {
+                EmoteName name(originalMessage.mid(start, i - start));
+                twitchEmotes.emplace_back(TwitchEmoteOccurrence{
+                    .start = start,
+                    .end = i,
+                    .ptr = getIApp()
+                               ->getEmotes()
+                               ->getTwitchEmotes()
+                               ->getOrCreateEmote(it->id, name),
+                    .name = name,
+                });
+                it++;
+                if (it == emotes.end())
+                {
+                    break;
+                }
+                start = -1;
+            }
+            codepointPos++;
+        }
     }
 
     return twitchEmotes;

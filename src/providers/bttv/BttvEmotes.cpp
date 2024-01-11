@@ -47,7 +47,8 @@ namespace {
     }
     EmotePtr cachedOrMake(Emote &&emote, const EmoteId &id)
     {
-        static std::unordered_map<EmoteId, std::weak_ptr<const Emote>> cache;
+        static boost::unordered_flat_map<EmoteId, std::weak_ptr<const Emote>>
+            cache;
         static std::mutex mutex;
 
         return cachedOrMakeEmotePtr(std::move(emote), cache, mutex, id);

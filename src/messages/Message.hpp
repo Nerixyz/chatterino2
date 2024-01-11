@@ -99,6 +99,9 @@ struct Message {
     std::shared_ptr<MessageThread> replyThread;
     MessagePtr replyParent;
     uint32_t count = 1;
+    // This generation must only be updated on the GUI thread.
+    // It is used to detect changed message elements (these aren't const).
+    mutable uint32_t generation = 0;
     std::vector<std::unique_ptr<MessageElement>> elements;
 
     ScrollbarHighlight getScrollBarHighlight() const;

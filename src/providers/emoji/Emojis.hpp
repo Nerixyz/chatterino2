@@ -1,13 +1,14 @@
 #pragma once
 
-#include <boost/variant.hpp>
 #include <QMap>
 #include <QRegularExpression>
 #include <QVector>
 
 #include <memory>
 #include <set>
+#include <variant>
 #include <vector>
+
 
 namespace chatterino {
 
@@ -43,7 +44,7 @@ class IEmojis
 public:
     virtual ~IEmojis() = default;
 
-    virtual std::vector<boost::variant<EmotePtr, QString>> parse(
+    virtual std::vector<std::variant<EmotePtr, QString>> parse(
         const QString &text) const = 0;
     virtual const std::vector<EmojiPtr> &getEmojis() const = 0;
     virtual const std::vector<QString> &getShortCodes() const = 0;
@@ -55,7 +56,7 @@ class Emojis : public IEmojis
 public:
     void initialize();
     void load();
-    std::vector<boost::variant<EmotePtr, QString>> parse(
+    std::vector<std::variant<EmotePtr, QString>> parse(
         const QString &text) const override;
 
     std::vector<QString> shortCodes;

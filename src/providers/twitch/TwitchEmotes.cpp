@@ -9,8 +9,22 @@ namespace chatterino {
 
 QString TwitchEmotes::cleanUpEmoteCode(const QString &dirtyEmoteCode)
 {
+    if (dirtyEmoteCode.length() < 2)
+    {
+        return dirtyEmoteCode;
+    }
+
+    const auto isLetterOrNumber = [](char16_t c) {
+        return (c >= 0x30 && c <= 0x39) || (c >= 0x41 && c <= 0x5a) ||
+               (c >= 0x61 && c <= 0x7a);
+    };
+    if (isLetterOrNumber(dirtyEmoteCode.at(0).unicode()) &&
+        isLetterOrNumber(dirtyEmoteCode.at(1).unicode()))
+    {
+        return dirtyEmoteCode;
+    }
+
     auto cleanCode = dirtyEmoteCode;
-    cleanCode.detach();
 
     static QMap<QString, QString> emoteNameReplacements{
         {"[oO](_|\\.)[oO]", "O_o"}, {"\\&gt\\;\\(", "&gt;("},

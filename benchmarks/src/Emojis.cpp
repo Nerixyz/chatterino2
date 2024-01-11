@@ -64,7 +64,7 @@ static void BM_EmojiParsing(benchmark::State &state)
 
     struct TestCase {
         QString input;
-        std::vector<boost::variant<EmotePtr, QString>> expectedOutput;
+        std::vector<std::variant<EmotePtr, QString>> expectedOutput;
     };
 
     const auto &emojiMap = emojis.getEmojis();
@@ -133,9 +133,9 @@ static void BM_EmojiParsing(benchmark::State &state)
                 qDebug() << "BAD BENCH";
                 for (const auto &v : output)
                 {
-                    if (v.type() == typeid(QString))
+                    if (std::holds_alternative<QString>(v))
                     {
-                        qDebug() << "output:" << boost::get<QString>(v);
+                        qDebug() << "output:" << std::get<QString>(v);
                     }
                 }
             }
@@ -158,7 +158,7 @@ static void BM_EmojiParsing2(benchmark::State &state, const QString &input,
         int actualNumEmojis = 0;
         for (const auto &part : output)
         {
-            if (part.type() == typeid(EmotePtr))
+            if (std::holds_alternative<EmotePtr>(part))
             {
                 ++actualNumEmojis;
             }
