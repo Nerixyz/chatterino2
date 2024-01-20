@@ -30,9 +30,9 @@ jobs:
     strategy:
       matrix:
         include:
-          # Ubuntu 20.04, Qt 5.12
+          # Ubuntu 20.04, Qt 5.15
           - os: ubuntu-20.04
-            qt-version: 5.12.12
+            qt-version: 5.15.2
             force-lto: false
             plugins: false
             skip-artifact: false
@@ -331,7 +331,7 @@ jobs:
         shell: bash
 
       - name: Package - .deb (Ubuntu)
-        if: startsWith(matrix.os, 'ubuntu') && !matrix.skip-artifact
+        if: startsWith(matrix.os, 'ubuntu-22.04') && !matrix.skip-artifact
         run: |
           cd build
           sh ./../.CI/CreateUbuntuDeb.sh
@@ -345,7 +345,7 @@ jobs:
           path: build/Chatterino-x86_64.AppImage
 
       - name: Upload artifact - .deb (Ubuntu)
-        if: startsWith(matrix.os, 'ubuntu') && !matrix.skip-artifact
+        if: startsWith(matrix.os, 'ubuntu-22.04') && !matrix.skip-artifact
         uses: actions/upload-artifact@v4
         with:
           name: Chatterino-${{ matrix.os }}-Qt-${{ matrix.qt-version }}.deb
@@ -429,15 +429,9 @@ jobs:
           path: release-artifacts/
 
       - uses: actions/download-artifact@v4
-        name: Linux Qt5.12.12 AppImage
+        name: Linux Qt5.15.2 AppImage
         with:
-          name: Chatterino-x86_64-5.12.12.AppImage
-          path: release-artifacts/
-
-      - uses: actions/download-artifact@v4
-        name: Ubuntu 20.04 Qt5.12.12 deb
-        with:
-          name: Chatterino-ubuntu-20.04-Qt-5.12.12.deb
+          name: Chatterino-x86_64-5.15.2.AppImage
           path: release-artifacts/
 
       - uses: actions/download-artifact@v4
