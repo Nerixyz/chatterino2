@@ -20,6 +20,8 @@
 #include <functional>
 
 #ifdef USEWINSDK
+#    include "widgets/platform/windows/DirectManipulation.hpp"
+
 #    include <dwmapi.h>
 #    include <VersionHelpers.h>
 #    include <Windows.h>
@@ -28,6 +30,7 @@
 #    pragma comment(lib, "Dwmapi.lib")
 
 #    include <QHBoxLayout>
+#    include <qpa/qwindowsysteminterface.h>
 
 #    define WM_DPICHANGED 0x02E0
 #endif
@@ -198,6 +201,76 @@ void BaseWindow::init()
         this->ui_.layoutBase->setContentsMargins(1, 0, 1, 1);
         layout->addWidget(this->ui_.layoutBase);
     }
+
+    this->directManipulation_ =
+        std::make_unique<windows::DirectManipulation>(this);
+    QObject::connect(
+        this->directManipulation_.get(),
+        &windows::DirectManipulation::manipulationEvent, this,
+        [this](const auto &event) {
+            using Type = windows::DirectManipulation::Event::Type;
+
+            auto *window = this->windowHandle();
+            if (!window)
+            {
+                return;
+            }
+
+            auto synthesizedPhase = [&] {
+                switch (event.type)
+                {
+                    case Type::ScrollBegin:
+                        return Qt::ScrollBegin;
+                    case Type::Scroll:
+                        return Qt::ScrollUpdate;
+                    case Type::MoveBegin:
+                        [[fallthrough]];
+                    case Type::Move:
+                        return Qt::ScrollMomentum;
+                    case Type::ScrollEnd:
+                        [[fallthrough]];
+                    case Type::MoveEnd:
+                        return Qt::ScrollEnd;
+                    default:
+                        assert(false && "Unexpected phase");
+                        return Qt::ScrollEnd;
+                }
+            }();
+
+            POINT screenCursorPos;
+            GetCursorPos(&screenCursorPos);
+            POINT localCursorPos;
+            ScreenToClient(reinterpret_cast<HWND>(this->winId()),
+                           &localCursorPos);
+
+            auto isPressed = [](auto key) {
+                return (GetKeyState(key) & 0x8000) != 0;
+            };
+
+            Qt::KeyboardModifiers modifiers;
+            if (isPressed(VK_SHIFT))
+            {
+                modifiers |= Qt::ShiftModifier;
+            }
+            if (isPressed(VK_RMENU) || isPressed(VK_MENU))
+            {
+                modifiers |= Qt::AltModifier;
+            }
+            if (isPressed(VK_CONTROL))
+            {
+                modifiers |= Qt::ControlModifier;
+            }
+            if (isPressed(VK_RWIN) || isPressed(VK_LWIN))
+            {
+                modifiers |= Qt::MetaModifier;
+            }
+
+            QWindowSystemInterface::handleWheelEvent(
+                window, QPointF(localCursorPos.x, localCursorPos.y),
+                QPointF(screenCursorPos.x, screenCursorPos.y), event.delta,
+                event.delta, modifiers, synthesizedPhase,
+                Qt::MouseEventSynthesizedBySystem);
+        });
 
 // DPI
 //    auto dpi = getWindowDpi(this->winId());
@@ -531,6 +604,14 @@ void BaseWindow::resizeEvent(QResizeEvent *)
     }
 
     this->calcButtonsSizes();
+
+    if (this->directManipulation_)
+    {
+        RECT rect;
+        ::GetWindowRect(reinterpret_cast<HWND>(this->winId()), &rect);
+        this->directManipulation_->updateWindowSize(
+            {rect.right - rect.left, rect.bottom - rect.top});
+    }
 #endif
 }
 
@@ -688,6 +769,15 @@ bool BaseWindow::nativeEvent(const QByteArray &eventType, void *message,
             else
             {
                 this->ui_.titlebarButtons->mouseRelease(ht, globalPos);
+            }
+        }
+        break;
+
+        case DM_POINTERHITTEST: {
+            if (this->directManipulation_)
+            {
+                this->directManipulation_->onPointerHitTest(msg->wParam);
+                returnValue = true;
             }
         }
         break;

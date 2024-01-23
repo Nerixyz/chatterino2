@@ -14,6 +14,8 @@ Q_LOGGING_CATEGORY(chatterinoCache, "chatterino.cache", logThreshold);
 Q_LOGGING_CATEGORY(chatterinoCommon, "chatterino.common", logThreshold);
 Q_LOGGING_CATEGORY(chatterinoCrashhandler, "chatterino.crashhandler",
                    logThreshold);
+Q_LOGGING_CATEGORY(chatterinoDirectManipulation,
+                   "chatterino.directmanipulation", logThreshold);
 Q_LOGGING_CATEGORY(chatterinoEmoji, "chatterino.emoji", logThreshold);
 Q_LOGGING_CATEGORY(chatterinoEnv, "chatterino.env", logThreshold);
 Q_LOGGING_CATEGORY(chatterinoFfzemotes, "chatterino.ffzemotes", logThreshold);

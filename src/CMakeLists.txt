@@ -709,6 +709,13 @@ set(SOURCE_FILES
         ${CMAKE_SOURCE_DIR}/resources/resources.qrc
         )
 
+if (WIN32)
+    list(APPEND SOURCE_FILES
+        widgets/platform/windows/DirectManipulation.cpp
+        widgets/platform/windows/DirectManipulation.hpp
+    )
+endif ()
+
 if (APPLE)
     set(MACOS_BUNDLE_ICON_FILE "${CMAKE_SOURCE_DIR}/resources/chatterino.icns")
     list(APPEND SOURCE_FILES "${MACOS_BUNDLE_ICON_FILE}")
@@ -750,6 +757,7 @@ target_link_libraries(${LIBRARY_PROJECT}
         PUBLIC
         Qt${MAJOR_QT_VERSION}::Core
         Qt${MAJOR_QT_VERSION}::Widgets
+        Qt${MAJOR_QT_VERSION}::WidgetsPrivate
         Qt${MAJOR_QT_VERSION}::Gui
         Qt${MAJOR_QT_VERSION}::Network
         Qt${MAJOR_QT_VERSION}::Svg
@@ -764,6 +772,7 @@ target_link_libraries(${LIBRARY_PROJECT}
         RapidJSON::RapidJSON
         LRUCache
         MagicEnum
+        $<$<BOOL:${WIN32}>:cppwinrt>
         )
 if (CHATTERINO_PLUGINS)
     target_link_libraries(${LIBRARY_PROJECT} PUBLIC lua)

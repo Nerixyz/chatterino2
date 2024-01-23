@@ -104,6 +104,10 @@ endif()
 
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/GIT.cmake)
 
+if(WIN32)
+    include(${CMAKE_CURRENT_LIST_DIR}/cmake/CppWinRT.cmake)
+endif()
+
 find_package(Qt${MAJOR_QT_VERSION} REQUIRED
     COMPONENTS
     Core

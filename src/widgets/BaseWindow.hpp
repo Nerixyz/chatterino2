@@ -21,6 +21,12 @@ class TitleBarButton;
 class TitleBarButtons;
 enum class TitleBarButtonStyle;
 
+namespace windows {
+
+    class DirectManipulation;
+
+}  // namespace windows
+
 class BaseWindow : public BaseWidget
 {
     Q_OBJECT
@@ -148,6 +154,8 @@ private:
     QTimer useNextBounds_;
     bool isNotMinimizedOrMaximized_{};
     bool lastEventWasNcMouseMove_ = false;
+
+    std::unique_ptr<windows::DirectManipulation> directManipulation_;
 #endif
 
     pajlada::Signals::SignalHolder connections_;
