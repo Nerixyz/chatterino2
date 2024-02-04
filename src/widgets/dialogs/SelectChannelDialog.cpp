@@ -1,4 +1,4 @@
-#include "SelectChannelDialog.hpp"
+#include "widgets/dialogs/SelectChannelDialog.hpp"
 
 #include "Application.hpp"
 #include "common/QLogging.hpp"
@@ -240,7 +240,7 @@ SelectChannelDialog::SelectChannelDialog(QWidget *parent)
 
         if (!getSettings()->enableExperimentalIrc)
         {
-            tab->setEnable(false);
+            tab->setEnabled(false);
             tab->setVisible(false);
         }
     }

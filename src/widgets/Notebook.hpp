@@ -13,6 +13,9 @@
 
 namespace chatterino {
 
+class Button;
+class PixmapButton;
+class SvgButton;
 class Window;
 class UpdateDialog;
 class NotebookButton;
@@ -130,7 +133,16 @@ protected:
     void paintEvent(QPaintEvent *) override;
 
     NotebookButton *getAddButton();
-    NotebookButton *addCustomButton();
+
+    template <typename T, typename... Args>
+    T *addCustomButton(Args... args)
+    {
+        auto *btn = new T(args..., this);
+        this->customButtons_.push_back(btn);
+        this->performLayout();
+
+        return btn;
+    }
 
     struct Item {
         NotebookTab *tab{};
@@ -186,7 +198,7 @@ private:
     QWidget *selectedPage_ = nullptr;
 
     NotebookButton *addButton_;
-    std::vector<NotebookButton *> customButtons_;
+    std::vector<Button *> customButtons_;
 
     bool allowUserTabManagement_ = false;
     bool showTabs_ = true;
@@ -224,7 +236,7 @@ private:
     pajlada::Signals::SignalHolder signalHolder_;
 
     // Main window on Windows has basically a duplicate of this in Window
-    NotebookButton *streamerModeIcon_{};
+    PixmapButton *streamerModeIcon_{};
     void updateStreamerModeIcon();
 };
 

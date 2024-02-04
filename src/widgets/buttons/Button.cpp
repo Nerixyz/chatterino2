@@ -1,4 +1,4 @@
-#include "Button.hpp"
+#include "widgets/buttons/Button.hpp"
 
 #include "singletons/Theme.hpp"
 #include "util/FunctionEventFilter.hpp"
@@ -9,24 +9,6 @@
 #include <QScreen>
 
 namespace chatterino {
-namespace {
-
-    // returns a new resized image or the old one if the size didn't change
-    auto resizePixmap(const QPixmap &current, const QPixmap resized,
-                      const QSize &size) -> QPixmap
-    {
-        if (resized.size() == size)
-        {
-            return resized;
-        }
-        else
-        {
-            return current.scaled(size, Qt::IgnoreAspectRatio,
-                                  Qt::SmoothTransformation);
-        }
-    }
-
-}  // namespace
 
 Button::Button(BaseWidget *parent)
     : BaseWidget(parent)
@@ -42,71 +24,14 @@ Button::Button(BaseWidget *parent)
 
 void Button::setMouseEffectColor(std::optional<QColor> color)
 {
-    this->mouseEffectColor_ = std::move(color);
+    this->mouseEffectColor_ = color;
 }
 
-void Button::setPixmap(const QPixmap &_pixmap)
+void Button::setEnabled(bool enabled)
 {
-    this->pixmap_ = _pixmap;
-    this->resizedPixmap_ = {};
-    this->update();
-}
-
-const QPixmap &Button::getPixmap() const
-{
-    return this->pixmap_;
-}
-
-void Button::setDim(Dim value)
-{
-    this->dimPixmap_ = value;
+    this->enabled_ = enabled;
 
     this->update();
-}
-
-Button::Dim Button::getDim() const
-{
-    return this->dimPixmap_;
-}
-
-void Button::setEnable(bool value)
-{
-    this->enabled_ = value;
-
-    this->update();
-}
-
-bool Button::getEnable() const
-{
-    return this->enabled_;
-}
-
-void Button::setEnableMargin(bool value)
-{
-    this->enableMargin_ = value;
-
-    this->update();
-}
-
-bool Button::getEnableMargin() const
-{
-    return this->enableMargin_;
-}
-
-qreal Button::getCurrentDimAmount() const
-{
-    if (this->dimPixmap_ == Dim::None || this->mouseOver_)
-    {
-        return 1;
-    }
-    else if (this->dimPixmap_ == Dim::Some)
-    {
-        return 0.7;
-    }
-    else
-    {
-        return 0.15;
-    }
 }
 
 void Button::setBorderColor(const QColor &color)
@@ -114,11 +39,6 @@ void Button::setBorderColor(const QColor &color)
     this->borderColor_ = color;
 
     this->update();
-}
-
-const QColor &Button::getBorderColor() const
-{
-    return this->borderColor_;
 }
 
 void Button::setMenu(std::unique_ptr<QMenu> menu)
@@ -142,90 +62,35 @@ void Button::setMenu(std::unique_ptr<QMenu> menu)
         }));
 }
 
-void Button::paintEvent(QPaintEvent *)
+void Button::paintEvent(QPaintEvent * /*event*/)
 {
     QPainter painter(this);
     this->paintButton(painter);
 }
 
-void Button::paintButton(QPainter &painter)
+void Button::invalidateContent()
 {
-    painter.setRenderHint(QPainter::SmoothPixmapTransform);
-
-    if (!this->pixmap_.isNull())
-    {
-        painter.setOpacity(this->getCurrentDimAmount());
-
-        QRect rect = this->rect();
-
-        this->resizedPixmap_ =
-            resizePixmap(this->pixmap_, this->resizedPixmap_, rect.size());
-
-        int margin = this->height() < 22 * this->scale() ? 3 : 6;
-
-        int s = this->enableMargin_ ? int(margin * this->scale()) : 0;
-
-        rect.moveLeft(s);
-        rect.setRight(rect.right() - s - s);
-        rect.moveTop(s);
-        rect.setBottom(rect.bottom() - s - s);
-
-        painter.drawPixmap(rect, this->resizedPixmap_);
-
-        painter.setOpacity(1);
-    }
-
-    this->fancyPaint(painter);
-
-    if (this->borderColor_.isValid())
-    {
-        painter.setRenderHint(QPainter::Antialiasing, false);
-        painter.setPen(this->borderColor_);
-        painter.drawRect(0, 0, this->width() - 1, this->height() - 1);
-    }
+    this->pixmapValid_ = false;
+    this->update();
 }
 
-void Button::fancyPaint(QPainter &painter)
+void Button::setContentCacheEnabled(bool enabled)
 {
-    if (!this->enabled_)
+    if (this->cachePixmap_ == enabled)
     {
         return;
     }
 
-    painter.setRenderHint(QPainter::Antialiasing);
-    QColor c;
-
-    if (this->mouseEffectColor_)
+    if (!enabled)
     {
-        c = *this->mouseEffectColor_;
+        this->cachedPixmap_ = {};
     }
-    else
-    {
-        c = this->theme->isLightTheme() ? QColor(0, 0, 0)
-                                        : QColor(255, 255, 255);
-    }
+    this->cachePixmap_ = enabled;
+}
 
-    if (this->hoverMultiplier_ > 0)
-    {
-        QRadialGradient gradient(QPointF(mousePos_), this->width() / 2);
-
-        gradient.setColorAt(0, QColor(c.red(), c.green(), c.blue(),
-                                      int(50 * this->hoverMultiplier_)));
-        gradient.setColorAt(1, QColor(c.red(), c.green(), c.blue(),
-                                      int(40 * this->hoverMultiplier_)));
-
-        painter.fillRect(this->rect(), gradient);
-    }
-
-    for (auto effect : this->clickEffects_)
-    {
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(QColor(c.red(), c.green(), c.blue(),
-                                int((1 - effect.progress) * 95)));
-        painter.drawEllipse(QPointF(effect.position),
-                            effect.progress * qreal(width()) * 2,
-                            effect.progress * qreal(width()) * 2);
-    }
+void Button::setOpaqueContent(bool opaqueContent)
+{
+    this->opaqueContent_ = opaqueContent;
 }
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
@@ -262,7 +127,7 @@ void Button::mousePressEvent(QMouseEvent *event)
         return;
     }
 
-    this->clickEffects_.push_back(ClickEffect(event->pos()));
+    this->clickEffects_.emplace_back(event->pos());
 
     this->mouseDown_ = true;
 
@@ -317,16 +182,7 @@ void Button::onMouseEffectTimeout()
 {
     bool performUpdate = false;
 
-    if (selected_)
-    {
-        if (this->hoverMultiplier_ != 0)
-        {
-            this->hoverMultiplier_ =
-                std::max(0.0, this->hoverMultiplier_ - 0.1);
-            performUpdate = true;
-        }
-    }
-    else if (mouseOver_)
+    if (mouseOver_)
     {
         if (this->hoverMultiplier_ != 1)
         {
@@ -345,7 +201,7 @@ void Button::onMouseEffectTimeout()
         }
     }
 
-    if (this->clickEffects_.size() != 0)
+    if (!this->clickEffects_.empty())
     {
         performUpdate = true;
 
@@ -397,6 +253,95 @@ void Button::showMenu()
 
     this->menu_->popup(point);
     this->menuVisible_ = true;
+}
+
+void Button::paintButton(QPainter &painter)
+{
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
+
+    if (this->cachePixmap_)
+    {
+        if (this->cachedPixmap_.size() != this->size())
+        {
+            this->cachedPixmap_ = QPixmap(this->size());
+            this->cachedPixmap_.setDevicePixelRatio(this->devicePixelRatio());
+            this->pixmapValid_ = false;
+        }
+
+        if (!this->pixmapValid_)
+        {
+            if (!this->opaqueContent_)
+            {
+                this->cachedPixmap_.fill(Qt::transparent);
+            }
+
+            {
+                QPainter pixmapPainter(&this->cachedPixmap_);
+                this->paintContent(pixmapPainter);
+            }
+
+            this->pixmapValid_ = true;
+        }
+        painter.drawPixmap(this->rect(), this->cachedPixmap_,
+                           {{}, this->cachedPixmap_.size()});
+    }
+    else
+    {
+        this->paintContent(painter);
+    }
+
+    this->fancyPaint(painter);
+
+    if (this->borderColor_.isValid())
+    {
+        painter.setRenderHint(QPainter::Antialiasing, false);
+        painter.setPen(this->borderColor_);
+        painter.drawRect(0, 0, this->width() - 1, this->height() - 1);
+    }
+}
+
+void Button::fancyPaint(QPainter &painter)
+{
+    if (!this->enabled_)
+    {
+        return;
+    }
+
+    painter.setRenderHint(QPainter::Antialiasing);
+    QColor c;
+
+    if (this->mouseEffectColor_)
+    {
+        c = *this->mouseEffectColor_;
+    }
+    else
+    {
+        c = this->theme->isLightTheme() ? QColor(0, 0, 0)
+                                        : QColor(255, 255, 255);
+    }
+
+    if (this->hoverMultiplier_ > 0)
+    {
+        QRadialGradient gradient(QPointF(mousePos_),
+                                 static_cast<qreal>(this->width()) / 2.0);
+
+        gradient.setColorAt(0, QColor(c.red(), c.green(), c.blue(),
+                                      int(50 * this->hoverMultiplier_)));
+        gradient.setColorAt(1, QColor(c.red(), c.green(), c.blue(),
+                                      int(40 * this->hoverMultiplier_)));
+
+        painter.fillRect(this->rect(), gradient);
+    }
+
+    for (auto effect : this->clickEffects_)
+    {
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(QColor(c.red(), c.green(), c.blue(),
+                                int((1 - effect.progress) * 95)));
+        painter.drawEllipse(QPointF(effect.position),
+                            effect.progress * qreal(width()) * 2,
+                            effect.progress * qreal(width()) * 2);
+    }
 }
 
 }  // namespace chatterino

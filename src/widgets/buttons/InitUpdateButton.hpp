@@ -10,10 +10,10 @@ namespace Signals {
 
 namespace chatterino {
 
-class Button;
+class PixmapButton;
 class UpdateDialog;
 
-void initUpdateButton(Button &button,
+void initUpdateButton(PixmapButton &button,
                       pajlada::Signals::SignalHolder &signalHolder);
 
 }  // namespace chatterino
