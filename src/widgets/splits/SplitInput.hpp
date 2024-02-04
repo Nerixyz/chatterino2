@@ -19,9 +19,10 @@ namespace chatterino {
 class Split;
 class EmotePopup;
 class InputCompletionPopup;
-class EffectLabel;
+class LabelButton;
 class ResizingTextEdit;
 class ChannelView;
+class SvgButton;
 enum class CompletionKind;
 
 class SplitInput : public BaseWidget
@@ -128,8 +129,8 @@ protected:
     struct {
         ResizingTextEdit *textEdit;
         QLabel *textEditLength;
-        EffectLabel *sendButton;
-        EffectLabel *emoteButton;
+        LabelButton *sendButton;
+        LabelButton *emoteButton;
 
         QHBoxLayout *hbox;
         QVBoxLayout *vbox;
@@ -137,7 +138,7 @@ protected:
         QWidget *replyWrapper;
         QHBoxLayout *replyHbox;
         QLabel *replyLabel;
-        EffectLabel *cancelReplyButton;
+        LabelButton *cancelReplyButton;
     } ui_{};
 
     MessagePtr replyThread_ = nullptr;

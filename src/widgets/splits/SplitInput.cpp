@@ -11,14 +11,16 @@
 #include "providers/twitch/TwitchChannel.hpp"
 #include "providers/twitch/TwitchCommon.hpp"
 #include "providers/twitch/TwitchIrcServer.hpp"
+#include "singletons/Fonts.hpp"
 #include "singletons/Settings.hpp"
 #include "singletons/Theme.hpp"
 #include "util/Clamp.hpp"
 #include "util/Helpers.hpp"
 #include "util/LayoutCreator.hpp"
+#include "widgets/buttons/LabelButton.hpp"
+#include "widgets/buttons/PixmapButton.hpp"
 #include "widgets/dialogs/EmotePopup.hpp"
 #include "widgets/helper/ChannelView.hpp"
-#include "widgets/helper/EffectLabel.hpp"
 #include "widgets/helper/ResizingTextEdit.hpp"
 #include "widgets/Notebook.hpp"
 #include "widgets/Scrollbar.hpp"
@@ -100,9 +102,10 @@ void SplitInput::initLayout()
 
     replyHbox->addStretch(1);
 
-    auto replyCancelButton = replyHbox.emplace<EffectLabel>(nullptr, 4)
-                                 .assign(&this->ui_.cancelReplyButton);
-    replyCancelButton->getLabel().setTextFormat(Qt::RichText);
+    auto replyCancelButton =
+        replyHbox.emplace<LabelButton>(QString{}, nullptr, QSize{4, 0})
+            .assign(&this->ui_.cancelReplyButton);
+    replyCancelButton->setRichText();
 
     replyCancelButton->hide();
     replyLabel->hide();
@@ -117,11 +120,10 @@ void SplitInput::initLayout()
     connect(textEdit.getElement(), &ResizingTextEdit::textChanged, this,
             &SplitInput::editTextChanged);
 
-    hboxLayout.emplace<EffectLabel>().assign(&this->ui_.sendButton);
-    this->ui_.sendButton->getLabel().setText("SEND");
+    hboxLayout.emplace<LabelButton>("SEND").assign(&this->ui_.sendButton);
     this->ui_.sendButton->hide();
 
-    QObject::connect(this->ui_.sendButton, &EffectLabel::leftClicked, [this] {
+    QObject::connect(this->ui_.sendButton, &Button::leftClicked, [this] {
         std::vector<QString> arguments;
         this->handleSendMessage(arguments);
     });
@@ -148,10 +150,10 @@ void SplitInput::initLayout()
         textEditLength->setAlignment(Qt::AlignRight);
 
         box->addStretch(1);
-        box.emplace<EffectLabel>().assign(&this->ui_.emoteButton);
+        box.emplace<LabelButton>().assign(&this->ui_.emoteButton);
     }
 
-    this->ui_.emoteButton->getLabel().setTextFormat(Qt::RichText);
+    this->ui_.emoteButton->setRichText();
 
     // ---- misc
 
@@ -172,15 +174,14 @@ void SplitInput::initLayout()
         });
 
     // open emote popup
-    QObject::connect(this->ui_.emoteButton, &EffectLabel::leftClicked, [this] {
+    QObject::connect(this->ui_.emoteButton, &Button::leftClicked, [this] {
         this->openEmotePopup();
     });
 
     // clear input and remove reply thread
-    QObject::connect(this->ui_.cancelReplyButton, &EffectLabel::leftClicked,
-                     [this] {
-                         this->clearInput();
-                     });
+    QObject::connect(this->ui_.cancelReplyButton, &Button::leftClicked, [this] {
+        this->clearInput();
+    });
 
     // Forward selection change signal
     QObject::connect(this->ui_.textEdit, &QTextEdit::copyAvailable,
@@ -239,7 +240,7 @@ void SplitInput::themeChangedEvent()
     auto marginPx = static_cast<int>(2.F * this->scale());
     this->ui_.vbox->setContentsMargins(marginPx, marginPx, marginPx, marginPx);
 
-    this->ui_.emoteButton->getLabel().setStyleSheet("color: #000");
+    this->ui_.emoteButton->setStyleSheet("color: #000");
 
     if (this->theme->isLightTheme())
     {
@@ -260,7 +261,7 @@ void SplitInput::updateEmoteButton()
             .arg(this->theme->isLightTheme() ? "emoteDark" : "emote")
             .arg(int(12 * scale));
 
-    this->ui_.emoteButton->getLabel().setText(text);
+    this->ui_.emoteButton->setText(text);
     this->ui_.emoteButton->setFixedHeight(int(18 * scale));
 }
 
@@ -273,7 +274,7 @@ void SplitInput::updateCancelReplyButton()
             .arg(this->theme->isLightTheme() ? "cancelDark" : "cancel")
             .arg(int(12 * scale));
 
-    this->ui_.cancelReplyButton->getLabel().setText(text);
+    this->ui_.cancelReplyButton->setText(text);
     this->ui_.cancelReplyButton->setFixedHeight(int(12 * scale));
 }
 

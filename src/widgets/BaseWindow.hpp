@@ -16,7 +16,8 @@ typedef struct tagMSG MSG;
 namespace chatterino {
 
 class Button;
-class EffectLabel;
+class LabelButton;
+class PixmapButton;
 class TitleBarButton;
 class TitleBarButtons;
 enum class TitleBarButtonStyle;
@@ -50,9 +51,20 @@ public:
 
     QWidget *getLayoutContainer();
     bool hasCustomWindowFrame() const;
-    TitleBarButton *addTitleBarButton(const TitleBarButtonStyle &style,
-                                      std::function<void()> onClicked);
-    EffectLabel *addTitleBarLabel(std::function<void()> onClicked);
+
+    template <typename T>
+    T *addTitleBarButton(std::function<void()> onClicked, auto &&...args)
+    {
+        auto *button = new T(args...);
+        button->setScaleIndependantSize(30, 30);
+        this->appendTitlebarButton(button);
+
+        QObject::connect(button, &T::leftClicked, this, std::move(onClicked));
+
+        return button;
+    }
+
+    LabelButton *addTitleBarLabel(std::function<void()> onClicked);
 
     void setActionOnFocusLoss(ActionOnFocusLoss value);
     ActionOnFocusLoss getActionOnFocusLoss() const;
@@ -143,6 +155,8 @@ private:
     bool handleNCCALCSIZE(MSG *msg, long *result);
     bool handleNCHITTEST(MSG *msg, long *result);
 #endif
+
+    void appendTitlebarButton(Button *button);
 
     bool enableCustomFrame_;
     ActionOnFocusLoss actionOnFocusLoss_ = Nothing;

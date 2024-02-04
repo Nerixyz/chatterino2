@@ -41,7 +41,7 @@ enum class MessageElementFlag : int64_t;
 using MessageElementFlags = FlagsEnum<MessageElementFlag>;
 
 class Scrollbar;
-class EffectLabel;
+class LabelButton;
 struct Link;
 class MessageLayoutElement;
 class Split;
@@ -346,7 +346,7 @@ private:
     Split *split_;
 
     Scrollbar *scrollBar_;
-    EffectLabel *goToBottom_{};
+    LabelButton *goToBottom_{};
     bool showScrollBar_ = false;
 
     FilterSetPtr channelFilters_;
