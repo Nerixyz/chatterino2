@@ -8,7 +8,7 @@
 
 namespace chatterino::filters {
 
-static const QMap<QString, QString> validIdentifiersMap = {
+inline const QMap<QString, QString> validIdentifiersMap = {
     {"author.badges", "author badges"},
     {"author.color", "author color"},
     {"author.name", "author name"},
@@ -38,7 +38,7 @@ static const QMap<QString, QString> validIdentifiersMap = {
     {"message.length", "message length"}};
 
 // clang-format off
-static const QRegularExpression tokenRegex(
+inline const QRegularExpression tokenRegex(
     QString("((r|ri)?\\\")((\\\\\")|[^\\\"])*\\\"|") +        // String/Regex literal
     QString("[\\w\\.]+|") +                                   // Identifier or reserved keyword
     QString("(<=?|>=?|!=?|==|\\|\\||&&|\\+|-|\\*|\\/|%)+|") + // Operator

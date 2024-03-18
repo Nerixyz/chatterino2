@@ -22,7 +22,7 @@ namespace chatterino::filters {
 // For example, flags.highlighted is a boolean variable, so it is marked as Type::Bool
 // below. These variable types will be used to check whether a filter "makes sense",
 // i.e. if all the variables and operators being used have compatible types.
-static const QMap<QString, Type> MESSAGE_TYPING_CONTEXT = {
+inline const QMap<QString, Type> MESSAGE_TYPING_CONTEXT = {
     {"author.badges", Type::StringList},
     {"author.color", Type::Color},
     {"author.name", Type::String},
