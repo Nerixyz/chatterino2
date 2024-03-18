@@ -6,7 +6,7 @@
 namespace chatterino {
 
 // Colors taken from https://modern.ircdocs.horse/formatting.html
-static QMap<int, QColor> IRC_COLORS = {
+inline QMap<int, QColor> IRC_COLORS = {
     {0, QColor("white")},      {1, QColor("black")},
     {2, QColor("blue")},       {3, QColor("green")},
     {4, QColor("red")},        {5, QColor("brown")},

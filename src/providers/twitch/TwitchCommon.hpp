@@ -15,16 +15,16 @@ namespace chatterino {
 #    endif
 #endif
 
-static const char *ANONYMOUS_USERNAME ATTR_UNUSED = "justinfan64537";
+inline const char *ANONYMOUS_USERNAME ATTR_UNUSED = "justinfan64537";
 
-static constexpr int TWITCH_MESSAGE_LIMIT = 500;
+inline constexpr int TWITCH_MESSAGE_LIMIT = 500;
 
 inline QByteArray getDefaultClientID()
 {
     return QByteArray("7ue61iz46fz11y3cugd0l3tawb4taal");
 }
 
-static const std::vector<QColor> TWITCH_USERNAME_COLORS = {
+inline const std::vector<QColor> TWITCH_USERNAME_COLORS = {
     {255, 0, 0},      // Red
     {0, 0, 255},      // Blue
     {0, 255, 0},      // Green
@@ -42,7 +42,7 @@ static const std::vector<QColor> TWITCH_USERNAME_COLORS = {
     {0, 255, 127},    // SpringGreen
 };
 
-static const QStringList TWITCH_DEFAULT_COMMANDS{
+inline const QStringList TWITCH_DEFAULT_COMMANDS{
     "help",
     "w",
     "me",
@@ -79,6 +79,6 @@ static const QStringList TWITCH_DEFAULT_COMMANDS{
     "requests",
 };
 
-static const QStringList TWITCH_WHISPER_COMMANDS{"/w", ".w"};
+inline const QStringList TWITCH_WHISPER_COMMANDS{"/w", ".w"};
 
 }  // namespace chatterino
