@@ -1,10 +1,13 @@
 #include "providers/emoji/Emojis.hpp"
 
+#include "common/Literals.hpp"
+
 #include <benchmark/benchmark.h>
 #include <QDebug>
 #include <QString>
 
 using namespace chatterino;
+using namespace literals;
 
 static void BM_ShortcodeParsing(benchmark::State &state)
 {
@@ -56,97 +59,7 @@ static void BM_ShortcodeParsing(benchmark::State &state)
 
 BENCHMARK(BM_ShortcodeParsing);
 
-static void BM_EmojiParsing(benchmark::State &state)
-{
-    Emojis emojis;
-
-    emojis.load();
-
-    struct TestCase {
-        QString input;
-        std::vector<boost::variant<EmotePtr, QString>> expectedOutput;
-    };
-
-    const auto &emojiMap = emojis.getEmojis();
-    auto getEmoji = [&](auto code) {
-        std::shared_ptr<EmojiData> emoji;
-        for (const auto &e : emojis.getEmojis())
-        {
-            if (e->unifiedCode == code)
-            {
-                emoji = e;
-                break;
-            }
-        }
-        return emoji->emote;
-    };
-    auto penguinEmoji = getEmoji("1F427");
-    assert(penguinEmoji.get() != nullptr);
-
-    std::vector<TestCase> tests{
-        {
-            // 1 emoji
-            "foo 🐧 bar",
-            // expected output
-            {
-                "foo ",
-                penguinEmoji,
-                " bar",
-            },
-        },
-        {
-            // no emoji
-            "foo bar",
-            // expected output
-            {
-                "foo bar",
-            },
-        },
-        {
-            // many emoji
-            "foo 🐧 bar 🐧🐧🐧🐧🐧",
-            // expected output
-            {
-                "foo ",
-                penguinEmoji,
-                " bar ",
-                penguinEmoji,
-                penguinEmoji,
-                penguinEmoji,
-                penguinEmoji,
-                penguinEmoji,
-            },
-        },
-    };
-
-    for (auto _ : state)
-    {
-        for (const auto &test : tests)
-        {
-            auto output = emojis.parse(test.input);
-
-            bool areEqual = std::equal(output.begin(), output.end(),
-                                       test.expectedOutput.begin());
-
-            if (!areEqual)
-            {
-                qDebug() << "BAD BENCH";
-                for (const auto &v : output)
-                {
-                    if (v.type() == typeid(QString))
-                    {
-                        qDebug() << "output:" << boost::get<QString>(v);
-                    }
-                }
-            }
-        }
-    }
-}
-
-BENCHMARK(BM_EmojiParsing);
-
-static void BM_EmojiParsing2(benchmark::State &state, const QString &input,
-                             int expectedNumEmojis)
+static void BM_EmojiParsing(benchmark::State &state, const QString &input)
 {
     Emojis emojis;
 
@@ -155,28 +68,24 @@ static void BM_EmojiParsing2(benchmark::State &state, const QString &input,
     for (auto _ : state)
     {
         auto output = emojis.parse(input);
-        int actualNumEmojis = 0;
-        for (const auto &part : output)
-        {
-            if (part.type() == typeid(EmotePtr))
-            {
-                ++actualNumEmojis;
-            }
-        }
-
-        if (actualNumEmojis != expectedNumEmojis)
-        {
-            qDebug() << "BAD BENCH, EXPECTED NUM EMOJIS IS WRONG"
-                     << actualNumEmojis;
-        }
+        benchmark::DoNotOptimize(output);
     }
 }
 
-BENCHMARK_CAPTURE(BM_EmojiParsing2, one_emoji, "foo 🐧 bar", 1);
-BENCHMARK_CAPTURE(BM_EmojiParsing2, two_emoji, "foo 🐧 bar 🐧", 2);
+BENCHMARK_CAPTURE(BM_EmojiParsing, no_emoji, u"foo bar"_s);
 BENCHMARK_CAPTURE(
-    BM_EmojiParsing2, many_emoji,
+    BM_EmojiParsing, no_emoji_long,
+    u"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."_s);
+BENCHMARK_CAPTURE(BM_EmojiParsing, one_emoji, u"foo 🐧 bar"_s);
+BENCHMARK_CAPTURE(BM_EmojiParsing, two_emoji, u"foo 🐧 bar 🐧"_s);
+BENCHMARK_CAPTURE(
+    BM_EmojiParsing, repeated_emoji,
+    u"😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 "_s
     "😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 "
-    "😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 "
-    "😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 ",
-    61);
+    "😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 😂 ");
+BENCHMARK_CAPTURE(
+    BM_EmojiParsing, random_emoji,
+    u"💲 🔔 💋 🍟 🎱 📍 🙌 🙋 🍢 😽 🙋 🙅 👧 ❇️ 💠 🚌 🏓 💔 🌶 ♥️ 🍭 🗓 🔆 💃 🍑 🍪 👛 🚨 💡 💜 🚲 💼 🍦 📂 🎳 🍒 ⏺ 💍 📟 📋 🚲 🍡 🙌 🍯 🕒 🕰 📲 🍯 🔊 💈 👃 🤑 📲 🚼 💜 🛄 ⛰ 👕 💊 🚢 🈺 💗 🚻 🎚 🔏 👲 🈶 ㊗️ 🐑 ▫️ 👮 📌 💳 🛬 🏆 🛳 ❔ 🕌 📐 👸 🐀 🎒 👑 Ⓜ️ 👪 🛐 😻 🐏 🍲 👹 🎎 ✴️ 🙃 🚲 🌦 🔊 🏁 ⛺️ 🔧 ⏺ 🏹 🐹 🆖 🐡 🏰 🌆 💢 ❔ ⚫️ 🎛 🏯 🔖 💙 ⏪ 😅 💰 🌌 💫 😕 🎫 🛣 🔋 ↔️ 🔽 😗 🗂 🏢 🏕"_s);
+BENCHMARK_CAPTURE(
+    BM_EmojiParsing, random_emoji_with_text,
+    u"Lorem ipsum 🙏 dolor 📑 sit 🌷 amet, 🌚 consectetur 🕔 adipiscing ✅ elit, 📤 sed 🖨 do 🍬 eiusmod 🔫 tempor 🐋 incididunt 🏛 ut 🔱 labore 🔓 et ⤵️ dolore 📫 magna 🏓 aliqua. 🚋 Ut ⚛ enim 🏄 ad 🗼 minim 🏜 veniam, 🖇 quis 📌 nostrud 😈 exercitation ↙️ ullamco ®️ laboris 👁 nisi 💹 ut 🔜 aliquip ☠ ex ⛱ ea 🛢 commodo 🍝 consequat. 🐶 Duis 8️⃣ aute ➕ irure ♣️ dolor 🍀 in 🔆 reprehenderit 🍒 in 🎣 voluptate ⏮ velit #️⃣ esse 🔥 cillum ◼️ dolore 🖍 eu 😗 fugiat ⤴️ nulla 🦃 pariatur. ❕ Excepteur ➰ sint 🐄 occaecat 🚈 cupidatat 🕰 non 😞 proident, 📲 sunt 🛩 in ⚡️ culpa 7️⃣ qui 🎬 officia 🛍 deserunt 🔚"_s);

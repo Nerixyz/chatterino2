@@ -5,21 +5,26 @@
 #include "messages/Image.hpp"
 #include "util/QStringHash.hpp"
 
-namespace {
+namespace triegen {
 
-using namespace chatterino;
+extern QSize twitchUnusualEmoteSize(const char16_t *in, size_t len) noexcept;
 
-Url getEmoteLink(const EmoteId &id, const QString &emoteScale)
-{
-    return {QString(TWITCH_EMOTE_TEMPLATE)
-                .replace("{id}", id.string)
-                .replace("{scale}", emoteScale)};
-}
+}  // namespace triegen
+
+namespace chatterino::detail {
 
 QSize getEmoteExpectedBaseSize(const EmoteId &id)
 {
     // From Twitch docs - expected size for an emote (1x)
     constexpr QSize defaultBaseSize(28, 28);
+#ifdef TRIEGEN_IMPL
+    auto s = triegen::twitchUnusualEmoteSize(
+        reinterpret_cast<const char16_t *>(id.string.data()), id.string.size());
+    if (s.isValid())
+    {
+        return s;
+    }
+#else
     static std::unordered_map<QString, QSize> outliers{
         {"555555635", {21, 18}}, /* ;p */
         {"555555636", {21, 18}}, /* ;-p */
@@ -201,8 +206,22 @@ QSize getEmoteExpectedBaseSize(const EmoteId &id)
     {
         return it->second;
     }
+#endif
 
     return defaultBaseSize;
+}
+
+}  // namespace chatterino::detail
+
+namespace {
+
+using namespace chatterino;
+
+Url getEmoteLink(const EmoteId &id, const QString &emoteScale)
+{
+    return {QString(TWITCH_EMOTE_TEMPLATE)
+                .replace("{id}", id.string)
+                .replace("{scale}", emoteScale)};
 }
 
 qreal getEmote3xScaleFactor(const EmoteId &id)
@@ -438,7 +457,7 @@ EmotePtr TwitchEmotes::getOrCreateEmote(const EmoteId &id,
 
     if (!shared)
     {
-        auto baseSize = getEmoteExpectedBaseSize(id);
+        auto baseSize = detail::getEmoteExpectedBaseSize(id);
         auto emote3xScaleFactor = getEmote3xScaleFactor(id);
         (*cache)[id] = shared = std::make_shared<Emote>(Emote{
             EmoteName{name},

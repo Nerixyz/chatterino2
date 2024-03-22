@@ -234,6 +234,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Generate resource files
 include(cmake/resources/generate_resources.cmake)
 
+add_subdirectory("${CMAKE_SOURCE_DIR}/tools/triegen")
+
+function(use_triegen_kv path_var fn)
+    add_custom_command(
+        OUTPUT "${CMAKE_BINARY_DIR}/triegen/${fn}_gen.cpp"
+        DEPENDS triegen-kv
+        COMMAND triegen-kv "${CMAKE_BINARY_DIR}/triegen/${fn}_gen.cpp" ${fn} ${ARGN}
+    )
+    set(${path_var} "${CMAKE_BINARY_DIR}/triegen/${fn}_gen.cpp" PARENT_SCOPE)
+endfunction()
+
 add_subdirectory(src)
 
 if (BUILD_TESTS OR BUILD_BENCHMARKS)

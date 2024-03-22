@@ -11,6 +11,7 @@ set(benchmark_SOURCES
     src/LimitedQueue.cpp
     src/LinkParser.cpp
     src/RecentMessages.cpp
+    src/UnusualEmotes.cpp
     # Add your new file above this line!
     )
 
@@ -39,3 +40,10 @@ if (CHATTERINO_STATIC_QT_BUILD)
         Qt::QMinimalIntegrationPlugin
     )
 endif ()
+
+if(CHATTERINO_ENABLE_LTO)
+    message(STATUS "Enabling LTO for ${PROJECT_NAME}")
+    set_target_properties(${PROJECT_NAME} PROPERTIES 
+        INTERPROCEDURAL_OPTIMIZATION TRUE
+    )
+endif()

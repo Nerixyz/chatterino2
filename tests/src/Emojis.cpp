@@ -1,6 +1,7 @@
 #include "providers/emoji/Emojis.hpp"
 
 #include "common/Literals.hpp"
+#include "debug/Benchmark.hpp"
 #include "TestHelpers.hpp"
 
 #include <gtest/gtest.h>
@@ -159,6 +160,7 @@ TEST(Emojis, Parse)
         },
     };
 
+    BenchmarkGuard g("foo");
     for (const auto &test : tests)
     {
         auto output = emojis.parse(test.input);

@@ -33,6 +33,10 @@ struct CheerEmoteSet {
     std::vector<CheerEmote> cheerEmotes;
 };
 
+namespace detail {
+    QSize getEmoteExpectedBaseSize(const EmoteId &id);
+}  // namespace detail
+
 class ITwitchEmotes
 {
 public:

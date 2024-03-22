@@ -15,6 +15,13 @@
 #include <map>
 #include <memory>
 
+namespace triegen {
+
+extern std::pair<int, size_t> matchEmoji(const char16_t *in,
+                                         size_t len) noexcept;
+
+}  // namespace triegen
+
 namespace {
 
 using namespace chatterino;
@@ -292,13 +299,57 @@ void Emojis::loadEmojiSet()
     });
 }
 
+#ifdef TRIEGEN_IMPL
 std::vector<boost::variant<EmotePtr, QString>> Emojis::parse(
     const QString &text) const
 {
     auto result = std::vector<boost::variant<EmotePtr, QString>>();
     QString::size_type lastParsedEmojiEndIndex = 0;
 
-    for (auto i = 0; i < text.length(); ++i)
+    for (QString::size_type i = 0; i < text.length(); ++i)
+    {
+        const QChar character = text.at(i);
+
+        if (character.isLowSurrogate())
+        {
+            continue;
+        }
+
+        auto [idx, len] = triegen::matchEmoji(
+            reinterpret_cast<const char16_t *>(text.data() + i),
+            text.length() - i);
+        if (idx < 0)
+        {
+            continue;
+        }
+
+        if (i - lastParsedEmojiEndIndex > 0)
+        {
+            // Add characters inbetween emojis
+            result.emplace_back(
+                text.mid(lastParsedEmojiEndIndex, i - lastParsedEmojiEndIndex));
+        }
+        result.emplace_back(this->emojis[idx]->emote);
+        lastParsedEmojiEndIndex = i + static_cast<QString::size_type>(len);
+        i += static_cast<QString::size_type>(len) - 1;
+    }
+
+    if (lastParsedEmojiEndIndex < text.length())
+    {
+        // Add remaining characters
+        result.emplace_back(text.mid(lastParsedEmojiEndIndex));
+    }
+
+    return result;
+}
+#else
+std::vector<boost::variant<EmotePtr, QString>> Emojis::parse(
+    const QString &text) const
+{
+    auto result = std::vector<boost::variant<EmotePtr, QString>>();
+    QString::size_type lastParsedEmojiEndIndex = 0;
+
+    for (QString::size_type i = 0; i < text.length(); ++i)
     {
         const QChar character = text.at(i);
 
@@ -394,6 +445,7 @@ std::vector<boost::variant<EmotePtr, QString>> Emojis::parse(
 
     return result;
 }
+#endif
 
 QString Emojis::replaceShortCodes(const QString &text) const
 {

@@ -6,8 +6,194 @@ add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x050F00)
 # registers the native messageing host
 option(CHATTERINO_DEBUG_NATIVE_MESSAGES "Debug native messages" OFF)
 option(CHATTERINO_STATIC_QT_BUILD "Static link Qt" OFF)
+option(CHATTERINO_TRIEGEN "Use triegen" OFF)
+
+add_custom_command(
+    OUTPUT ${CMAKE_BINARY_DIR}/triegen/MatchEmoji_gen.cpp
+    DEPENDS triegen-emoji
+    COMMAND triegen-emoji "${CMAKE_SOURCE_DIR}/resources/emoji.json" ${CMAKE_BINARY_DIR}/triegen/MatchEmoji_gen.cpp
+)
+
+set(TWITCH_UNUSUAL_EMOTE_SIZES
+    555555635=21x18 # ;p
+    555555636=21x18 # ;-p
+    555555614=21x18 # O_o
+    555555641=21x18 # :z
+    555555604=21x18 # :\\
+    444=21x18       # :|
+    555555634=21x18 # ;-P
+    439=21x18       # ;)
+    555555642=21x18 # :-z
+    555555613=21x18 # :-o
+    555555625=21x18 # :-p
+    433=21x18       # :/
+    555555622=21x18 # :P
+    555555640=21x18 # :-|
+    555555623=21x18 # :-P
+    555555628=21x18 # :)
+    555555632=21x18 # 8-)
+    555555667=20x18 # ;p
+    445=21x18       # <3
+    555555668=20x18 # ;-p
+    555555679=20x18 # :z
+    483=20x18       # <3
+    555555666=20x18 # ;-P
+    497=20x18       # O_o
+    555555664=20x18 # :-p
+    555555671=20x18 # :o
+    555555681=20x18 # :Z
+    555555672=20x18 # :-o
+    555555676=20x18 # :-\\
+    555555611=21x18 # :-O
+    555555670=20x18 # :-O
+    555555688=20x18 # :-D
+    441=21x18       # B)
+    555555601=21x18 # >(
+    491=20x18       # ;P
+    496=20x18       # :D
+    492=20x18       # :O
+    555555573=24x18 # o_O
+    555555643=21x18 # :Z
+    1898=26x28      # ThunBeast
+    555555682=20x18 # :-Z
+    1896=20x30      # WholeWheat
+    1906=24x30      # SoBayed
+    555555607=21x18 # :-(
+    555555660=20x18 # :-(
+    489=20x18       # :(
+    495=20x18       # :s
+    555555638=21x18 # :-D
+    357=28x30       # HotPokket
+    555555624=21x18 # :p
+    73=21x30        # DBstyle
+    555555674=20x18 # :-/
+    555555629=21x18 # :-)
+    555555600=24x18 # R-)
+    41=19x27        # Kreygasm
+    555555612=21x18 # :o
+    488=29x24       # :7
+    69=41x28        # BloodTrail
+    555555608=21x18 # R)
+    501=20x18       # ;)
+    50=18x27        # ArsonNoSexy
+    443=21x18       # :D
+    1904=24x30      # BigBrother
+    555555595=24x18 # ;P
+    555555663=20x18 # :p
+    555555576=24x18 # o.o
+    360=22x30       # FailFish
+    500=20x18       # B)
+    3=24x18         # :D
+    484=20x22       # R)
+    555555678=20x18 # :-|
+    7=24x18         # B)
+    52=32x32        # SMOrc
+    555555644=21x18 # :-Z
+    18=20x27        # TheRinger
+    49106=27x28     # CorgiDerp
+    6=24x18         # O_o
+    10=24x18        # :/
+    47=24x24        # PunchTrees
+    555555561=24x18 # :-D
+    555555564=24x18 # :-|
+    13=24x18        # ;P
+    555555593=24x18 # :p
+    555555589=24x18 # ;)
+    555555590=24x18 # ;-)
+    486=27x42       # :>
+    40=21x27        # KevinTurtle
+    555555558=24x18 # :(
+    555555597=24x18 # ;p
+    555555580=24x18 # :O
+    555555567=24x18 # :Z
+    1=24x18         # :)
+    11=24x18        # ;)
+    33=25x32        # DansGame
+    555555586=24x18 # :-/
+    4=24x18         # >(
+    555555588=24x18 # :-\\
+    12=24x18        # :P
+    555555563=24x18 # :|
+    555555581=24x18 # :-O
+    555555598=24x18 # ;-p
+    555555596=24x18 # ;-P
+    555555557=24x18 # :-)
+    498=20x18       # >(
+    555555680=20x18 # :-z
+    555555587=24x18 # :\\
+    5=24x18         # :|
+    354=20x30       # 4Head
+    555555562=24x18 # >(
+    555555594=24x18 # :-p
+    490=20x18       # :P
+    555555662=20x18 # :-P
+    2=24x18         # :(
+    1902=27x29      # Keepo
+    555555627=21x18 # ;-)
+    555555566=24x18 # :-z
+    555555559=24x18 # :-(
+    555555592=24x18 # :-P
+    28=39x27        # MrDestructoid
+    8=24x18         # :O
+    244=24x30       # FUNgineer
+    555555591=24x18 # :P
+    555555585=24x18 # :/
+    494=20x18       # :|
+    9=24x18         # <3
+    555555584=24x18 # <3
+    555555579=24x18 # 8-)
+    14=24x18        # R)
+    485=27x18       # #/
+    555555560=24x18 # :D
+    86=36x30        # BibleThump
+    555555578=24x18 # B-)
+    17=20x27        # StoneLightning
+    436=21x18       # :O
+    555555675=20x18 # :\\
+    22=19x27        # RedCoat
+    555555574=24x18 # o.O
+    555555603=21x18 # :-/
+    1901=24x28      # Kippa
+    15=21x27        # JKanStyle
+    555555605=21x18 # :-\\
+    555555701=20x18 # ;-)
+    487=20x42       # <]
+    555555572=24x18 # O.O
+    65=40x30        # FrankerZ
+    25=25x28        # Kappa
+    36=36x30        # PJSalt
+    499=20x18       # :)
+    555555565=24x18 # :z
+    434=21x18       # :(
+    555555577=24x18 # B)
+    34=21x28        # SwiftRage
+    555555575=24x18 # o_o
+    92=23x30        # PMSTwin
+    555555570=24x18 # O.o
+    555555569=24x18 # O_o
+    493=20x18       # :/
+    26=20x27        # JonCarnage
+    66=20x27        # OneHand
+    555555568=24x18 # :-Z
+    555555599=24x18 # R)
+    1900=33x30      # RalpherZ
+    555555582=24x18 # :o
+    1899=22x30      # TF2John
+    555555633=21x18 # ;P
+    16=22x27        # OptimizePrime
+    30=29x27        # BCWarrior
+    555555583=24x18 # :-o
+    32=21x27        # GingerPower
+    87=24x30        # ShazBotstix
+    74=24x30        # AsianGlow
+    555555571=24x18 # O_O
+    46=24x24        # SSSsss
+)
+
+use_triegen_kv(TWITCH_UNUSUAL_EMOTE_SIZE_GEN twitchUnusualEmoteSize -qsize ${TWITCH_UNUSUAL_EMOTE_SIZES})
 
 set(SOURCE_FILES
+        ${TWITCH_UNUSUAL_EMOTE_SIZE_GEN}
         Application.cpp
         Application.hpp
         BrowserExtension.cpp
@@ -720,6 +906,7 @@ set(SOURCE_FILES
         widgets/splits/SplitOverlay.hpp
 
         ${CMAKE_SOURCE_DIR}/resources/resources.qrc
+        ${CMAKE_BINARY_DIR}/triegen/MatchEmoji_gen.cpp
         )
 
 if (APPLE)
@@ -735,6 +922,8 @@ source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${SOURCE_FILES})
 list(APPEND SOURCE_FILES ${RES_AUTOGEN_FILES})
 
 add_library(${LIBRARY_PROJECT} OBJECT ${SOURCE_FILES})
+
+target_compile_definitions(${LIBRARY_PROJECT} PRIVATE $<$<BOOL:${CHATTERINO_TRIEGEN}>:TRIEGEN_IMPL>)
 
 if(CHATTERINO_PLUGINS)
     target_compile_definitions(${LIBRARY_PROJECT}
