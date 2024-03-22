@@ -7,8 +7,20 @@ add_compile_definitions(QT_WARN_DEPRECATED_UP_TO=0x050F00)
 # registers the native messageing host
 option(CHATTERINO_DEBUG_NATIVE_MESSAGES "Debug native messages" OFF)
 option(CHATTERINO_STATIC_QT_BUILD "Static link Qt" OFF)
+option(CHATTERINO_TRIEGEN "Use triegen" OFF)
+
+set(_match_emoji_src "${CMAKE_BINARY_DIR}/triegen/MatchEmoji_gen.cpp")
+set(_match_emoji_include_dir "${CMAKE_BINARY_DIR}/triegen/include")
+set(_match_emoji_header "${_match_emoji_include_dir}/triegen/MatchEmoji.hpp")
+add_custom_command(
+    OUTPUT "${_match_emoji_src}"
+    BYPRODUCTS "${_match_emoji_header}"
+    DEPENDS triegen-emoji
+    COMMAND triegen-emoji "${CMAKE_SOURCE_DIR}/resources/emoji.json" "${_match_emoji_src}" "${_match_emoji_header}"
+)
 
 set(SOURCE_FILES
+        ${TWITCH_UNUSUAL_EMOTE_SIZE_GEN}
         Application.cpp
         Application.hpp
         BrowserExtension.cpp
@@ -736,6 +748,7 @@ set(SOURCE_FILES
         widgets/splits/SplitOverlay.hpp
 
         ${CMAKE_SOURCE_DIR}/resources/resources.qrc
+        ${CMAKE_BINARY_DIR}/triegen/MatchEmoji_gen.cpp
         )
 
 if (APPLE)
@@ -751,6 +764,8 @@ source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${SOURCE_FILES})
 list(APPEND SOURCE_FILES ${RES_AUTOGEN_FILES})
 
 add_library(${LIBRARY_PROJECT} OBJECT ${SOURCE_FILES})
+
+target_compile_definitions(${LIBRARY_PROJECT} PRIVATE $<$<BOOL:${CHATTERINO_TRIEGEN}>:TRIEGEN_IMPL>)
 
 if(CHATTERINO_PLUGINS)
     target_compile_definitions(${LIBRARY_PROJECT}
@@ -1015,7 +1030,11 @@ if (APPLE AND BUILD_APP)
         )
 endif ()
 
-target_include_directories(${LIBRARY_PROJECT} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/autogen/)
+target_include_directories(${LIBRARY_PROJECT} PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_BINARY_DIR}/autogen/
+    "${_match_emoji_include_dir}"
+)
 
 # semver dependency https://github.com/Neargye/semver
 target_include_directories(${LIBRARY_PROJECT} PUBLIC ${CMAKE_SOURCE_DIR}/lib/semver/include)

@@ -12,6 +12,7 @@
 #include <rapidjson/error/en.h>
 #include <rapidjson/error/error.h>
 #include <rapidjson/rapidjson.h>
+#include <triegen/MatchEmoji.hpp>
 
 #include <map>
 #include <memory>
@@ -304,7 +305,9 @@ std::vector<boost::variant<EmotePtr, QString>> Emojis::parse(
     auto result = std::vector<boost::variant<EmotePtr, QString>>();
     QString::size_type lastParsedEmojiEndIndex = 0;
 
-    for (qsizetype i = 0; i < text.length(); ++i)
+    QStringView textView(text);
+
+    for (QString::size_type i = 0; i < text.length(); ++i)
     {
         const QChar character = text.at(i);
 
@@ -313,83 +316,21 @@ std::vector<boost::variant<EmotePtr, QString>> Emojis::parse(
             continue;
         }
 
-        auto it = this->emojiFirstByte_.find(character);
-        if (it == this->emojiFirstByte_.end())
-        {
-            // No emoji starts with this character
-            continue;
-        }
-
-        const auto &possibleEmojis = it.value();
-
-        auto remainingCharacters = text.length() - i - 1;
-
-        std::shared_ptr<EmojiData> matchedEmoji;
-
-        QString::size_type matchedEmojiLength = 0;
-
-        for (const std::shared_ptr<EmojiData> &emoji : possibleEmojis)
-        {
-            auto emojiNonQualifiedExtraCharacters =
-                emoji->nonQualified.length() - 1;
-            auto emojiExtraCharacters = emoji->value.length() - 1;
-            if (remainingCharacters >= emojiExtraCharacters)
-            {
-                // look in emoji->value
-                bool match = QStringView{emoji->value}.mid(1) ==
-                             QStringView{text}.mid(i + 1, emojiExtraCharacters);
-
-                if (match)
-                {
-                    matchedEmoji = emoji;
-                    matchedEmojiLength = emoji->value.length();
-
-                    break;
-                }
-            }
-            if (!emoji->nonQualified.isNull() &&
-                remainingCharacters >= emojiNonQualifiedExtraCharacters)
-            {
-                // This checking here relies on the fact that the nonQualified string
-                // always starts with the same byte as value (the unified string)
-                bool match = QStringView{emoji->nonQualified}.mid(1) ==
-                             QStringView{text}.mid(
-                                 i + 1, emojiNonQualifiedExtraCharacters);
-
-                if (match)
-                {
-                    matchedEmoji = emoji;
-                    matchedEmojiLength = emoji->nonQualified.length();
-
-                    break;
-                }
-            }
-        }
-
-        if (matchedEmojiLength == 0)
+        auto [idx, len] = triegen::matchEmoji(textView.mid(i));
+        if (idx < 0)
         {
             continue;
         }
 
-        auto currentParsedEmojiFirstIndex = i;
-        auto currentParsedEmojiEndIndex = i + (matchedEmojiLength);
-
-        auto charactersFromLastParsedEmoji =
-            currentParsedEmojiFirstIndex - lastParsedEmojiEndIndex;
-
-        if (charactersFromLastParsedEmoji > 0)
+        if (i - lastParsedEmojiEndIndex > 0)
         {
             // Add characters inbetween emojis
-            result.emplace_back(text.mid(lastParsedEmojiEndIndex,
-                                         charactersFromLastParsedEmoji));
+            result.emplace_back(
+                text.mid(lastParsedEmojiEndIndex, i - lastParsedEmojiEndIndex));
         }
-
-        // Push the emoji as a word to parsedWords
-        result.emplace_back(matchedEmoji->emote);
-
-        lastParsedEmojiEndIndex = currentParsedEmojiEndIndex;
-
-        i += matchedEmojiLength - 1;
+        result.emplace_back(this->emojis[idx]->emote);
+        lastParsedEmojiEndIndex = i + static_cast<QString::size_type>(len);
+        i += static_cast<QString::size_type>(len) - 1;
     }
 
     if (lastParsedEmojiEndIndex < text.length())
