@@ -63,7 +63,7 @@ jobs:
           split_workflow: true
           exclude: "lib/*,tools/crash-handler/*"
           cmake_command: >-
-            bash .CI/SetupClangTidyCMake.sh ${{matrix.qt-version}}
+            ./.CI/SetupClangTidyCMake.sh ${{matrix.qt-version}}
           apt_packages: >-
             libsecret-1-dev,
             libboost-dev, libboost-system-dev, libboost-filesystem-dev,
