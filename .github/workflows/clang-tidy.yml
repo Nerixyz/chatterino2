@@ -53,6 +53,7 @@ jobs:
           modules: qt5compat qtimageformats
           version: ${{ matrix.qt-version }}
           dir: ${{ github.workspace }}/.qtinstall
+          set-env: false
 
       - name: clang-tidy review
         timeout-minutes: 20
