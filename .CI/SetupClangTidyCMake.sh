@@ -9,8 +9,7 @@ set -ev;
 # aqt installs into .qtinstall/Qt/<version>/gcc_64
 # This is doing the same as jurplel/install-qt-action
 # See https://github.com/jurplel/install-qt-action/blob/74ca8cd6681420fc8894aed264644c7a76d7c8cb/action/src/main.ts#L52-L74
-qmake_path=$(echo .qtinstall/Qt/[0-9]*/*/bin/qmake*);
-qtpath=${qmake_path%/bin/qmake*};
+qtpath=$(echo .qtinstall/Qt/[0-9]*/*/bin/qmake | sed -e s:/bin/qmake$::);
 echo $qtpath;
 export LD_LIBRARY_PATH="$qtpath/lib";
 export QT_ROOT_DIR=$qtpath;
