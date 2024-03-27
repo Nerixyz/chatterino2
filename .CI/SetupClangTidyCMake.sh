@@ -15,6 +15,7 @@ export LD_LIBRARY_PATH="$qtpath/lib";
 export QT_ROOT_DIR=$qtpath;
 export QT_PLUGIN_PATH="$qtpath/plugins";
 export PATH="$PATH:$(realpath "$qtdir/bin")";
+export Qt6_DIR="$(realpath "$qtdir")";
 
 cmake -S. -Bbuild-clang-tidy \
     -DCMAKE_BUILD_TYPE=Debug \
