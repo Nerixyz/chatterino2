@@ -568,6 +568,7 @@ std::vector<MessagePtr> parsePrivMessage(Channel *channel,
     MessageParseArgs args;
     TwitchMessageBuilder builder(channel, message, args, message->content(),
                                  message->isAction());
+
     if (!builder.isIgnored())
     {
         builtMessages.emplace_back(builder.build());
@@ -620,6 +621,12 @@ std::vector<MessagePtr> IrcMessageHandler::parseMessageWithReply(
         MessageParseArgs args;
         TwitchMessageBuilder builder(channel, message, args, content,
                                      privMsg->isAction());
+        if (message->tag(u"msg-id"_s).toString() ==
+            u"gigantified-emote-message"_s)
+        {
+            builder.message().flags.set(MessageFlag::GigantifiedEmote);
+        }
+
         builder.setMessageOffset(messageOffset);
 
         populateReply(tc, message, otherLoaded, builder);
@@ -1425,6 +1432,11 @@ void IrcMessageHandler::addMessage(Communi::IrcMessage *message,
                 }
             }
         }
+    }
+
+    if (message->tag(u"msg-id"_s).toString() == u"gigantified-emote-message"_s)
+    {
+        builder.message().flags.set(MessageFlag::GigantifiedEmote);
     }
 
     if (isSub || !builder.isIgnored())

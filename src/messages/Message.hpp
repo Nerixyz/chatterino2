@@ -63,6 +63,8 @@ enum class MessageFlag : int64_t {
     MonitoredMessage = (1LL << 35),
     /// The message is an ACTION message (/me)
     Action = (1LL << 36),
+    /// Bits redemption for gigantified (enlarged) emotes
+    GigantifiedEmote = (1LL << 37),
 };
 using MessageFlags = FlagsEnum<MessageFlag>;
 

@@ -990,4 +990,9 @@ bool MessageLayoutContainer::canCollapse() const
            this->flags_.has(MessageFlag::Collapsed);
 }
 
+MessageFlags MessageLayoutContainer::messageFlags() const
+{
+    return this->flags_;
+}
+
 }  // namespace chatterino

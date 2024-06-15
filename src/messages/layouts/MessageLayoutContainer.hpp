@@ -179,6 +179,9 @@ struct MessageLayoutContainer {
      */
     int nextWordId();
 
+    /// @returns The flags of the to be laid out message
+    MessageFlags messageFlags() const;
+
 private:
     struct Line {
         /**

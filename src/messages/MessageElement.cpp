@@ -7,6 +7,7 @@
 #include "messages/Image.hpp"
 #include "messages/layouts/MessageLayoutContainer.hpp"
 #include "messages/layouts/MessageLayoutElement.hpp"
+#include "messages/Message.hpp"
 #include "providers/emoji/Emojis.hpp"
 #include "singletons/Emotes.hpp"
 #include "singletons/Settings.hpp"
@@ -155,8 +156,15 @@ void EmoteElement::addToContainer(MessageLayoutContainer &container,
     {
         if (flags.has(MessageElementFlag::EmoteImages))
         {
+            auto scaleFactor = 1.0F;
+
+            if (container.messageFlags().has(MessageFlag::GigantifiedEmote))
+            {
+                scaleFactor = 4.0F;
+            }
+
             auto image = this->emote_->images.getImageOrLoaded(
-                container.getImageScale());
+                container.getImageScale() * scaleFactor);
             if (image->isEmpty())
             {
                 return;
@@ -164,9 +172,10 @@ void EmoteElement::addToContainer(MessageLayoutContainer &container,
 
             auto emoteScale = getSettings()->emoteScale.getValue();
 
-            auto size =
-                QSize(int(container.getScale() * image->width() * emoteScale),
-                      int(container.getScale() * image->height() * emoteScale));
+            auto size = QSize(int(container.getScale() * image->width() *
+                                  emoteScale * scaleFactor),
+                              int(container.getScale() * image->height() *
+                                  emoteScale * scaleFactor));
 
             container.addElement(this->makeImageLayoutElement(image, size));
         }
