@@ -1728,10 +1728,11 @@ std::optional<EmotePtr> TwitchChannel::twitchBadge(const QString &set,
 std::vector<FfzBadges::Badge> TwitchChannel::ffzChannelBadges(
     const QString &userID) const
 {
-    this->tgFfzChannelBadges_.guard();
-
-    auto it = this->ffzChannelBadges_.find(userID);
-    if (it == this->ffzChannelBadges_.end())
+    QVarLengthArray<int, 2> channelBadges;
+    auto found = this->ffzChannelBadges_.visit(userID, [&](const auto &v) {
+        channelBadges = v.second;
+    });
+    if (found == 0)
     {
         return {};
     }
@@ -1740,7 +1741,7 @@ std::vector<FfzBadges::Badge> TwitchChannel::ffzChannelBadges(
 
     const auto *ffzBadges = getIApp()->getFfzBadges();
 
-    for (const auto &badgeID : it->second)
+    for (auto badgeID : channelBadges)
     {
         auto badge = ffzBadges->getBadge(badgeID);
         if (badge.has_value())

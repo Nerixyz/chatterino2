@@ -349,15 +349,11 @@ Fonts *Application::getFonts()
 
 IEmotes *Application::getEmotes()
 {
-    assertInGuiThread();
-
     return this->emotes;
 }
 
 AccountController *Application::getAccounts()
 {
-    assertInGuiThread();
-
     return this->accounts;
 }
 
@@ -406,15 +402,11 @@ NotificationController *Application::getNotifications()
 
 HighlightController *Application::getHighlights()
 {
-    assertInGuiThread();
-
     return this->highlights;
 }
 
 FfzBadges *Application::getFfzBadges()
 {
-    assertInGuiThread();
-
     return this->ffzBadges;
 }
 
@@ -427,8 +419,6 @@ SeventvBadges *Application::getSeventvBadges()
 
 IUserDataController *Application::getUserData()
 {
-    assertInGuiThread();
-
     return this->userData.get();
 }
 
@@ -448,7 +438,6 @@ ITwitchLiveController *Application::getTwitchLiveController()
 
 TwitchBadges *Application::getTwitchBadges()
 {
-    assertInGuiThread();
     assert(this->twitchBadges);
 
     return this->twitchBadges.get();
@@ -456,7 +445,6 @@ TwitchBadges *Application::getTwitchBadges()
 
 IChatterinoBadges *Application::getChatterinoBadges()
 {
-    assertInGuiThread();
     assert(this->chatterinoBadges);
 
     return this->chatterinoBadges.get();
@@ -515,8 +503,6 @@ ILogging *Application::getChatLogger()
 
 ILinkResolver *Application::getLinkResolver()
 {
-    assertInGuiThread();
-
     return this->linkResolver.get();
 }
 
@@ -527,7 +513,6 @@ IStreamerMode *Application::getStreamerMode()
 
 BttvEmotes *Application::getBttvEmotes()
 {
-    assertInGuiThread();
     assert(this->bttvEmotes);
 
     return this->bttvEmotes.get();
@@ -535,7 +520,6 @@ BttvEmotes *Application::getBttvEmotes()
 
 FfzEmotes *Application::getFfzEmotes()
 {
-    assertInGuiThread();
     assert(this->ffzEmotes);
 
     return this->ffzEmotes.get();
@@ -543,7 +527,6 @@ FfzEmotes *Application::getFfzEmotes()
 
 SeventvEmotes *Application::getSeventvEmotes()
 {
-    assertInGuiThread();
     assert(this->seventvEmotes);
 
     return this->seventvEmotes.get();

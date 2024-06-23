@@ -15,6 +15,7 @@
 #include "singletons/Resources.hpp"
 #include "singletons/Theme.hpp"
 #include "util/FormatTime.hpp"
+#include "util/PostToThread.hpp"
 
 #include <QDateTime>
 
@@ -661,7 +662,21 @@ void MessageBuilder::addLink(const ParsedLink &parsedLink)
         LinkElement::Parsed{.lowercase = lowercaseLinkString,
                             .original = origLink},
         fullUrl, MessageElementFlag::Text, textColor);
-    getIApp()->getLinkResolver()->resolve(el->linkInfo());
+    if (isGuiThread())
+    {
+        getIApp()->getLinkResolver()->resolve(el->linkInfo());
+    }
+    else
+    {
+        el->linkInfo()->moveToThread(qApp->thread());
+        QPointer p{el->linkInfo()};
+        postToThread([p = std::move(p)] {
+            if (p)
+            {
+                getIApp()->getLinkResolver()->resolve(p.get());
+            }
+        });
+    }
 }
 
 void MessageBuilder::addIrcMessageText(const QString &text)

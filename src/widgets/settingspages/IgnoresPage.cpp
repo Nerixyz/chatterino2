@@ -131,10 +131,9 @@ void IgnoresPage::onShow()
     QStringList users;
     users.reserve(user->blocks().size());
 
-    for (const auto &blockedUser : user->blocks())
-    {
-        users << blockedUser.name;
-    }
+    user->blocks().cvisit_all([&](const auto &blocked) {
+        users << blocked.name;
+    });
     users.sort(Qt::CaseInsensitive);
     this->userListModel_.setStringList(users);
 }

@@ -35,6 +35,7 @@ void load(
     const long delayMs = jitter ? std::rand() % 100 : 0;
     QTimer::singleShot(delayMs, [=] {
         NetworkRequest(url)
+            .concurrent()
             .onSuccess([channelPtr, onLoaded](const auto &result) {
                 auto shared = channelPtr.lock();
                 if (!shared)

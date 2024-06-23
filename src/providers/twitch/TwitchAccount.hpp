@@ -9,6 +9,7 @@
 #include "util/CancellationToken.hpp"
 #include "util/QStringHash.hpp"
 
+#include <boost/unordered/concurrent_flat_set.hpp>  // ugh
 #include <QColor>
 #include <QElapsedTimer>
 #include <QObject>
@@ -88,8 +89,9 @@ public:
                      std::function<void()> onSuccess,
                      std::function<void()> onFailure);
 
-    [[nodiscard]] const std::unordered_set<TwitchUser> &blocks() const;
-    [[nodiscard]] const std::unordered_set<QString> &blockedUserIds() const;
+    [[nodiscard]] const boost::concurrent_flat_set<TwitchUser> &blocks() const;
+    [[nodiscard]] const boost::concurrent_flat_set<QString> &blockedUserIds()
+        const;
 
     void loadEmotes(std::weak_ptr<Channel> weakChannel = {});
     // loadUserstateEmotes loads emote sets that are part of the USERSTATE emote-sets key
@@ -119,8 +121,8 @@ private:
     QStringList userstateEmoteSets_;
 
     ScopedCancellationToken blockToken_;
-    std::unordered_set<TwitchUser> ignores_;
-    std::unordered_set<QString> ignoresUserIds_;
+    boost::concurrent_flat_set<TwitchUser> ignores_;
+    boost::concurrent_flat_set<QString> ignoresUserIds_;
 
     //    std::map<UserId, TwitchAccountEmoteData> emotes;
     UniqueAccess<TwitchAccountEmoteData> emotes_;

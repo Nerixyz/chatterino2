@@ -3,6 +3,7 @@
 #include "common/network/NetworkRequest.hpp"
 #include "common/network/NetworkResult.hpp"
 #include "common/QLogging.hpp"
+#include "debug/AssertInGuiThread.hpp"
 #include "messages/Emote.hpp"
 #include "messages/Image.hpp"
 #include "providers/twitch/api/Helix.hpp"
@@ -30,6 +31,7 @@ namespace chatterino {
 
 void TwitchBadges::loadTwitchBadges()
 {
+    assertInGuiThread();
     assert(this->loaded_ == false);
 
     getHelix()->getGlobalBadges(

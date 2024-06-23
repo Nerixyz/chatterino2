@@ -1,5 +1,6 @@
 #include "controllers/userdata/UserDataController.hpp"
 
+#include "debug/AssertInGuiThread.hpp"
 #include "singletons/Paths.hpp"
 #include "util/CombinePath.hpp"
 #include "util/Helpers.hpp"
@@ -59,6 +60,8 @@ std::unordered_map<QString, UserData> UserDataController::getUsers() const
 void UserDataController::setUserColor(const QString &userID,
                                       const QString &colorString)
 {
+    assertInGuiThread();
+
     auto c = this->getUsers();
     auto it = c.find(userID);
     std::optional<QColor> finalColor =

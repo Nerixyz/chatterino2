@@ -4,7 +4,7 @@
 #include "common/Atomic.hpp"
 #include "util/QStringHash.hpp"
 
-#include <boost/unordered/unordered_flat_map.hpp>
+#include <boost/unordered/concurrent_flat_map.hpp>
 #include <QJsonObject>
 
 #include <memory>
@@ -19,7 +19,7 @@ class Channel;
 
 /// Maps a Twitch User ID to a list of badge IDs
 using FfzChannelBadgeMap =
-    boost::unordered::unordered_flat_map<QString, std::vector<int>>;
+    boost::concurrent_flat_map<QString, QVarLengthArray<int, 2>>;
 
 namespace ffz::detail {
 

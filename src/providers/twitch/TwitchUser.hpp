@@ -44,6 +44,11 @@ struct TwitchUser {
     }
 };
 
+inline size_t hash_value(const TwitchUser &user) noexcept
+{
+    return qHash(user.id);
+}
+
 }  // namespace chatterino
 
 namespace pajlada {

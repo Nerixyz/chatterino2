@@ -45,7 +45,8 @@ std::vector<FfzBadges::Badge> FfzBadges::getUserBadges(const UserId &id)
 
 std::optional<FfzBadges::Badge> FfzBadges::getBadge(const int badgeID) const
 {
-    this->tgBadges.guard();
+    std::shared_lock lock(this->mutex_);  // TODO: use concurrent map
+
     auto it = this->badges.find(badgeID);
     if (it != this->badges.end())
     {
@@ -104,12 +105,15 @@ void FfzBadges::load()
                     auto userIDString = QString::number(user.toInt());
 
                     auto [userBadges, created] = this->userBadges.emplace(
-                        std::make_pair<QString, std::set<int>>(
+                        std::make_pair<QString, QVarLengthArray<int, 2>>(
                             std::move(userIDString), {badgeID}));
                     if (!created)
                     {
                         // User already had a badge assigned
-                        userBadges->second.emplace(badgeID);
+                        if (!userBadges->second.contains(badgeID))
+                        {
+                            userBadges->second.append(badgeID);
+                        }
                     }
                 }
             }

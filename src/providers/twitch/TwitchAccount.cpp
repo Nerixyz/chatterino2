@@ -164,15 +164,13 @@ void TwitchAccount::unblockUser(const QString &userId, const QObject *caller,
         std::move(onFailure));
 }
 
-const std::unordered_set<TwitchUser> &TwitchAccount::blocks() const
+const boost::concurrent_flat_set<TwitchUser> &TwitchAccount::blocks() const
 {
-    assertInGuiThread();
     return this->ignores_;
 }
 
-const std::unordered_set<QString> &TwitchAccount::blockedUserIds() const
+const boost::concurrent_flat_set<QString> &TwitchAccount::blockedUserIds() const
 {
-    assertInGuiThread();
     return this->ignoresUserIds_;
 }
 
