@@ -16,6 +16,9 @@ struct Selection;
 
 // TODO: Figure out if this could be a subset of Theme instead (e.g. Theme::MessageColors)
 struct MessageColors {
+    // true if any of the background colors have transparency
+    bool hasTransparency = false;
+
     QColor regular;
     QColor alternate;
     QColor disabled;

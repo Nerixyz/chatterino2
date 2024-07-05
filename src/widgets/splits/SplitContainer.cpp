@@ -639,11 +639,13 @@ void SplitContainer::paintEvent(QPaintEvent * /*event*/)
     {
         if (getIApp()->getThemes()->isLightTheme())
         {
-            painter.fillRect(rect(), QColor("#999"));
+            painter.fillRect(rect(), {153, 153, 153,
+                                      this->theme->window.background.alpha()});
         }
         else
         {
-            painter.fillRect(rect(), QColor("#555"));
+            painter.fillRect(
+                rect(), {85, 85, 85, this->theme->window.background.alpha()});
         }
     }
 

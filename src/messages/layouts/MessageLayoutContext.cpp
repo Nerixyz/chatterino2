@@ -18,6 +18,9 @@ void MessageColors::applyTheme(Theme *theme)
 
     this->focusedLastMessageLine = theme->tabs.selected.backgrounds.regular;
     this->unfocusedLastMessageLine = theme->tabs.selected.backgrounds.unfocused;
+
+    this->hasTransparency =
+        this->regular.alpha() != 255 || this->alternate.alpha() != 255;
 }
 
 void MessagePreferences::connectSettings(Settings *settings,

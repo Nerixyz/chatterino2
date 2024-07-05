@@ -468,7 +468,8 @@ void BaseWindow::themeChangedEvent()
     if (this->hasCustomWindowFrame())
     {
         QPalette palette;
-        palette.setColor(QPalette::Window, QColor(80, 80, 80, 255));
+        palette.setColor(QPalette::Window,
+                         {80, 80, 80, this->theme->window.background.alpha()});
         palette.setColor(QPalette::WindowText, this->theme->window.text);
         this->setPalette(palette);
 
@@ -489,10 +490,13 @@ void BaseWindow::themeChangedEvent()
     else
     {
         QPalette palette;
-        palette.setColor(QPalette::Window, this->theme->window.background);
+        palette.setColor(QPalette::Window, {0, 255, 0, 255});
         palette.setColor(QPalette::WindowText, this->theme->window.text);
         this->setPalette(palette);
     }
+
+    this->setAttribute(Qt::WA_TranslucentBackground,
+                       this->theme->window.background.alpha() != 255);
 }
 
 bool BaseWindow::event(QEvent *event)
@@ -787,6 +791,22 @@ bool BaseWindow::nativeEvent(const QByteArray &eventType, void *message,
             returnValue = this->handleNCCALCSIZE(msg, result);
             break;
 
+        case WM_NCPAINT:
+            returnValue = true;
+            break;
+
+        case WM_ACTIVATE: {
+            DwmDefWindowProc(msg->hwnd, msg->message, msg->wParam, msg->lParam,
+                             result);
+            if (this->hasCustomWindowFrame())
+            {
+                // disable OS window border
+                const MARGINS margins = {-1};
+                DwmExtendFrameIntoClientArea(msg->hwnd, &margins);
+            }
+        }
+        break;
+
         case WM_SIZE:
             returnValue = this->handleSIZE(msg);
             break;
@@ -918,7 +938,12 @@ void BaseWindow::paintEvent(QPaintEvent *)
 
     if (this->frameless_)
     {
-        painter.setPen(QColor("#999"));
+        painter.setPen(
+            QColor{153, 153, 153, this->theme->window.background.alpha()});
+        if (this->theme->window.background.alpha() != 255)
+        {
+            painter.setBrush({this->theme->window.background});
+        }
         painter.drawRect(0, 0, this->width() - 1, this->height() - 1);
     }
 
@@ -1045,6 +1070,16 @@ bool BaseWindow::handleSHOWWINDOW(MSG *msg)
             const MARGINS margins = {-1};
             DwmExtendFrameIntoClientArea(msg->hwnd, &margins);
         }
+
+        DWM_BLURBEHIND bb = {0};
+
+        // Specify blur-behind and blur region.
+        bb.dwFlags = DWM_BB_ENABLE;
+        bb.fEnable = TRUE;
+        bb.hRgnBlur = nullptr;
+
+        // Enable blur-behind.
+        DwmEnableBlurBehindWindow(msg->hwnd, &bb);
 
         if (!this->initalBounds_.isNull())
         {
