@@ -483,7 +483,7 @@ size_t MessageLayout::getSelectionIndex(QPoint position) const
 }
 
 void MessageLayout::addSelectionText(QString &str, uint32_t from, uint32_t to,
-                                     CopyMode copymode)
+                                     CopyMode copymode) const
 {
     this->container_.addSelectionText(str, from, to, copymode);
 }

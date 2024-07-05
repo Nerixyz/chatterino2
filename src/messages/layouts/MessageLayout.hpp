@@ -104,7 +104,7 @@ public:
     size_t getSelectionIndex(QPoint position) const;
     void addSelectionText(QString &str, uint32_t from = 0,
                           uint32_t to = UINT32_MAX,
-                          CopyMode copymode = CopyMode::Everything);
+                          CopyMode copymode = CopyMode::Everything) const;
 
     // Misc
     bool isDisabled() const;

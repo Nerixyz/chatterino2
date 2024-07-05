@@ -574,6 +574,8 @@ set(SOURCE_FILES
         widgets/buttons/InitUpdateButton.hpp
         widgets/buttons/LabelButton.cpp
         widgets/buttons/LabelButton.hpp
+        widgets/buttons/MessageButtons.hpp
+        widgets/buttons/MessageButtons.cpp
         widgets/buttons/NotebookButton.cpp
         widgets/buttons/NotebookButton.hpp
         widgets/buttons/PixmapButton.cpp

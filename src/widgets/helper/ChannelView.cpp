@@ -330,6 +330,7 @@ ChannelView::ChannelView(InternalCtor /*tag*/, QWidget *parent, Split *split,
     , highlightAnimation_(this)
     , context_(context)
     , messages_(messagesLimit)
+    , messageButtons_(this)
     , tooltipWidget_(new TooltipWidget(this))
 {
     this->setMouseTracking(true);
@@ -404,6 +405,44 @@ void ChannelView::initializeLayout()
                 getSettings()->enableSmoothScrollingNewMessages.getValue());
         });
     });
+
+    this->messageButtons_.setVisible(false);
+    QObject::connect(
+        &this->messageButtons_, &MessageButtons::replyAllRequested, this,
+        [this] {
+            const auto *message = this->messageButtons_.message();
+            if (!message || !message->replyThread)
+            {
+                assert(false && "replyAll without a message/reply");
+                return;
+            }
+            this->setInputReply(message->replyThread->root());
+        });
+    QObject::connect(&this->messageButtons_, &MessageButtons::replyRequested,
+                     this, [this] {
+                         auto message = this->messageButtons_.messagePtr();
+                         if (!message)
+                         {
+                             assert(false && "reply without a message");
+                             return;
+                         }
+                         this->setInputReply(message);
+                     });
+
+    QObject::connect(
+        &this->messageButtons_, &MessageButtons::copyRequested, this, [this] {
+            const auto *layout = this->messageButtons_.messageLayout();
+            if (!layout)
+            {
+                assert(false && "No layout");
+                return;
+            }
+            QString copyString;
+            layout->addSelectionText(copyString, 0, INT_MAX,
+                                     CopyMode::OnlyTextAndEmotes);
+
+            crossPlatformCopy(copyString);
+        });
 }
 
 void ChannelView::initializeScrollbar()
@@ -692,6 +731,8 @@ void ChannelView::layoutVisibleMessages(
     const auto flags = this->getFlags();
     auto redrawRequired = false;
 
+    const auto *hovered = this->messageButtons_.message();
+
     if (messages.size() > start)
     {
         auto y = int(-(messages[start]->getHeight() *
@@ -706,10 +747,21 @@ void ChannelView::layoutVisibleMessages(
                 this->scale() * static_cast<float>(this->devicePixelRatio()),
                 flags, this->bufferInvalidationQueued_);
 
+            if (message->getMessage() == hovered)
+            {
+                this->moveButtonsTo(y);
+                hovered = nullptr;
+            }
+
             y += message->getHeight();
         }
     }
     this->bufferInvalidationQueued_ = false;
+
+    if (hovered != nullptr)
+    {
+        this->messageButtons_.hide();
+    }
 
     if (redrawRequired)
     {
@@ -1790,6 +1842,7 @@ void ChannelView::enterEvent(QEvent * /*event*/)
 void ChannelView::leaveEvent(QEvent * /*event*/)
 {
     this->tooltipWidget_->hide();
+    this->messageButtons_.hide();
 
     this->unpause(PauseReason::Mouse);
 }
@@ -1811,13 +1864,27 @@ void ChannelView::mouseMoveEvent(QMouseEvent *event)
     std::shared_ptr<MessageLayout> layout;
     QPoint relativePos;
     int messageIndex;
+    int yPos{};
 
     // no message under cursor
-    if (!tryGetMessageAt(event->pos(), layout, relativePos, messageIndex))
+    if (!tryGetMessageAt(event->pos(), layout, relativePos, messageIndex,
+                         &yPos))
     {
         this->setCursor(Qt::ArrowCursor);
         this->tooltipWidget_->hide();
+        this->messageButtons_.hide();
         return;
+    }
+
+    if (!layout->getMessage()->flags.has(MessageFlag::System))
+    {
+        this->messageButtons_.show();
+        this->messageButtons_.setMessageLayout(layout);
+        this->moveButtonsTo(yPos);
+    }
+    else
+    {
+        this->messageButtons_.hide();
     }
 
     if (this->isScrolling_)
@@ -2005,7 +2072,8 @@ void ChannelView::mousePressEvent(QMouseEvent *event)
     QPoint relativePos;
     int messageIndex;
 
-    if (!tryGetMessageAt(event->pos(), layout, relativePos, messageIndex))
+    if (!tryGetMessageAt(event->pos(), layout, relativePos, messageIndex,
+                         nullptr))
     {
         setCursor(Qt::ArrowCursor);
         auto &messagesSnapshot = this->getMessagesSnapshot();
@@ -2111,8 +2179,8 @@ void ChannelView::mouseReleaseEvent(QMouseEvent *event)
     QPoint relativePos;
     int messageIndex;
 
-    bool foundElement =
-        tryGetMessageAt(event->pos(), layout, relativePos, messageIndex);
+    bool foundElement = tryGetMessageAt(event->pos(), layout, relativePos,
+                                        messageIndex, nullptr);
 
     // check if mouse was pressed
     if (event->button() == Qt::LeftButton)
@@ -2647,7 +2715,8 @@ void ChannelView::mouseDoubleClickEvent(QMouseEvent *event)
     QPoint relativePos;
     int messageIndex;
 
-    if (!tryGetMessageAt(event->pos(), layout, relativePos, messageIndex))
+    if (!tryGetMessageAt(event->pos(), layout, relativePos, messageIndex,
+                         nullptr))
     {
         return;
     }
@@ -2896,7 +2965,7 @@ void ChannelView::handleLinkClick(QMouseEvent *event, const Link &link,
 
 bool ChannelView::tryGetMessageAt(QPoint p,
                                   std::shared_ptr<MessageLayout> &_message,
-                                  QPoint &relativePos, int &index)
+                                  QPoint &relativePos, int &index, int *yPos)
 {
     auto &messagesSnapshot = this->getMessagesSnapshot();
 
@@ -2919,6 +2988,10 @@ bool ChannelView::tryGetMessageAt(QPoint p,
             relativePos = QPoint(p.x(), p.y() - y);
             _message = message;
             index = i;
+            if (yPos)
+            {
+                *yPos = y;
+            }
             return true;
         }
 
@@ -3149,6 +3222,13 @@ void ChannelView::pendingLinkInfoStateChanged()
     }
     this->setLinkInfoTooltip(this->pendingLinkInfo_.data());
     this->tooltipWidget_->applyLastBoundsCheck();
+}
+
+void ChannelView::moveButtonsTo(int yPos)
+{
+    this->messageButtons_.move(
+        this->width() - this->messageButtons_.width() - 10,
+        yPos - this->messageButtons_.height() / 4);
 }
 
 }  // namespace chatterino

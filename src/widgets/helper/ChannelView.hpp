@@ -7,6 +7,7 @@
 #include "messages/Selection.hpp"
 #include "util/ThreadGuard.hpp"
 #include "widgets/BaseWidget.hpp"
+#include "widgets/buttons/MessageButtons.hpp"
 #include "widgets/TooltipWidget.hpp"
 
 #include <pajlada/signals/signal.hpp>
@@ -228,7 +229,7 @@ protected:
                          MessageLayout *layout);
 
     bool tryGetMessageAt(QPoint p, std::shared_ptr<MessageLayout> &message,
-                         QPoint &relativePos, int &index);
+                         QPoint &relativePos, int &index, int *yPos);
 
 private:
     struct InternalCtor {
@@ -405,6 +406,10 @@ private:
 
     MessageColors messageColors_;
     MessagePreferences messagePreferences_;
+
+    MessageButtons messageButtons_;
+
+    void moveButtonsTo(int yPos);
 
     void scrollUpdateRequested();
 
