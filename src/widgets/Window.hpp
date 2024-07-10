@@ -6,8 +6,8 @@
 #include <pajlada/settings/setting.hpp>
 #include <pajlada/signals/signal.hpp>
 #include <pajlada/signals/signalholder.hpp>
-#include <QSystemTrayIcon>
 
+class QSystemTrayIcon;
 
 namespace chatterino {
 
@@ -27,14 +27,19 @@ public:
 
     WindowType getType();
     SplitNotebook &getNotebook();
-    QSystemTrayIcon *getTrayIcon();
+
+#ifndef Q_OS_MAC
+    QSystemTrayIcon *trayIcon();
+#endif
+
+    bool handleMinimizeEvent() override;
+    bool handleCloseEvent() override;
 
     pajlada::Signals::NoArgSignal closed;
 
 protected:
     void closeEvent(QCloseEvent *event) override;
     bool event(QEvent *event) override;
-    bool isMainWindow() override;
     void themeChangedEvent() override;
 
 private:
@@ -56,10 +61,9 @@ private:
     pajlada::Signals::SignalHolder signalHolder_;
     std::vector<boost::signals2::scoped_connection> bSignals_;
 
+#ifndef Q_OS_MAC
     QSystemTrayIcon *trayIcon_ = nullptr;
-    QAction *actionExit_ = nullptr;
-    QAction *actionShow_ = nullptr;
-    QMenu *trayContextMenu_ = nullptr;
+#endif
 
     // this is only used on Windows and only on the main window, for the one used otherwise, see SplitNotebook in Notebook.hpp
     TitleBarButton *streamerModeTitlebarIcon_ = nullptr;

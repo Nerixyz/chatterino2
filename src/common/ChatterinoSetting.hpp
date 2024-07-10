@@ -106,7 +106,6 @@ public:
         _registerSetting(this->getData());
     }
 
-    template <typename T2>
     EnumStringSetting<Enum> &operator=(Enum newValue)
     {
         this->setValue(qmagicenum::enumNameString(newValue).toLower());

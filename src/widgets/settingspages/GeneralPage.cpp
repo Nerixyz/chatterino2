@@ -312,61 +312,21 @@ void GeneralPage::initLayout(GeneralPageView &layout)
                        "Shows a red dot in the top right corner of a tab to "
                        "indicate one of the channels in the tab is live.");
 
-    minimizeTrayAction =
-        layout.addDropdown<std::underlying_type<TrayAction>::type>(
-            "Behavior when you press the minimize button",
-            {"Ask me", "Minimize to task bar", "Minimize to tray"},
-            s.minizeTrayAction,
-            [](auto val) {
-                switch (val)
-                {
-                    default:
-                    case TrayAction::MinimizeToTaskBar:
-                        return QString("Minimize to task bar");
-                    case TrayAction::AskMe:
-                        return QString("Ask me");
-                    case TrayAction::MinimizeToTray:
-                        return QString("Minimize to tray");
-                }
-            },
-            [](auto args) {
-                if (args.value == "Minimize to tray")
-                    return TrayAction::MinimizeToTray;
-                if (args.value == "Ask me")
-                    return TrayAction::AskMe;
-                return TrayAction::MinimizeToTaskBar;
-            },
-            false);
-    closeTrayAction =
-        layout.addDropdown<std::underlying_type<TrayAction>::type>(
-            "Behavior when you press the close button",
-            {"Ask me", "Close Chatterino", "Minimize to tray"},
-            s.closeTrayAction,
-            [](auto val) {
-                switch (val)
-                {
-                    default:
-                    case TrayAction::CloseChatterino:
-                        return QString("Close Chatterino");
-                    case TrayAction::AskMe:
-                        return QString("Ask me");
-                    case TrayAction::MinimizeToTray:
-                        return QString("Minimize to tray");
-                }
-            },
-            [](auto args) {
-                if (args.value == "Minimize to tray")
-                    return TrayAction::MinimizeToTray;
-                if (args.value == "Ask me")
-                    return TrayAction::AskMe;
-                return TrayAction::CloseChatterino;
-            },
-            false);
-
-    minimizeTrayAction->setMinimumWidth(
-        closeTrayAction->minimumSizeHint().width() + 35);
-    closeTrayAction->setMinimumWidth(
-        closeTrayAction->minimumSizeHint().width() + 35);
+#ifndef Q_OS_MAC
+    layout.addDropdownEnumClass<TrayAction>(
+        "Behavior when the <b>minimize</b> button is pressed",
+        qmagicenum::enumNames<TrayAction>(), s.minizeTrayAction,
+        "The action to take when minimizing the main window. 'Default' will "
+        "minimize the window. Child windows and popups won't inherit this "
+        "behavior.",
+        {});
+    layout.addDropdownEnumClass<TrayAction>(
+        "Behavior when the <b>close</b> button is pressed",
+        qmagicenum::enumNames<TrayAction>(), s.closeTrayAction,
+        "The action to take when closing the main window. 'Default' will close "
+        "the window. Child windows and popups won't inherit this behavior.",
+        {});
+#endif
 
     layout.addTitle("Chat");
 

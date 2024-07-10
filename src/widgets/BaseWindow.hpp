@@ -37,7 +37,6 @@ public:
         Dialog = 1 << 6,
         DisableLayoutSave = 1 << 7,
         BoundsCheckOnShow = 1 << 8,
-        IgnoreTrayEvent = 1 << 9,
     };
 
     enum ActionOnFocusLoss { Nothing, Delete, Close, Hide };
@@ -89,10 +88,6 @@ public:
 
     static bool supportsCustomWindowFrame();
 
-    FlagsEnum<Flags> const &getFlags();
-
-    virtual bool shouldHandleTrayEvent(bool visible);
-
 signals:
     void topMostChanged(bool topMost);
 
@@ -119,8 +114,6 @@ protected:
     bool event(QEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
 
-    virtual bool isMainWindow();
-
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
@@ -129,8 +122,19 @@ protected:
 
     void updateScale();
 
-    void handleMinimizeEvent(QEvent *event);
-    void handleCloseEvent(QEvent *event);
+    /// @brief Attempts to handle/intercept a minimize event
+    ///
+    /// By default this is unhandled.
+    ///
+    /// @returns true if the event was handled (further processing is skipped).
+    virtual bool handleMinimizeEvent();
+
+    /// @brief Attempts to handle/intercept a close event
+    ///
+    /// By default this is unhandled.
+    ///
+    /// @returns true if the event was handled (further processing is skipped).
+    virtual bool handleCloseEvent();
 
     std::optional<QColor> overrideBackgroundColor_;
 

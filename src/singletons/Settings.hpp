@@ -47,11 +47,14 @@ enum UsernameDisplayMode : int {
     UsernameAndLocalizedName = 3,  // Username (Localized name)
 };
 
-enum TrayAction : int {
-    AskMe = 0,              // Default
-    MinimizeToTray = 1,     // Minimize to tray icon
-    MinimizeToTaskBar = 2,  // Minimize to task bar
-    CloseChatterino = 3     // Close program
+/// Action to do when clicking the minimize or close button
+enum class TrayAction : uint8_t {
+    /// Ask the user about the preferred action
+    Ask,
+    /// Default action (minimize/close)
+    Default,
+    /// Minimize to tray icon
+    MinimizeToTray,
 };
 
 enum ThumbnailPreviewMode : int {
@@ -161,10 +164,10 @@ public:
     BoolSetting showTabLive = {"/appearance/showTabLiveButton", true};
     BoolSetting hidePreferencesButton = {"/appearance/hidePreferencesButton",
                                          false};
-    EnumSetting<TrayAction> minizeTrayAction = {
-        "/appearance/minimizeTrayAction", AskMe};
-    EnumSetting<TrayAction> closeTrayAction = {"/appearance/closeTrayAction",
-                                               AskMe};
+    EnumStringSetting<TrayAction> minizeTrayAction = {
+        "/appearance/minimizeTrayAction", TrayAction::Ask};
+    EnumStringSetting<TrayAction> closeTrayAction = {
+        "/appearance/closeTrayAction", TrayAction::Ask};
     BoolSetting hideUserButton = {"/appearance/hideUserButton", false};
     BoolSetting enableSmoothScrolling = {"/appearance/smoothScrolling", true};
     BoolSetting enableSmoothScrollingNewMessages = {

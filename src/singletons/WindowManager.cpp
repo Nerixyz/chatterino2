@@ -30,6 +30,8 @@
 #include <QMessageBox>
 #include <QSaveFile>
 #include <QScreen>
+#include <QSystemTrayIcon>
+#include <QWindow>
 
 #include <chrono>
 #include <optional>
@@ -741,21 +743,30 @@ void WindowManager::closeAll()
 void WindowManager::setVisibilityAll(bool visible)
 {
     assertInGuiThread();
-    getMainWindow().getTrayIcon()->setVisible(!visible);
+
+#ifndef Q_OS_MAC
+    getMainWindow().trayIcon()->setVisible(!visible);
+#endif
 
     for (Window *window : windows_)
     {
-        if (!window->getFlags().has(BaseWindow::IgnoreTrayEvent))
+        window->setVisible(visible);
+        if (visible)
         {
-            if (window->shouldHandleTrayEvent(visible))
+            window->activateWindow();
+            window->raise();
+            window->showNormal();
+        }
+    }
+
+    // close all remaining windows
+    if (!visible)
+    {
+        for (auto *win : qApp->allWindows())
+        {
+            if (win->isVisible())
             {
-                window->setVisible(visible);
-                if (visible)
-                {
-                    window->activateWindow();
-                    window->raise();
-                    window->showNormal();
-                }
+                win->close();
             }
         }
     }

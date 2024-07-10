@@ -18,7 +18,6 @@ inline constexpr T *tooltipParentFor(T * /*desiredParent*/)
 {
     return nullptr;
 }
-
 #else
 template <typename T>
 inline constexpr T *tooltipParentFor(T *desiredParent)
@@ -33,7 +32,7 @@ namespace chatterino {
 
 TooltipWidget::TooltipWidget(BaseWidget *parent)
     : BaseWindow({BaseWindow::TopMost, BaseWindow::DontFocus,
-                  BaseWindow::DisableLayoutSave, BaseWindow::IgnoreTrayEvent},
+                  BaseWindow::DisableLayoutSave},
                  tooltipParentFor(parent))
 {
     assert(parent != nullptr);

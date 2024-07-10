@@ -45,6 +45,7 @@
 #include <QMenuBar>
 #include <QPalette>
 #include <QStandardItemModel>
+#include <QSystemTrayIcon>
 #include <QVBoxLayout>
 
 namespace chatterino {
@@ -72,38 +73,38 @@ Window::Window(WindowType type, QWidget *parent)
     {
         this->resize(int(600 * this->scale()), int(500 * this->scale()));
 
-        getSettings()->tabDirection.connect([this](int val) {
-            this->notebook_->setTabDirection(NotebookTabDirection(val));
+#ifndef Q_OS_MAC
+        auto *showAction = new QAction("Show", this);
+        auto *exitAction = new QAction("Exit", this);
+        auto *trayContextMenu = new QMenu(this);
+
+        trayContextMenu->addAction(showAction);
+        trayContextMenu->addSeparator();
+        trayContextMenu->addAction(exitAction);
+
+        this->trayIcon_ = new QSystemTrayIcon(this);
+        this->trayIcon_->setVisible(false);
+        this->trayIcon_->setIcon(QIcon(":/icon.ico"));
+        this->trayIcon_->setToolTip(Version::instance().fullVersion());
+        this->trayIcon_->setContextMenu(trayContextMenu);
+
+        connect(showAction, &QAction::triggered, this, [] {
+            getIApp()->getWindows()->setVisibilityAll(true);
         });
-
-        actionShow_ = new QAction("Show", this);
-        actionExit_ = new QAction("Exit", this);
-        trayContextMenu_ = new QMenu(this);
-
-        trayContextMenu_->addAction(actionShow_);
-        trayContextMenu_->addSeparator();
-        trayContextMenu_->addAction(actionExit_);
-
-        trayIcon_ = new QSystemTrayIcon(this);
-        trayIcon_->setVisible(false);
-        trayIcon_->setIcon(QIcon(":/icon.ico"));
-        trayIcon_->setToolTip(Version::instance().fullVersion());
-        trayIcon_->setContextMenu(trayContextMenu_);
-
-        connect(actionShow_, &QAction::triggered, this, [] {
-            getApp()->windows->setVisibilityAll(true);
-        });
-        connect(actionExit_, &QAction::triggered, this, [] {
+        connect(exitAction, &QAction::triggered, this, [] {
             QApplication::exit();
         });
 
-        connect(trayIcon_, &QSystemTrayIcon::activated, this, [](auto reason) {
-            if (reason == QSystemTrayIcon::ActivationReason::Trigger)
-            {
-                getApp()->windows->setVisibilityAll(
-                    !getApp()->windows->getMainWindow().isVisible());
-            }
-        });
+        connect(
+            this->trayIcon_, &QSystemTrayIcon::activated, this,
+            [](auto reason) {
+                if (reason == QSystemTrayIcon::ActivationReason::Trigger)
+                {
+                    getIApp()->getWindows()->setVisibilityAll(
+                        !getIApp()->getWindows()->getMainWindow().isVisible());
+                }
+            });
+#endif
     }
     else
     {
@@ -135,10 +136,12 @@ SplitNotebook &Window::getNotebook()
     return *this->notebook_;
 }
 
-QSystemTrayIcon *Window::getTrayIcon()
+#ifndef Q_OS_MAC
+QSystemTrayIcon *Window::trayIcon()
 {
     return trayIcon_;
 }
+#endif
 
 bool Window::event(QEvent *event)
 {
@@ -165,14 +168,18 @@ bool Window::event(QEvent *event)
             }
         }
         break;
-#if !defined(Q_OS_WINDOWS)
+#ifndef Q_OS_WIN
         // We handle this in the custom minimize button on Windows
-        case QEvent::WindowStateChange:
+        case QEvent::WindowStateChange: {
             if (this->type_ == WindowType::Main && isMinimized())
             {
-                handleMinimizeEvent(event);
+                if (this->handleMinimizeEvent())
+                {
+                    event->ignore();
+                }
             }
-            break;
+        }
+        break;
 #endif
         default:;
     }
@@ -180,18 +187,19 @@ bool Window::event(QEvent *event)
     return BaseWindow::event(event);
 }
 
-bool Window::isMainWindow()
-{
-    return this->type_ == WindowType::Main;
-}
-
 void Window::closeEvent(QCloseEvent *e)
 {
-    auto action = getSettings()->closeTrayAction.getEnum();
-    if (this->type_ == WindowType::Main &&
-        action != TrayAction::CloseChatterino)
+    if (this->type_ == WindowType::Main)
     {
-        handleCloseEvent(e);
+        getIApp()->getWindows()->save();
+
+        if (this->handleCloseEvent())
+        {
+            e->ignore();
+            return;
+        }
+
+        getIApp()->getWindows()->closeAll();
     }
 
     // Ensure selectedWindow_ is never an invalid pointer.
@@ -203,19 +211,7 @@ void Window::closeEvent(QCloseEvent *e)
 
     if (this->type_ == WindowType::Main)
     {
-        if (this->type_ == WindowType::Main)
-        {
-            auto app = getApp();
-            app->windows->save();
-            app->windows->closeAll();
-        }
-
-        this->closed.invoke();
-
-        if (this->type_ == WindowType::Main)
-        {
-            QApplication::exit();
-        }
+        QApplication::exit();
     }
 }
 
@@ -848,6 +844,106 @@ void Window::onAccountSelected()
             this->userLabel_->getLabel().setText(user->getUserName());
         }
     }
+}
+
+bool Window::handleMinimizeEvent()
+{
+#ifndef Q_OS_MAC
+    if (this->type_ != WindowType::Main)
+    {
+        return false;
+    }
+
+    auto showMessage = [&] {
+        QMessageBox msgBox{
+            QMessageBox::Question,
+            "Chatterino",
+            "What should happen when you press the "
+            "minimize button?",
+            QMessageBox::NoButton,
+            this,
+        };
+        auto *taskbar =
+            msgBox.addButton("Minimize to task &bar", QMessageBox::YesRole);
+        msgBox.addButton("Minimize to t&ray", QMessageBox::ApplyRole);
+
+        msgBox.setWindowModality(Qt::ApplicationModal);
+        msgBox.setWindowFlag(Qt::WindowContextHelpButtonHint, false);
+        msgBox.setWindowFlag(Qt::Popup);
+        msgBox.exec();
+
+        auto *result = dynamic_cast<QPushButton *>(msgBox.clickedButton());
+        if (result == taskbar)
+        {
+            return TrayAction::Default;
+        }
+        return TrayAction::MinimizeToTray;
+    };
+
+    auto action = getSettings()->minizeTrayAction.getEnum();
+    if (action == TrayAction::Ask)
+    {
+        action = showMessage();
+        getSettings()->minizeTrayAction = action;
+    }
+
+    if (action == TrayAction::MinimizeToTray)
+    {
+        getApp()->getWindows()->setVisibilityAll(false);
+        return true;
+    }
+#endif
+
+    return false;
+}
+
+bool Window::handleCloseEvent()
+{
+#ifndef Q_OS_MAC
+    if (this->type_ != WindowType::Main)
+    {
+        return false;
+    }
+
+    auto action = getSettings()->closeTrayAction.getEnum();
+    auto showMessage = [&] {
+        QMessageBox msgBox{
+            QMessageBox::Question,
+            "Chatterino",
+            "What should happen when you press the close button?",
+            QMessageBox::NoButton,
+            this,
+        };
+        auto *close =
+            msgBox.addButton("&Close Chatterino", QMessageBox::YesRole);
+        msgBox.addButton("&Minimize to tray", QMessageBox::ApplyRole);
+
+        msgBox.setWindowFlag(Qt::WindowContextHelpButtonHint, false);
+        msgBox.setWindowFlag(Qt::Popup);
+        msgBox.exec();
+
+        auto *result = dynamic_cast<QPushButton *>(msgBox.clickedButton());
+        if (result == close)
+        {
+            return TrayAction::Default;
+        }
+        return TrayAction::MinimizeToTray;
+    };
+
+    if (action == TrayAction::Ask)
+    {
+        action = showMessage();
+        getSettings()->closeTrayAction = action;
+    }
+
+    if (action == TrayAction::MinimizeToTray)
+    {
+        getApp()->getWindows()->setVisibilityAll(false);
+        return true;
+    }
+#endif
+
+    return false;
 }
 
 }  // namespace chatterino

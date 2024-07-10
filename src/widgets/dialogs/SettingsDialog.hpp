@@ -42,8 +42,6 @@ public:
                            SettingsDialogPreference preferredTab =
                                SettingsDialogPreference::NoPreference);
 
-    bool shouldHandleTrayEvent(bool visible) override;
-
 protected:
     void scaleChangedEvent(float newDpi) override;
     void themeChangedEvent() override;
@@ -81,7 +79,6 @@ private:
     SettingsDialogTab *selectedTab_{};
     SettingsDialogTab *lastSelectedByUser_{};
     float dpi_ = 1.0F;
-    bool wasVisible_ = false;
 
     friend class SettingsDialogTab;
 };
