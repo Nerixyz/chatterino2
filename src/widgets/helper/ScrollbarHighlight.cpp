@@ -14,16 +14,19 @@ ScrollbarHighlight::ScrollbarHighlight()
 
 ScrollbarHighlight::ScrollbarHighlight(const std::shared_ptr<QColor> color,
                                        Style style, bool isRedeemedHighlight,
-                                       bool isFirstMessageHighlight)
+                                       bool isFirstMessageHighlight,
+                                       bool isElevatedMessageHighlight)
     : color_(color)
     , style_(style)
     , isRedeemedHighlight_(isRedeemedHighlight)
     , isFirstMessageHighlight_(isFirstMessageHighlight)
+    , isElevatedMessageHighlight_(isElevatedMessageHighlight)
 {
 }
 
 QColor ScrollbarHighlight::getColor() const
 {
+    assert(this->color_);
     return *this->color_;
 }
 
@@ -42,9 +45,14 @@ bool ScrollbarHighlight::isFirstMessageHighlight() const
     return this->isFirstMessageHighlight_;
 }
 
+bool ScrollbarHighlight::isElevatedMessageHighlight() const
+{
+    return this->isElevatedMessageHighlight_;
+}
+
 bool ScrollbarHighlight::isNull() const
 {
-    return this->style_ == None;
+    return this->style_ == None || !this->color_;
 }
 
 }  // namespace chatterino

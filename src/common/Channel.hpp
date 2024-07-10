@@ -1,22 +1,23 @@
 #pragma once
 
-#include "common/CompletionModel.hpp"
 #include "common/FlagsEnum.hpp"
+#include "controllers/completion/TabCompletionModel.hpp"
 #include "messages/LimitedQueue.hpp"
 
+#include <magic_enum/magic_enum.hpp>
+#include <pajlada/signals/signal.hpp>
 #include <QDate>
 #include <QString>
 #include <QTimer>
-#include <boost/optional.hpp>
-#include <pajlada/signals/signal.hpp>
 
 #include <memory>
+#include <optional>
 
 namespace chatterino {
 
 struct Message;
 using MessagePtr = std::shared_ptr<const Message>;
-enum class MessageFlag : uint32_t;
+enum class MessageFlag : int64_t;
 using MessageFlags = FlagsEnum<MessageFlag>;
 
 enum class TimeoutStackStyle : int {
@@ -30,6 +31,10 @@ enum class TimeoutStackStyle : int {
 class Channel : public std::enable_shared_from_this<Channel>
 {
 public:
+    // This is for Lua. See scripts/make_luals_meta.py
+    /**
+     * @exposeenum c2.ChannelType
+     */
     enum class Type {
         None,
         Direct,
@@ -38,9 +43,10 @@ public:
         TwitchWatching,
         TwitchMentions,
         TwitchLive,
+        TwitchAutomod,
         TwitchEnd,
         Irc,
-        Misc
+        Misc,
     };
 
     explicit Channel(const QString &name, Type type);
@@ -49,11 +55,15 @@ public:
     // SIGNALS
     pajlada::Signals::Signal<const QString &, const QString &, bool &>
         sendMessageSignal;
-    pajlada::Signals::Signal<MessagePtr &> messageRemovedFromStart;
-    pajlada::Signals::Signal<MessagePtr &, boost::optional<MessageFlags>>
+    pajlada::Signals::Signal<const QString &, const QString &, const QString &,
+                             bool &>
+        sendReplySignal;
+    pajlada::Signals::Signal<MessagePtr &, std::optional<MessageFlags>>
         messageAppended;
     pajlada::Signals::Signal<std::vector<MessagePtr> &> messagesAddedAtStart;
     pajlada::Signals::Signal<size_t, MessagePtr &> messageReplaced;
+    /// Invoked when some number of messages were filled in using time received
+    pajlada::Signals::Signal<const std::vector<MessagePtr> &> filledInMessages;
     pajlada::Signals::NoArgSignal destroyed;
     pajlada::Signals::NoArgSignal displayNameChanged;
 
@@ -69,38 +79,47 @@ public:
     // overridingFlags can be filled in with flags that should be used instead
     // of the message's flags. This is useful in case a flag is specific to a
     // type of split
-    void addMessage(
-        MessagePtr message,
-        boost::optional<MessageFlags> overridingFlags = boost::none);
-    void addMessagesAtStart(std::vector<MessagePtr> &messages_);
+    void addMessage(MessagePtr message,
+                    std::optional<MessageFlags> overridingFlags = std::nullopt);
+    void addMessagesAtStart(const std::vector<MessagePtr> &messages_);
+
+    void addSystemMessage(const QString &contents);
+
+    /// Inserts the given messages in order by Message::serverReceivedTime.
+    void fillInMissingMessages(const std::vector<MessagePtr> &messages);
+
     void addOrReplaceTimeout(MessagePtr message);
     void disableAllMessages();
     void replaceMessage(MessagePtr message, MessagePtr replacement);
     void replaceMessage(size_t index, MessagePtr replacement);
     void deleteMessage(QString messageID);
+
     MessagePtr findMessage(QString messageID);
 
     bool hasMessages() const;
 
     // CHANNEL INFO
     virtual bool canSendMessage() const;
+    virtual bool isWritable() const;  // whether split input will be usable
     virtual void sendMessage(const QString &message);
     virtual bool isMod() const;
     virtual bool isBroadcaster() const;
     virtual bool hasModRights() const;
     virtual bool hasHighRateLimit() const;
     virtual bool isLive() const;
+    virtual bool isRerun() const;
     virtual bool shouldIgnoreHighlights() const;
     virtual bool canReconnect() const;
     virtual void reconnect();
 
     static std::shared_ptr<Channel> getEmpty();
 
-    CompletionModel completionModel;
+    TabCompletionModel completionModel;
     QDate lastDate_;
 
 protected:
     virtual void onConnected();
+    virtual void messageRemovedFromStart(const MessagePtr &msg);
 
 private:
     const QString name_;
@@ -125,7 +144,7 @@ public:
     IndirectChannel(ChannelPtr channel,
                     Channel::Type type = Channel::Type::Direct);
 
-    ChannelPtr get();
+    ChannelPtr get() const;
     void reset(ChannelPtr channel);
     pajlada::Signals::NoArgSignal &getChannelChanged();
     Channel::Type getType();
@@ -135,3 +154,32 @@ private:
 };
 
 }  // namespace chatterino
+
+template <>
+constexpr magic_enum::customize::customize_t
+    magic_enum::customize::enum_name<chatterino::Channel::Type>(
+        chatterino::Channel::Type value) noexcept
+{
+    using Type = chatterino::Channel::Type;
+    switch (value)
+    {
+        case Type::Twitch:
+            return "twitch";
+        case Type::TwitchWhispers:
+            return "whispers";
+        case Type::TwitchWatching:
+            return "watching";
+        case Type::TwitchMentions:
+            return "mentions";
+        case Type::TwitchLive:
+            return "live";
+        case Type::TwitchAutomod:
+            return "automod";
+        case Type::Irc:
+            return "irc";
+        case Type::Misc:
+            return "misc";
+        default:
+            return default_tag;
+    }
+}

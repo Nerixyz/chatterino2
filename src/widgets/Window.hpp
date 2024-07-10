@@ -2,11 +2,12 @@
 
 #include "widgets/BaseWindow.hpp"
 
-#include <QSystemTrayIcon>
 #include <boost/signals2.hpp>
 #include <pajlada/settings/setting.hpp>
 #include <pajlada/signals/signal.hpp>
 #include <pajlada/signals/signalholder.hpp>
+#include <QSystemTrayIcon>
+
 
 namespace chatterino {
 
@@ -22,7 +23,7 @@ class Window : public BaseWindow
     Q_OBJECT
 
 public:
-    explicit Window(WindowType type);
+    explicit Window(WindowType type, QWidget *parent);
 
     WindowType getType();
     SplitNotebook &getNotebook();
@@ -34,6 +35,7 @@ protected:
     void closeEvent(QCloseEvent *event) override;
     bool event(QEvent *event) override;
     bool isMainWindow() override;
+    void themeChangedEvent() override;
 
 private:
     void addCustomTitlebarButtons();
@@ -58,6 +60,10 @@ private:
     QAction *actionExit_ = nullptr;
     QAction *actionShow_ = nullptr;
     QMenu *trayContextMenu_ = nullptr;
+
+    // this is only used on Windows and only on the main window, for the one used otherwise, see SplitNotebook in Notebook.hpp
+    TitleBarButton *streamerModeTitlebarIcon_ = nullptr;
+    void updateStreamerModeIcon();
 
     friend class Notebook;
 };

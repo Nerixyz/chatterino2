@@ -1,81 +1,66 @@
 # Linux
 
-Note on Qt version compatibility: If you are installing Qt from a package manager, please ensure the version you are installing is at least **Qt 5.12 or newer**.
+For all dependencies below we use Qt 6. Our minimum supported version is Qt 5.15.2, but you are on your own.
 
-## Ubuntu 20.04
+## Install dependencies
 
-_Most likely works the same for other Debian-like distros_
+### Ubuntu
 
-1. Install all of the dependencies using `sudo apt install qttools5-dev qtmultimedia5-dev libqt5svg5-dev libboost-dev libssl-dev libboost-system-dev libboost-filesystem-dev cmake g++`
+Building on Ubuntu requires Docker.
 
-### Compiling through Qt Creator
+Use <https://github.com/Chatterino/docker/pkgs/container/chatterino2-build-ubuntu-20.04> as your base if you're on Ubuntu 20.04.
 
-1. Install C++ IDE Qt Creator by using `sudo apt install qtcreator`
-1. Open `chatterino.pro` with Qt Creator and select build
+Use <https://github.com/Chatterino/docker/pkgs/container/chatterino2-build-ubuntu-22.04> if you're on Ubuntu 22.04.
 
-### Manually
+The built binary should be exportable from the final image & able to run on your system assuming you perform a static build. See our [build.yml GitHub workflow file](.github/workflows/build.yml) for the CMake line used for Ubuntu builds.
 
-1. Go into the project directory
-1. Create a build folder and go into it (`mkdir build && cd build`)
-1. Use one of the options below to compile it
+### Debian 12 (bookworm) or later
 
-### Using CMake
+```sh
+sudo apt install qt6-base-dev qt6-5compat-dev qt6-svg-dev qt6-image-formats-plugins libboost1.81-dev libssl-dev cmake g++ git
+```
 
-`cmake .. && make`
+### Arch Linux
 
-### Using QMake
+```sh
+sudo pacman -S --needed qt6-base qt6-tools boost-libs openssl qt6-imageformats qt6-5compat qt6-svg boost rapidjson pkgconf openssl cmake
+```
 
-`qmake .. && make`
+Alternatively you can use the [chatterino2-git](https://aur.archlinux.org/packages/chatterino2-git/) package to build and install Chatterino for you.
 
-## Arch Linux
-
-### Through AUR
-
-- [chatterino2-git](https://aur.archlinux.org/packages/chatterino2-git/)
-
-### Manually
-
-1. Install all of the dependencies using `sudo pacman -S --needed qt5-base qt5-multimedia qt5-svg qt5-tools gst-plugins-ugly gst-plugins-good boost rapidjson pkgconf openssl cmake`
-1. Go into the project directory
-1. Create a build folder and go into it (`mkdir build && cd build`)
-1. Use one of the options below to compile it
-
-### Using CMake
-
-`cmake .. && make`
-
-### Using QMake
-
-`qmake .. && make`
-
-## Fedora 28 and above
+### Fedora 39 and above
 
 _Most likely works the same for other Red Hat-like distros. Substitute `dnf` with `yum`._
 
-1. Install all of the dependencies using `sudo dnf install qt5-qtbase-devel qt5-qtmultimedia-devel qt5-qtsvg-devel libsecret-devel openssl-devel boost-devel cmake`
-1. Go into the project directory
-1. Create a build folder and go into it (`mkdir build && cd build`)
-1. Use one of the options below to compile it
+```sh
+sudo dnf install qt6-qtbase-devel qt6-qtimageformats qt6-qtsvg-devel qt6-qt5compat-devel g++ git openssl-devel boost-devel cmake
+```
 
-### Using CMake
+### NixOS 18.09+
 
-`cmake .. && make -j$(nproc)`
+```sh
+nix-shell -p openssl boost qt6.full pkg-config cmake
+```
 
-### Using QMake
+## Compile
 
-`qmake-qt5 .. && make -j$(nproc)`
+## Manually
 
-## NixOS 18.09+
+1. In the project directory, create a build directory and enter it
+   ```sh
+   mkdir build
+   cd build
+   ```
+1. Generate build files. To enable Lua plugins in your build add `-DCHATTERINO_PLUGINS=ON` to this command.
+   ```sh
+   cmake -DBUILD_WITH_QT6=ON -DBUILD_WITH_QTKEYCHAIN=OFF ..
+   ```
+1. Build the project
+   ```sh
+   cmake --build .
+   ```
 
-1. Enter the development environment with all of the dependencies: `nix-shell -p openssl boost qt5.full pkg-config cmake`
-1. Go into the project directory
-1. Create a build folder and go into it (`mkdir build && cd build`)
-1. Use one of the options below to compile it
+### Through Qt Creator
 
-### Using CMake
-
-`cmake .. && make`
-
-### Using QMake
-
-`qmake .. && make`
+1. Install C++ IDE Qt Creator by using `sudo apt install qtcreator` (Or whatever equivalent for your distro)
+1. Open `CMakeLists.txt` with Qt Creator and select build

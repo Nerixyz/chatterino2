@@ -2,6 +2,8 @@
 
 #include <QString>
 
+#include <optional>
+
 namespace chatterino {
 
 class Env
@@ -13,10 +15,10 @@ public:
 
     const QString recentMessagesApiUrl;
     const QString linkResolverUrl;
-    const QString twitchEmoteSetResolverUrl;
     const QString twitchServerHost;
     const uint16_t twitchServerPort;
     const bool twitchServerSecure;
+    const std::optional<QString> proxyUrl;
 };
 
 }  // namespace chatterino

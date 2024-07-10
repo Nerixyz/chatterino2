@@ -1,17 +1,18 @@
 #pragma once
 
-#include <boost/optional.hpp>
-#include <common/Singleton.hpp>
-
 #include "common/Aliases.hpp"
+#include "common/Singleton.hpp"
 #include "util/QStringHash.hpp"
-
-#include <map>
-#include <memory>
-#include <shared_mutex>
-#include <vector>
+#include "util/ThreadGuard.hpp"
 
 #include <QColor>
+
+#include <memory>
+#include <optional>
+#include <set>
+#include <shared_mutex>
+#include <unordered_map>
+#include <vector>
 
 namespace chatterino {
 
@@ -21,20 +22,28 @@ using EmotePtr = std::shared_ptr<const Emote>;
 class FfzBadges : public Singleton
 {
 public:
-    virtual void initialize(Settings &settings, Paths &paths) override;
+    void initialize(Settings &settings, const Paths &paths) override;
     FfzBadges() = default;
 
-    boost::optional<EmotePtr> getBadge(const UserId &id);
-    boost::optional<QColor> getBadgeColor(const UserId &id);
+    struct Badge {
+        EmotePtr emote;
+        QColor color;
+    };
+
+    std::vector<Badge> getUserBadges(const UserId &id);
+    std::optional<Badge> getBadge(int badgeID) const;
 
 private:
-    void loadFfzBadges();
+    void load();
 
     std::shared_mutex mutex_;
 
-    std::unordered_map<QString, int> badgeMap;
-    std::vector<EmotePtr> badges;
-    std::unordered_map<int, QColor> colorMap;
+    // userBadges points a user ID to the list of badges they have
+    std::unordered_map<QString, std::set<int>> userBadges;
+
+    // badges points a badge ID to the information about the badge
+    std::unordered_map<int, Badge> badges;
+    ThreadGuard tgBadges;
 };
 
 }  // namespace chatterino

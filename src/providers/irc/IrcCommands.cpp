@@ -27,7 +27,7 @@ Outcome invokeIrcCommand(const QString &commandName, const QString &allParams,
 
     if (auto it = staticMessages.find(cmd); it != staticMessages.end())
     {
-        channel.addMessage(makeSystemMessage(it->second));
+        channel.addSystemMessage(it->second);
         return Success;
     }
 
@@ -43,7 +43,7 @@ Outcome invokeIrcCommand(const QString &commandName, const QString &allParams,
 
     if (cmd == "msg")
     {
-        sendRaw("PRIVMSG " + params[0] + " :" + paramsAfter(0));
+        channel.server()->sendWhisper(params[0], paramsAfter(0));
     }
     else if (cmd == "away")
     {
@@ -57,8 +57,8 @@ Outcome invokeIrcCommand(const QString &commandName, const QString &allParams,
     {
         if (params.size() < 2)
         {
-            channel.addMessage(
-                makeSystemMessage("Usage: /kick <channel> <client> [message]"));
+            channel.addSystemMessage(
+                "Usage: /kick <channel> <client> [message]");
             return Failure;
         }
         const auto &channelParam = params[0];

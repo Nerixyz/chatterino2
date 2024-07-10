@@ -1,41 +1,44 @@
-#include "UserInfoPopup.hpp"
+#include "widgets/dialogs/UserInfoPopup.hpp"
 
 #include "Application.hpp"
 #include "common/Channel.hpp"
-#include "common/NetworkRequest.hpp"
+#include "common/network/NetworkRequest.hpp"
 #include "common/QLogging.hpp"
 #include "controllers/accounts/AccountController.hpp"
+#include "controllers/commands/CommandController.hpp"
 #include "controllers/highlights/HighlightBlacklistUser.hpp"
 #include "controllers/hotkeys/HotkeyController.hpp"
 #include "messages/Message.hpp"
 #include "messages/MessageBuilder.hpp"
 #include "providers/IvrApi.hpp"
+#include "providers/twitch/api/Helix.hpp"
+#include "providers/twitch/ChannelPointReward.hpp"
+#include "providers/twitch/TwitchAccount.hpp"
 #include "providers/twitch/TwitchChannel.hpp"
 #include "providers/twitch/TwitchIrcServer.hpp"
-#include "providers/twitch/api/Helix.hpp"
 #include "singletons/Resources.hpp"
 #include "singletons/Settings.hpp"
+#include "singletons/StreamerMode.hpp"
 #include "singletons/Theme.hpp"
 #include "singletons/WindowManager.hpp"
 #include "util/Clipboard.hpp"
 #include "util/Helpers.hpp"
 #include "util/LayoutCreator.hpp"
-#include "util/PostToThread.hpp"
-#include "util/StreamerMode.hpp"
-#include "widgets/Label.hpp"
-#include "widgets/Scrollbar.hpp"
-#include "widgets/Window.hpp"
 #include "widgets/helper/ChannelView.hpp"
 #include "widgets/helper/EffectLabel.hpp"
+#include "widgets/helper/InvisibleSizeGrip.hpp"
 #include "widgets/helper/Line.hpp"
+#include "widgets/Label.hpp"
+#include "widgets/Scrollbar.hpp"
 #include "widgets/splits/Split.hpp"
+#include "widgets/Window.hpp"
 
 #include <QCheckBox>
 #include <QDesktopServices>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QPointer>
 
-const QString TEXT_VIEWS("Views: %1");
 const QString TEXT_FOLLOWERS("Followers: %1");
 const QString TEXT_CREATED("Created: %1");
 const QString TEXT_TITLE("%1's Usercard - #%2");
@@ -53,7 +56,7 @@ namespace {
         {
             button.assign(copyButton);
         }
-        button->setPixmap(getApp()->themes->buttons.copy);
+        button->setPixmap(getIApp()->getThemes()->buttons.copy);
         button->setScaleIndependantSize(18, 18);
         button->setDim(Button::Dim::Lots);
         button->setToolTip(tooltip);
@@ -72,7 +75,9 @@ namespace {
     bool checkMessageUserName(const QString &userName, MessagePtr message)
     {
         if (message->flags.has(MessageFlag::Whisper))
+        {
             return false;
+        }
 
         bool isSubscription = message->flags.has(MessageFlag::Subscription) &&
                               message->loginName.isEmpty() &&
@@ -92,15 +97,27 @@ namespace {
         LimitedQueueSnapshot<MessagePtr> snapshot =
             channel->getMessageSnapshot();
 
-        ChannelPtr channelPtr(
-            new Channel(channel->getName(), Channel::Type::None));
+        ChannelPtr channelPtr;
+        if (channel->isTwitchChannel())
+        {
+            channelPtr = std::make_shared<TwitchChannel>(channel->getName());
+        }
+        else
+        {
+            channelPtr = std::make_shared<Channel>(channel->getName(),
+                                                   Channel::Type::None);
+        }
 
         for (size_t i = 0; i < snapshot.size(); i++)
         {
             MessagePtr message = snapshot[i];
+
+            auto overrideFlags = std::optional<MessageFlags>(message->flags);
+            overrideFlags->set(MessageFlag::DoNotLog);
+
             if (checkMessageUserName(userName, message))
             {
-                channelPtr->addMessage(message);
+                channelPtr->addMessage(message, overrideFlags);
             }
         }
 
@@ -119,32 +136,14 @@ namespace {
 
 }  // namespace
 
-#ifdef Q_OS_LINUX
-FlagsEnum<BaseWindow::Flags> userInfoPopupFlags{BaseWindow::Dialog,
-                                                BaseWindow::EnableCustomFrame};
-FlagsEnum<BaseWindow::Flags> userInfoPopupFlagsCloseAutomatically{
-    BaseWindow::EnableCustomFrame};
-#else
-FlagsEnum<BaseWindow::Flags> userInfoPopupFlags{BaseWindow::EnableCustomFrame};
-FlagsEnum<BaseWindow::Flags> userInfoPopupFlagsCloseAutomatically{
-    BaseWindow::EnableCustomFrame, BaseWindow::Frameless,
-    BaseWindow::FramelessDraggable};
-#endif
-
-UserInfoPopup::UserInfoPopup(bool closeAutomatically, QWidget *parent)
-    : BaseWindow(closeAutomatically ? userInfoPopupFlagsCloseAutomatically
-                                    : userInfoPopupFlags,
-                 parent)
-    , hack_(new bool)
-    , dragTimer_(this)
+UserInfoPopup::UserInfoPopup(bool closeAutomatically, Split *split)
+    : DraggablePopup(closeAutomatically, split)
+    , split_(split)
+    , closeAutomatically_(closeAutomatically)
 {
+    assert(split != nullptr &&
+           "split being nullptr causes lots of bugs down the road");
     this->setWindowTitle("Usercard");
-    this->setStayInScreenRect(true);
-
-    if (closeAutomatically)
-        this->setActionOnFocusLoss(BaseWindow::Delete);
-    else
-        this->setAttribute(Qt::WA_DeleteOnClose);
 
     HotkeyController::HotkeyMap actions{
         {"delete",
@@ -165,11 +164,11 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, QWidget *parent)
              auto &scrollbar = this->ui_.latestMessages->getScrollBar();
              if (direction == "up")
              {
-                 scrollbar.offset(-scrollbar.getLargeChange());
+                 scrollbar.offset(-scrollbar.getPageSize());
              }
              else if (direction == "down")
              {
-                 scrollbar.offset(scrollbar.getLargeChange());
+                 scrollbar.offset(scrollbar.getPageSize());
              }
              else
              {
@@ -226,7 +225,16 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, QWidget *parent)
                            .arg(this->userName_)
                            .arg(calculateTimeoutDuration(button));
              }
+
+             msg = getIApp()->getCommands()->execCommand(
+                 msg, this->underlyingChannel_, false);
+
              this->underlyingChannel_->sendMessage(msg);
+             return "";
+         }},
+        {"pin",
+         [this](std::vector<QString> /*arguments*/) -> QString {
+             this->togglePinned();
              return "";
          }},
 
@@ -237,11 +245,13 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, QWidget *parent)
         {"search", nullptr},
     };
 
-    this->shortcuts_ = getApp()->hotkeys->shortcutsForCategory(
+    this->shortcuts_ = getIApp()->getHotkeys()->shortcutsForCategory(
         HotkeyCategory::PopupWindow, actions, this);
 
-    auto layout = LayoutCreator<QWidget>(this->getLayoutContainer())
-                      .setLayoutType<QVBoxLayout>();
+    auto layers = LayoutCreator<QWidget>(this->getLayoutContainer())
+                      .setLayoutType<QGridLayout>()
+                      .withoutMargin();
+    auto layout = layers.emplace<QVBoxLayout>();
 
     // first line
     auto head = layout.emplace<QHBoxLayout>().withoutMargin();
@@ -269,15 +279,8 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, QWidget *parent)
                             return;
                         }
 
-                        static QMenu *previousMenu = nullptr;
-                        if (previousMenu != nullptr)
-                        {
-                            previousMenu->deleteLater();
-                            previousMenu = nullptr;
-                        }
-
-                        auto menu = new QMenu;
-                        previousMenu = menu;
+                        auto *menu = new QMenu(this);
+                        menu->setAttribute(Qt::WA_DeleteOnClose);
 
                         auto avatarUrl = this->avatarUrl_;
 
@@ -295,28 +298,31 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, QWidget *parent)
                         menu->addAction(
                             "Open channel in a new popup window", this,
                             [loginName] {
-                                auto app = getApp();
-                                auto &window = app->windows->createWindow(
+                                auto *app = getIApp();
+                                auto &window = app->getWindows()->createWindow(
                                     WindowType::Popup, true);
-                                auto split = window.getNotebook()
-                                                 .getOrAddSelectedPage()
-                                                 ->appendNewSplit(false);
-                                split->setChannel(app->twitch->getOrAddChannel(
-                                    loginName.toLower()));
+                                auto *split = window.getNotebook()
+                                                  .getOrAddSelectedPage()
+                                                  ->appendNewSplit(false);
+                                split->setChannel(
+                                    app->getTwitchAbstract()->getOrAddChannel(
+                                        loginName.toLower()));
                             });
 
                         menu->addAction(
                             "Open channel in a new tab", this, [loginName] {
                                 ChannelPtr channel =
-                                    getApp()->twitch->getOrAddChannel(
-                                        loginName);
+                                    getIApp()
+                                        ->getTwitchAbstract()
+                                        ->getOrAddChannel(loginName);
                                 auto &nb = getApp()
-                                               ->windows->getMainWindow()
+                                               ->getWindows()
+                                               ->getMainWindow()
                                                .getNotebook();
                                 SplitContainer *container = nb.addPage(true);
                                 Split *split = new Split(container);
                                 split->setChannel(channel);
-                                container->appendSplit(split);
+                                container->insertSplit(split);
                             });
                         menu->popup(QCursor::pos());
                         menu->raise();
@@ -355,11 +361,15 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, QWidget *parent)
 
                 this->ui_.localizedNameLabel->setVisible(false);
                 this->ui_.localizedNameCopyButton->setVisible(false);
+
+                // button to pin the window (only if we close automatically)
+                if (this->closeAutomatically_)
+                {
+                    box->addWidget(this->createPinButton());
+                }
             }
 
             // items on the left
-            vbox.emplace<Label>(TEXT_VIEWS.arg(""))
-                .assign(&this->ui_.viewCountLabel);
             vbox.emplace<Label>(TEXT_FOLLOWERS.arg(""))
                 .assign(&this->ui_.followerCountLabel);
             vbox.emplace<Label>(TEXT_CREATED.arg(""))
@@ -379,7 +389,10 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, QWidget *parent)
         user.emplace<QCheckBox>("Block").assign(&this->ui_.block);
         user.emplace<QCheckBox>("Ignore highlights")
             .assign(&this->ui_.ignoreHighlights);
-        auto usercard = user.emplace<EffectLabel2>(this);
+        // visibility of this is updated in setData
+
+        auto usercard =
+            user.emplace<EffectLabel2>(this).assign(&this->ui_.usercardLabel);
         usercard->getLabel().setText("Usercard");
         auto mod = user.emplace<Button>(this);
         mod->setPixmap(getResources().buttons.mod);
@@ -403,21 +416,35 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, QWidget *parent)
         });
 
         QObject::connect(mod.getElement(), &Button::leftClicked, [this] {
-            this->underlyingChannel_->sendMessage("/mod " + this->userName_);
+            QString value = "/mod " + this->userName_;
+            value = getIApp()->getCommands()->execCommand(
+                value, this->underlyingChannel_, false);
+            this->underlyingChannel_->sendMessage(value);
         });
         QObject::connect(unmod.getElement(), &Button::leftClicked, [this] {
-            this->underlyingChannel_->sendMessage("/unmod " + this->userName_);
+            QString value = "/unmod " + this->userName_;
+            value = getIApp()->getCommands()->execCommand(
+                value, this->underlyingChannel_, false);
+            this->underlyingChannel_->sendMessage(value);
         });
         QObject::connect(vip.getElement(), &Button::leftClicked, [this] {
-            this->underlyingChannel_->sendMessage("/vip " + this->userName_);
+            QString value = "/vip " + this->userName_;
+            value = getIApp()->getCommands()->execCommand(
+                value, this->underlyingChannel_, false);
+            this->underlyingChannel_->sendMessage(value);
         });
         QObject::connect(unvip.getElement(), &Button::leftClicked, [this] {
-            this->underlyingChannel_->sendMessage("/unvip " + this->userName_);
+            QString value = "/unvip " + this->userName_;
+            value = getIApp()->getCommands()->execCommand(
+                value, this->underlyingChannel_, false);
+            this->underlyingChannel_->sendMessage(value);
         });
 
         // userstate
-        this->userStateChanged_.connect([this, mod, unmod, vip,
-                                         unvip]() mutable {
+        // We can safely ignore this signal connection since this is a private signal, and
+        // we only connect once
+        std::ignore = this->userStateChanged_.connect([this, mod, unmod, vip,
+                                                       unvip]() mutable {
             TwitchChannel *twitchChannel =
                 dynamic_cast<TwitchChannel *>(this->underlyingChannel_.get());
 
@@ -426,9 +453,11 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, QWidget *parent)
             if (twitchChannel)
             {
                 bool isMyself =
-                    QString::compare(
-                        getApp()->accounts->twitch.getCurrent()->getUserName(),
-                        this->userName_, Qt::CaseInsensitive) == 0;
+                    QString::compare(getIApp()
+                                         ->getAccounts()
+                                         ->twitch.getCurrent()
+                                         ->getUserName(),
+                                     this->userName_, Qt::CaseInsensitive) == 0;
 
                 visibilityModButtons =
                     twitchChannel->isBroadcaster() && !isMyself;
@@ -447,17 +476,22 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, QWidget *parent)
     {
         auto timeout = moderation.emplace<TimeoutWidget>();
 
-        this->userStateChanged_.connect([this, lineMod, timeout]() mutable {
-            TwitchChannel *twitchChannel =
-                dynamic_cast<TwitchChannel *>(this->underlyingChannel_.get());
+        // We can safely ignore this signal connection since this is a private signal, and
+        // we only connect once
+        std::ignore =
+            this->userStateChanged_.connect([this, lineMod, timeout]() mutable {
+                TwitchChannel *twitchChannel = dynamic_cast<TwitchChannel *>(
+                    this->underlyingChannel_.get());
 
-            bool hasModRights =
-                twitchChannel ? twitchChannel->hasModRights() : false;
-            lineMod->setVisible(hasModRights);
-            timeout->setVisible(hasModRights);
-        });
+                bool hasModRights =
+                    twitchChannel ? twitchChannel->hasModRights() : false;
+                lineMod->setVisible(hasModRights);
+                timeout->setVisible(hasModRights);
+            });
 
-        timeout->buttonClicked.connect([this](auto item) {
+        // We can safely ignore this signal connection since we own the button, and
+        // the button will always be destroyed before the UserInfoPopup
+        std::ignore = timeout->buttonClicked.connect([this](auto item) {
             TimeoutWidget::Action action;
             int arg;
             std::tie(action, arg) = item;
@@ -467,25 +501,35 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, QWidget *parent)
                 case TimeoutWidget::Ban: {
                     if (this->underlyingChannel_)
                     {
-                        this->underlyingChannel_->sendMessage("/ban " +
-                                                              this->userName_);
+                        QString value = "/ban " + this->userName_;
+                        value = getIApp()->getCommands()->execCommand(
+                            value, this->underlyingChannel_, false);
+
+                        this->underlyingChannel_->sendMessage(value);
                     }
                 }
                 break;
                 case TimeoutWidget::Unban: {
                     if (this->underlyingChannel_)
                     {
-                        this->underlyingChannel_->sendMessage("/unban " +
-                                                              this->userName_);
+                        QString value = "/unban " + this->userName_;
+                        value = getIApp()->getCommands()->execCommand(
+                            value, this->underlyingChannel_, false);
+
+                        this->underlyingChannel_->sendMessage(value);
                     }
                 }
                 break;
                 case TimeoutWidget::Timeout: {
                     if (this->underlyingChannel_)
                     {
-                        this->underlyingChannel_->sendMessage(
-                            "/timeout " + this->userName_ + " " +
-                            QString::number(arg));
+                        QString value = "/timeout " + this->userName_ + " " +
+                                        QString::number(arg);
+
+                        value = getIApp()->getCommands()->execCommand(
+                            value, this->underlyingChannel_, false);
+
+                        this->underlyingChannel_->sendMessage(value);
                     }
                 }
                 break;
@@ -501,7 +545,9 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, QWidget *parent)
         this->ui_.noMessagesLabel = new Label("No recent messages");
         this->ui_.noMessagesLabel->setVisible(false);
 
-        this->ui_.latestMessages = new ChannelView(this);
+        this->ui_.latestMessages =
+            new ChannelView(this, this->split_, ChannelView::Context::UserCard,
+                            getSettings()->scrollbackUsercardLimit);
         this->ui_.latestMessages->setMinimumSize(400, 275);
         this->ui_.latestMessages->setSizePolicy(QSizePolicy::Expanding,
                                                 QSizePolicy::Expanding);
@@ -511,23 +557,15 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, QWidget *parent)
         logs->setAlignment(this->ui_.noMessagesLabel, Qt::AlignHCenter);
     }
 
+    // size grip
+    if (closeAutomatically)
+    {
+        layers->addWidget(new InvisibleSizeGrip(this), 0, 0,
+                          Qt::AlignRight | Qt::AlignBottom);
+    }
+
     this->installEvents();
     this->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Policy::Ignored);
-
-    this->dragTimer_.callOnTimeout(
-        [this, hack = std::weak_ptr<bool>(this->hack_)] {
-            if (!hack.lock())
-            {
-                // Ensure this timer is never called after the object has been destroyed
-                return;
-            }
-            if (!this->isMoving_)
-            {
-                return;
-            }
-
-            this->move(this->requestedDragPos_);
-        });
 }
 
 void UserInfoPopup::themeChangedEvent()
@@ -536,7 +574,8 @@ void UserInfoPopup::themeChangedEvent()
 
     for (auto &&child : this->findChildren<QCheckBox *>())
     {
-        child->setFont(getFonts()->getFont(FontStyle::UiMedium, this->scale()));
+        child->setFont(
+            getIApp()->getFonts()->getFont(FontStyle::UiMedium, this->scale()));
     }
 }
 
@@ -553,36 +592,6 @@ void UserInfoPopup::scaleChangedEvent(float /*scale*/)
     });
 }
 
-void UserInfoPopup::mousePressEvent(QMouseEvent *event)
-{
-    if (event->button() == Qt::MouseButton::LeftButton)
-    {
-        this->dragTimer_.start(std::chrono::milliseconds(17));
-        this->startPosDrag_ = event->pos();
-        this->movingRelativePos = event->localPos();
-    }
-}
-
-void UserInfoPopup::mouseReleaseEvent(QMouseEvent *event)
-{
-    this->dragTimer_.stop();
-    this->isMoving_ = false;
-}
-
-void UserInfoPopup::mouseMoveEvent(QMouseEvent *event)
-{
-    // Drag the window by the amount changed from inital position
-    // Note that we provide a few *units* of deadzone so people don't
-    // start dragging the window if they are slow at clicking.
-    auto movePos = event->pos() - this->startPosDrag_;
-    if (this->isMoving_ || movePos.manhattanLength() > 10.0)
-    {
-        this->requestedDragPos_ =
-            (event->screenPos() - this->movingRelativePos).toPoint();
-        this->isMoving_ = true;
-    }
-}
-
 void UserInfoPopup::installEvents()
 {
     std::shared_ptr<bool> ignoreNext = std::make_shared<bool>(false);
@@ -591,7 +600,7 @@ void UserInfoPopup::installEvents()
     QObject::connect(
         this->ui_.block, &QCheckBox::stateChanged,
         [this](int newState) mutable {
-            auto currentUser = getApp()->accounts->twitch.getCurrent();
+            auto currentUser = getIApp()->getAccounts()->twitch.getCurrent();
 
             const auto reenableBlockCheckbox = [this] {
                 this->ui_.block->setEnabled(true);
@@ -608,20 +617,20 @@ void UserInfoPopup::installEvents()
                 case Qt::CheckState::Unchecked: {
                     this->ui_.block->setEnabled(false);
 
-                    getApp()->accounts->twitch.getCurrent()->unblockUser(
-                        this->userId_,
+                    getIApp()->getAccounts()->twitch.getCurrent()->unblockUser(
+                        this->userId_, this,
                         [this, reenableBlockCheckbox, currentUser] {
-                            this->channel_->addMessage(makeSystemMessage(
+                            this->channel_->addSystemMessage(
                                 QString("You successfully unblocked user %1")
-                                    .arg(this->userName_)));
+                                    .arg(this->userName_));
                             reenableBlockCheckbox();
                         },
                         [this, reenableBlockCheckbox] {
-                            this->channel_->addMessage(makeSystemMessage(
+                            this->channel_->addSystemMessage(
                                 QString(
                                     "User %1 couldn't be unblocked, an unknown "
                                     "error occurred!")
-                                    .arg(this->userName_)));
+                                    .arg(this->userName_));
                             reenableBlockCheckbox();
                         });
                 }
@@ -635,20 +644,20 @@ void UserInfoPopup::installEvents()
                 case Qt::CheckState::Checked: {
                     this->ui_.block->setEnabled(false);
 
-                    getApp()->accounts->twitch.getCurrent()->blockUser(
-                        this->userId_,
+                    getIApp()->getAccounts()->twitch.getCurrent()->blockUser(
+                        this->userId_, this,
                         [this, reenableBlockCheckbox, currentUser] {
-                            this->channel_->addMessage(makeSystemMessage(
+                            this->channel_->addSystemMessage(
                                 QString("You successfully blocked user %1")
-                                    .arg(this->userName_)));
+                                    .arg(this->userName_));
                             reenableBlockCheckbox();
                         },
                         [this, reenableBlockCheckbox] {
-                            this->channel_->addMessage(makeSystemMessage(
+                            this->channel_->addSystemMessage(
                                 QString(
                                     "User %1 couldn't be blocked, an unknown "
                                     "error occurred!")
-                                    .arg(this->userName_)));
+                                    .arg(this->userName_));
                             reenableBlockCheckbox();
                         });
                 }
@@ -702,7 +711,18 @@ void UserInfoPopup::setData(const QString &name,
                             const ChannelPtr &contextChannel,
                             const ChannelPtr &openingChannel)
 {
-    this->userName_ = name;
+    const QStringView idPrefix = u"id:";
+    bool isId = name.startsWith(idPrefix);
+    if (isId)
+    {
+        this->userId_ = name.mid(idPrefix.size());
+        this->userName_ = "";
+    }
+    else
+    {
+        this->userName_ = name;
+    }
+
     this->channel_ = openingChannel;
 
     if (!contextChannel->isEmpty())
@@ -724,10 +744,20 @@ void UserInfoPopup::setData(const QString &name,
 
     this->userStateChanged_.invoke();
 
-    this->updateLatestMessages();
-    QTimer::singleShot(1, this, [this] {
-        this->setStayInScreenRect(true);
-    });
+    if (!isId)
+    {
+        this->updateLatestMessages();
+    }
+    // If we're opening by ID, this will be called as soon as we get the information from twitch
+
+    auto type = this->channel_->getType();
+    if (type == Channel::Type::TwitchLive ||
+        type == Channel::Type::TwitchWhispers || type == Channel::Type::Irc ||
+        type == Channel::Type::Misc)
+    {
+        // not a normal twitch channel, the url opened by the button will be invalid, so hide the button
+        this->ui_.usercardLabel->hide();
+    }
 }
 
 void UserInfoPopup::updateLatestMessages()
@@ -749,7 +779,9 @@ void UserInfoPopup::updateLatestMessages()
             this->underlyingChannel_->messageAppended.connect(
                 [this, hasMessages](auto message, auto) {
                     if (!checkMessageUserName(this->userName_, message))
+                    {
                         return;
+                    }
 
                     if (hasMessages)
                     {
@@ -768,8 +800,8 @@ void UserInfoPopup::updateLatestMessages()
 
 void UserInfoPopup::updateUserData()
 {
-    std::weak_ptr<bool> hack = this->hack_;
-    auto currentUser = getApp()->accounts->twitch.getCurrent();
+    std::weak_ptr<bool> hack = this->lifetimeHack_;
+    auto currentUser = getIApp()->getAccounts()->twitch.getCurrent();
 
     const auto onUserFetchFailed = [this, hack] {
         if (!hack.lock())
@@ -780,7 +812,6 @@ void UserInfoPopup::updateUserData()
         // this can occur when the account doesn't exist.
         this->ui_.followerCountLabel->setText(
             TEXT_FOLLOWERS.arg(TEXT_UNAVAILABLE));
-        this->ui_.viewCountLabel->setText(TEXT_VIEWS.arg(TEXT_UNAVAILABLE));
         this->ui_.createdDateLabel->setText(TEXT_CREATED.arg(TEXT_UNAVAILABLE));
 
         this->ui_.nameLabel->setText(this->userName_);
@@ -795,6 +826,14 @@ void UserInfoPopup::updateUserData()
         if (!hack.lock())
         {
             return;
+        }
+
+        // Correct for when being opened with ID
+        if (this->userName_.isEmpty())
+        {
+            this->userName_ = user.login;
+            // Ensure recent messages are shown
+            this->updateLatestMessages();
         }
 
         this->userId_ = user.id;
@@ -817,14 +856,12 @@ void UserInfoPopup::updateUserData()
 
         this->setWindowTitle(TEXT_TITLE.arg(
             user.displayName, this->underlyingChannel_->getName()));
-        this->ui_.viewCountLabel->setText(
-            TEXT_VIEWS.arg(localizeNumbers(user.viewCount)));
         this->ui_.createdDateLabel->setText(
             TEXT_CREATED.arg(user.createdAt.section("T", 0, 0)));
         this->ui_.userIDLabel->setText(TEXT_USER_ID + user.id);
         this->ui_.userIDLabel->setProperty("copy-text", user.id);
 
-        if (isInStreamerMode() &&
+        if (getIApp()->getStreamerMode()->isEnabled() &&
             getSettings()->streamerModeHideUsercardAvatars)
         {
             this->ui_.avatarButton->setPixmap(getResources().streamerMode);
@@ -834,7 +871,7 @@ void UserInfoPopup::updateUserData()
             this->loadAvatar(user.profileImageUrl);
         }
 
-        getHelix()->getUserFollowers(
+        getHelix()->getChannelFollowers(
             user.id,
             [this, hack](const auto &followers) {
                 if (!hack.lock())
@@ -844,18 +881,13 @@ void UserInfoPopup::updateUserData()
                 this->ui_.followerCountLabel->setText(
                     TEXT_FOLLOWERS.arg(localizeNumbers(followers.total)));
             },
-            [] {
-                // on failure
+            [](const auto &errorMessage) {
+                qCWarning(chatterinoTwitch)
+                    << "Error getting followers:" << errorMessage;
             });
 
         // get ignore state
-        bool isIgnoring = false;
-
-        if (auto blocks = currentUser->accessBlockedUserIds();
-            blocks->find(user.id) != blocks->end())
-        {
-            isIgnoring = true;
-        }
+        bool isIgnoring = currentUser->blockedUserIds().contains(user.id);
 
         // get ignoreHighlights state
         bool isIgnoringHighlights = false;
@@ -921,8 +953,16 @@ void UserInfoPopup::updateUserData()
             [] {});
     };
 
-    getHelix()->getUserByName(this->userName_, onUserFetched,
-                              onUserFetchFailed);
+    if (!this->userId_.isEmpty())
+    {
+        getHelix()->getUserById(this->userId_, onUserFetched,
+                                onUserFetchFailed);
+    }
+    else
+    {
+        getHelix()->getUserByName(this->userName_, onUserFetched,
+                                  onUserFetchFailed);
+    }
 
     this->ui_.block->setEnabled(false);
     this->ui_.ignoreHighlights->setEnabled(false);
@@ -931,10 +971,10 @@ void UserInfoPopup::updateUserData()
 void UserInfoPopup::loadAvatar(const QUrl &url)
 {
     QNetworkRequest req(url);
-    static auto manager = new QNetworkAccessManager();
+    static auto *manager = new QNetworkAccessManager();
     auto *reply = manager->get(req);
 
-    QObject::connect(reply, &QNetworkReply::finished, this, [=] {
+    QObject::connect(reply, &QNetworkReply::finished, this, [=, this] {
         if (reply->error() == QNetworkReply::NoError)
         {
             const auto data = reply->readAll();
@@ -961,42 +1001,10 @@ UserInfoPopup::TimeoutWidget::TimeoutWidget()
                       .setLayoutType<QHBoxLayout>()
                       .withoutMargin();
 
-    QColor color1(255, 255, 255, 80);
-    QColor color2(255, 255, 255, 0);
-
     int buttonWidth = 40;
-    // int buttonWidth = 24;
-    int buttonWidth2 = 32;
     int buttonHeight = 32;
 
     layout->setSpacing(16);
-
-    //auto addButton = [&](Action action, const QString &text,
-    //                     const QPixmap &pixmap) {
-    //    auto vbox = layout.emplace<QVBoxLayout>().withoutMargin();
-    //    {
-    //        auto title = vbox.emplace<QHBoxLayout>().withoutMargin();
-    //        title->addStretch(1);
-    //        auto label = title.emplace<Label>(text);
-    //        label->setHasOffset(false);
-    //        label->setStyleSheet("color: #BBB");
-    //        title->addStretch(1);
-
-    //        auto hbox = vbox.emplace<QHBoxLayout>().withoutMargin();
-    //        hbox->setSpacing(0);
-    //        {
-    //            auto button = hbox.emplace<Button>(nullptr);
-    //            button->setPixmap(pixmap);
-    //            button->setScaleIndependantSize(buttonHeight, buttonHeight);
-    //            button->setBorderColor(QColor(255, 255, 255, 127));
-
-    //            QObject::connect(
-    //                button.getElement(), &Button::leftClicked, [this, action] {
-    //                    this->buttonClicked.invoke(std::make_pair(action, -1));
-    //                });
-    //        }
-    //    }
-    //};
 
     const auto addLayout = [&](const QString &text) {
         auto vbox = layout.emplace<QVBoxLayout>().withoutMargin();

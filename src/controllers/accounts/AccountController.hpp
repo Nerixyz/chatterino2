@@ -1,11 +1,10 @@
 #pragma once
 
-#include <QObject>
-
 #include "common/SignalVector.hpp"
 #include "common/Singleton.hpp"
 #include "providers/twitch/TwitchAccountManager.hpp"
-#include "util/SharedPtrElementLess.hpp"
+
+#include <QObject>
 
 namespace chatterino {
 
@@ -22,7 +21,7 @@ public:
 
     AccountModel *createModel(QObject *parent);
 
-    virtual void initialize(Settings &settings, Paths &paths) override;
+    void initialize(Settings &settings, const Paths &paths) override;
 
     TwitchAccountManager twitch;
 

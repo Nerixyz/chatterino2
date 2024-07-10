@@ -1,28 +1,27 @@
 #pragma once
 
+#include <boost/preprocessor.hpp>
 #include <QString>
 #include <QWidget>
-#include <boost/optional.hpp>
-#include <boost/preprocessor.hpp>
+
 #include <memory>
+#include <optional>
 #include <string>
 
-#include "common/Aliases.hpp"
-#include "common/Outcome.hpp"
-#include "common/ProviderId.hpp"
+#define LINK_CHATTERINO_WIKI "https://wiki.chatterino.com"
+#define LINK_CHATTERINO_DISCORD "https://discord.gg/7Y5AYhAK4z"
+#define LINK_CHATTERINO_SOURCE "https://github.com/Chatterino/chatterino2"
 
 namespace chatterino {
+
+const inline auto TWITCH_PLAYER_URL =
+    QStringLiteral("https://player.twitch.tv/?channel=%1&parent=twitch.tv");
 
 enum class HighlightState {
     None,
     Highlighted,
     NewMessage,
 };
-
-inline QString qS(const std::string &string)
-{
-    return QString::fromStdString(string);
-}
 
 const Qt::KeyboardModifiers showSplitOverlayModifiers =
     Qt::ControlModifier | Qt::AltModifier;
@@ -51,6 +50,7 @@ using MessagePtr = std::shared_ptr<const Message>;
 
 enum class CopyMode {
     Everything,
+    EverythingButReplies,
     OnlyTextAndEmotes,
 };
 

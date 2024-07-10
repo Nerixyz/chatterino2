@@ -1,53 +1,76 @@
 #pragma once
 
-#include <IrcMessage>
-#include <functional>
-#include <mutex>
-#include <pajlada/signals/signal.hpp>
-#include <pajlada/signals/signalholder.hpp>
-
 #include "common/Common.hpp"
 #include "providers/irc/IrcConnection2.hpp"
 #include "util/RatelimitBucket.hpp"
+
+#include <IrcMessage>
+#include <pajlada/signals/signal.hpp>
+#include <pajlada/signals/signalholder.hpp>
+
+#include <functional>
+#include <mutex>
 
 namespace chatterino {
 
 class Channel;
 using ChannelPtr = std::shared_ptr<Channel>;
+class RatelimitBucket;
 
-class AbstractIrcServer : public QObject
+class IAbstractIrcServer
+{
+public:
+    virtual void connect() = 0;
+
+    virtual void sendRawMessage(const QString &rawMessage) = 0;
+
+    virtual ChannelPtr getOrAddChannel(const QString &dirtyChannelName) = 0;
+    virtual ChannelPtr getChannelOrEmpty(const QString &dirtyChannelName) = 0;
+
+    virtual void addFakeMessage(const QString &data) = 0;
+
+    virtual void addGlobalSystemMessage(const QString &messageText) = 0;
+
+    virtual void forEachChannel(std::function<void(ChannelPtr)> func) = 0;
+};
+
+class AbstractIrcServer : public IAbstractIrcServer, public QObject
 {
 public:
     enum ConnectionType { Read = 1, Write = 2, Both = 3 };
 
-    virtual ~AbstractIrcServer() = default;
+    ~AbstractIrcServer() override = default;
+    AbstractIrcServer(const AbstractIrcServer &) = delete;
+    AbstractIrcServer(AbstractIrcServer &&) = delete;
+    AbstractIrcServer &operator=(const AbstractIrcServer &) = delete;
+    AbstractIrcServer &operator=(AbstractIrcServer &&) = delete;
 
     // initializeIrc must be called from the derived class
     // this allows us to initialize the abstract IRC server based on the derived class's parameters
     void initializeIrc();
 
     // connection
-    void connect();
+    void connect() final;
     void disconnect();
 
     void sendMessage(const QString &channelName, const QString &message);
-    void sendRawMessage(const QString &rawMessage);
+    void sendRawMessage(const QString &rawMessage) override;
 
     // channels
-    ChannelPtr getOrAddChannel(const QString &dirtyChannelName);
-    ChannelPtr getChannelOrEmpty(const QString &dirtyChannelName);
+    ChannelPtr getOrAddChannel(const QString &dirtyChannelName) final;
+    ChannelPtr getChannelOrEmpty(const QString &dirtyChannelName) final;
     std::vector<std::weak_ptr<Channel>> getChannels();
 
     // signals
     pajlada::Signals::NoArgSignal connected;
     pajlada::Signals::NoArgSignal disconnected;
 
-    void addFakeMessage(const QString &data);
+    void addFakeMessage(const QString &data) final;
 
-    void addGlobalSystemMessage(const QString &messageText);
+    void addGlobalSystemMessage(const QString &messageText) final;
 
     // iteration
-    void forEachChannel(std::function<void(ChannelPtr)> func);
+    void forEachChannel(std::function<void(ChannelPtr)> func) final;
 
 protected:
     AbstractIrcServer();
@@ -55,7 +78,11 @@ protected:
     // initializeConnectionSignals is called on a connection once in its lifetime.
     // it can be used to connect signals to your class
     virtual void initializeConnectionSignals(IrcConnection *connection,
-                                             ConnectionType type){};
+                                             ConnectionType type)
+    {
+        (void)connection;
+        (void)type;
+    }
 
     // initializeConnection is called every time before we try to connect to the IRC server
     virtual void initializeConnection(IrcConnection *connection,
@@ -71,6 +98,7 @@ protected:
     virtual void onReadConnected(IrcConnection *connection);
     virtual void onWriteConnected(IrcConnection *connection);
     virtual void onDisconnected();
+    void markChannelsConnected();
 
     virtual std::shared_ptr<Channel> getCustomChannel(
         const QString &channelName);

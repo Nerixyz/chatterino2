@@ -1,14 +1,19 @@
-#include "messages/MessageBuilder.hpp"
+#pragma once
 
 #include "common/Aliases.hpp"
 #include "common/Outcome.hpp"
-#include "messages/MessageColor.hpp"
+#include "messages/MessageBuilder.hpp"
 
 #include <IrcMessage>
 #include <QColor>
 #include <QUrl>
 
+#include <optional>
+
 namespace chatterino {
+
+class Badge;
+class Channel;
 
 class SharedMessageBuilder : public MessageBuilder
 {
@@ -32,6 +37,14 @@ public:
     virtual void triggerHighlights();
     virtual MessagePtr build() = 0;
 
+    static std::pair<QString, QString> slashKeyValue(const QString &kvStr);
+
+    // Parses "badges" tag which contains a comma separated list of key-value elements
+    static std::vector<Badge> parseBadgeTag(const QVariantMap &tags);
+
+    static QString stylizeUsername(const QString &username,
+                                   const Message &message);
+
 protected:
     virtual void parse();
 
@@ -41,14 +54,15 @@ protected:
 
     virtual Outcome tryAppendEmote(const EmoteName &name)
     {
+        (void)name;
         return Failure;
     }
 
     // parseHighlights only updates the visual state of the message, but leaves the playing of alerts and sounds to the triggerHighlights function
     virtual void parseHighlights();
-
-    virtual void addTextOrEmoji(EmotePtr emote);
-    virtual void addTextOrEmoji(const QString &value);
+    static void triggerHighlights(const QString &channelName, bool playSound,
+                                  const std::optional<QUrl> &customSoundUrl,
+                                  bool windowAlert);
 
     void appendChannelName();
 
@@ -61,12 +75,10 @@ protected:
     const bool action_{};
 
     QColor usernameColor_ = {153, 153, 153};
-    MessageColor textColor_ = MessageColor::Text;
 
     bool highlightAlert_ = false;
     bool highlightSound_ = false;
-
-    QUrl highlightSoundUrl_;
+    std::optional<QUrl> highlightSoundCustomUrl_{};
 };
 
 }  // namespace chatterino

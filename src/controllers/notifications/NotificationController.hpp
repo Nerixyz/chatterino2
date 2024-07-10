@@ -1,8 +1,8 @@
 #pragma once
 
+#include "common/ChatterinoSetting.hpp"
 #include "common/SignalVector.hpp"
 #include "common/Singleton.hpp"
-#include "singletons/Settings.hpp"
 
 #include <QTimer>
 
@@ -15,13 +15,12 @@ class NotificationModel;
 
 enum class Platform : uint8_t {
     Twitch,  // 0
-    // Mixer,   // 1
 };
 
 class NotificationController final : public Singleton, private QObject
 {
 public:
-    virtual void initialize(Settings &settings, Paths &paths) override;
+    void initialize(Settings &settings, const Paths &paths) override;
 
     bool isChannelNotified(const QString &channelName, Platform p);
     void updateChannelNotification(const QString &channelName, Platform p);
@@ -49,10 +48,6 @@ private:
 
     ChatterinoSetting<std::vector<QString>> twitchSetting_ = {
         "/notifications/twitch"};
-    /*
-    ChatterinoSetting<std::vector<QString>> mixerSetting_ = {
-        "/notifications/mixer"};
-    */
 };
 
 }  // namespace chatterino

@@ -1,15 +1,23 @@
 #pragma once
 
-#include <QString>
 #include <pajlada/signals/signal.hpp>
+#include <QString>
 
 namespace chatterino {
 
+class Paths;
+
+/**
+ * To check for updates, use the `checkForUpdates` method.
+ * The class by itself does not start any automatic updates.
+ */
 class Updates
 {
-    Updates();
+    const Paths &paths;
 
 public:
+    explicit Updates(const Paths &paths_);
+
     enum Status {
         None,
         Searching,
@@ -21,8 +29,7 @@ public:
         WriteFileFailed,
     };
 
-    // fourtf: don't add this class to the application class
-    static Updates &instance();
+    static bool isDowngradeOf(const QString &online, const QString &current);
 
     void checkForUpdates();
     const QString &getCurrentVersion() const;

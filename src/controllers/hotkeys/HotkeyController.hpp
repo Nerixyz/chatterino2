@@ -4,10 +4,10 @@
 #include "common/Singleton.hpp"
 #include "controllers/hotkeys/HotkeyCategory.hpp"
 
-#include <boost/optional.hpp>
 #include <pajlada/signals/signal.hpp>
 #include <pajlada/signals/signalholder.hpp>
 
+#include <optional>
 #include <set>
 
 class QShortcut;
@@ -33,6 +33,17 @@ public:
 
     void save() override;
     std::shared_ptr<Hotkey> getHotkeyByName(QString name);
+    /**
+     * @brief returns a QKeySequence that perfoms the actions requested.
+     * Accepted if and only if the category matches, the action matches and arguments match.
+     * When arguments is present, contents of arguments must match the checked hotkey, otherwise arguments are ignored.
+     * For example:
+     * - std::nullopt (or {}) will match any hotkey satisfying category, action values,
+     * - {{"foo", "bar"}} will only match a hotkey that has these arguments and these arguments only
+     */
+    QKeySequence getDisplaySequence(
+        HotkeyCategory category, const QString &action,
+        const std::optional<std::vector<QString>> &arguments = {}) const;
 
     /**
      * @brief removes the hotkey with the oldName and inserts newHotkey at the end
@@ -40,8 +51,7 @@ public:
      * @returns the new index in the SignalVector
      **/
     int replaceHotkey(QString oldName, std::shared_ptr<Hotkey> newHotkey);
-    boost::optional<HotkeyCategory> hotkeyCategoryFromName(
-        QString categoryName);
+    std::optional<HotkeyCategory> hotkeyCategoryFromName(QString categoryName);
 
     /**
      * @brief checks if the hotkey is duplicate
@@ -71,8 +81,8 @@ public:
     /**
      * @returns a const map with the HotkeyCategory enum as its key, and HotkeyCategoryData as the value.
      **/
-    [[nodiscard]] const std::map<HotkeyCategory, HotkeyCategoryData>
-        &categories() const;
+    [[nodiscard]] const std::map<HotkeyCategory, HotkeyCategoryData> &
+        categories() const;
 
     pajlada::Signals::NoArgSignal onItemsUpdated;
 
@@ -114,6 +124,17 @@ private:
      **/
     static void showHotkeyError(const std::shared_ptr<Hotkey> &hotkey,
                                 QString warning);
+    /**
+     * @brief finds a Hotkey matching category, action and arguments.
+     * Accepted if and only if the category matches, the action matches and arguments match.
+     * When arguments is present, contents of arguments must match the checked hotkey, otherwise arguments are ignored.
+     * For example:
+     * - std::nullopt (or {}) will match any hotkey satisfying category, action values,
+     * - {{"foo", "bar"}} will only match a hotkey that has these arguments and these arguments only
+     */
+    std::shared_ptr<Hotkey> findLike(
+        HotkeyCategory category, const QString &action,
+        const std::optional<std::vector<QString>> &arguments = {}) const;
 
     friend class KeyboardSettingsPage;
 
