@@ -89,4 +89,8 @@ if (CHATTERINO_STATIC_QT_BUILD)
     )
 endif ()
 
+if (USE_PRECOMPILED_HEADERS)
+    target_precompile_headers(${PROJECT_NAME} PRIVATE PrecompiledTestHeader.hpp)
+endif ()
+
 gtest_discover_tests(${PROJECT_NAME})
