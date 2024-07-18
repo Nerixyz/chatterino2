@@ -9,7 +9,6 @@ on:
 env:
   TWITCH_PUBSUB_SERVER_TAG: v1.0.7
   QT_QPA_PLATFORM: minimal
-  C2_CTEST_ARGUMENTS: --repeat until-pass:4 --output-on-failure --exclude-regex ClassicEmoteNameFiltering
 
 concurrency:
   group: test-${{ github.ref }}
@@ -44,7 +43,12 @@ jobs:
         run: |
           sudo apt update
           sudo apt -y install \
-            libbenchmark-dev lcov
+            libbenchmark-dev
+
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: 18
 
       - name: Build (Ubuntu)
         run: |
@@ -56,8 +60,10 @@ jobs:
             -DCMAKE_PREFIX_PATH="$Qt6_DIR/lib/cmake" \
             -DBUILD_WITH_QT6="$C2_BUILD_WITH_QT6" \
             -DCHATTERINO_STATIC_QT_BUILD=On \
-            -DCHATTERINO_GENERATE_COVERAGE=On \
-            -DCHATTERINO_COVERAGE_CTEST_ARGUMENTS="${{env.C2_CTEST_ARGUMENTS}}" \
+            -DCMAKE_CXX_FLAGS="-fprofile-instr-generate -fcoverage-mapping" \
+            -DCMAKE_C_FLAGS="-fprofile-instr-generate -fcoverage-mapping" \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_C_COMPILER=clang \
             ..
           cmake --build .
         working-directory: build-test
@@ -85,14 +91,18 @@ jobs:
           cd ../pubsub-server-test
           ./server 127.0.0.1:9050 &
           cd ../build-test
-          make coverage
+          export LLVM_PROFILE_FILE="cov/c2-%p.profraw"
+          ctest --repeat until-pass:4 --output-on-failure --exclude-regex ClassicEmoteNameFiltering
         working-directory: build-test
 
-      - name: Install coverage
-        run: pip install coverage
+      - name: Export Coverage
+        run: |
+          llvm-profdata merge -sparse cov/c2-*.profraw -o default.profdata
+          llvm-cov export bin/chatterino-test --instr-profile default.profdata --format lcov lcov.txt
+        working-directory: build-test
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4.0.1
         with:
-          directory: build-test
+          file: build-test/lcov.txt
           token: ${{ secrets.CODECOV_TOKEN }}
