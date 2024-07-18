@@ -48,7 +48,7 @@ jobs:
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v2
         with:
-          version: 18
+          version: 18.1
 
       - name: Build (Ubuntu)
         run: |
