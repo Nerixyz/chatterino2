@@ -46,9 +46,9 @@ jobs:
             libbenchmark-dev
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2
+        uses: gentoo-root/install-llvm-action@abb6cec0ec431e834bc5e5090ea39a2d1d63a4c6
         with:
-          version: 18.1
+          version: 18
 
       - name: Build (Ubuntu)
         run: |
