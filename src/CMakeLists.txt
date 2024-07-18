@@ -762,9 +762,10 @@ if (CHATTERINO_GENERATE_COVERAGE)
     include(CodeCoverage)
     append_coverage_compiler_flags_to_target(${LIBRARY_PROJECT})
     message(STATUS "project source dir: ${PROJECT_SOURCE_DIR}/src")
-    setup_target_for_coverage_gcovr_html(
+    setup_target_for_coverage_lcov(
         NAME coverage
         EXECUTABLE ctest
+        EXECUTABLE_ARGS ${CHATTERINO_COVERAGE_CTEST_ARGS}
         EXCLUDE "/usr/include/*"
         EXCLUDE "build-*/*"
         EXCLUDE "lib/*"

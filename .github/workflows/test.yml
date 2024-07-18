@@ -9,6 +9,7 @@ on:
 env:
   TWITCH_PUBSUB_SERVER_TAG: v1.0.7
   QT_QPA_PLATFORM: minimal
+  C2_CTEST_ARGUMENTS: --repeat until-pass:4 --output-on-failure --exclude-regex ClassicEmoteNameFiltering
 
 concurrency:
   group: test-${{ github.ref }}
@@ -43,7 +44,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt -y install \
-            libbenchmark-dev
+            libbenchmark-dev lcov
 
       - name: Build (Ubuntu)
         run: |
@@ -55,6 +56,8 @@ jobs:
             -DCMAKE_PREFIX_PATH="$Qt6_DIR/lib/cmake" \
             -DBUILD_WITH_QT6="$C2_BUILD_WITH_QT6" \
             -DCHATTERINO_STATIC_QT_BUILD=On \
+            -DCHATTERINO_GENERATE_COVERAGE=On \
+            -DCHATTERINO_COVERAGE_CTEST_ARGUMENTS="${{env.C2_CTEST_ARGUMENTS}}" \
             ..
           cmake --build .
         working-directory: build-test
@@ -82,5 +85,11 @@ jobs:
           cd ../pubsub-server-test
           ./server 127.0.0.1:9050 &
           cd ../build-test
-          ctest --repeat until-pass:4 --output-on-failure --exclude-regex ClassicEmoteNameFiltering
+          make coverage
         working-directory: build-test
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          directory: build-test/src
+          token: ${{ secrets.CODECOV_TOKEN }}
