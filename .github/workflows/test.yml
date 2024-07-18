@@ -100,7 +100,7 @@ jobs:
           ls -la
           ls -la cov
           llvm-profdata merge -sparse cov/*.profraw -o default.profdata
-          llvm-cov export bin/chatterino-test --instr-profile default.profdata --format lcov lcov.txt
+          llvm-cov export bin/chatterino-test --instr-profile default.profdata --format lcov > lcov.txt
         working-directory: build-test
 
       - name: Upload coverage reports to Codecov
