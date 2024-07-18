@@ -91,13 +91,15 @@ jobs:
           cd ../pubsub-server-test
           ./server 127.0.0.1:9050 &
           cd ../build-test
-          export LLVM_PROFILE_FILE="cov/c2-%p.profraw"
+          export LLVM_PROFILE_FILE="$(pwd)/cov/c2-%p.profraw"
           ctest --repeat until-pass:4 --output-on-failure --exclude-regex ClassicEmoteNameFiltering
         working-directory: build-test
 
       - name: Export Coverage
         run: |
-          llvm-profdata merge -sparse cov/c2-*.profraw -o default.profdata
+          ls -la
+          ls -la cov
+          llvm-profdata merge -sparse cov/*.profraw -o default.profdata
           llvm-cov export bin/chatterino-test --instr-profile default.profdata --format lcov lcov.txt
         working-directory: build-test
 
