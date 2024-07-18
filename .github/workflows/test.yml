@@ -39,11 +39,11 @@ jobs:
       - name: Create build directory (Ubuntu)
         run: mkdir build-test
 
-      - name: Install googlebench
+      - name: Install googlebench & ncurses
         run: |
           sudo apt update
           sudo apt -y install \
-            libbenchmark-dev
+            libbenchmark-dev libncurses5
 
       - name: Install LLVM and Clang
         uses: gentoo-root/install-llvm-action@abb6cec0ec431e834bc5e5090ea39a2d1d63a4c6
