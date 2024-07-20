@@ -24,6 +24,7 @@ else()
     option(BUILD_WITH_QT6 "Use Qt6 instead of default Qt5" OFF)
 endif()
 option(CHATTERINO_GENERATE_COVERAGE "Generate coverage files" OFF)
+option(CHATTERINO_COVERAGE_CTEST_ARGS "Arguments for ctest when generating coverage" "")
 # We don't use translations, and we don't want qtkeychain to build translations
 option(BUILD_TRANSLATIONS "" OFF)
 option(BUILD_SHARED_LIBS "" OFF)
