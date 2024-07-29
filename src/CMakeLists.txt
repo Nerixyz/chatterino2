@@ -656,6 +656,9 @@ set(SOURCE_FILES
         widgets/helper/TitlebarButtons.cpp
         widgets/helper/TitlebarButtons.hpp
 
+        widgets/layout/FlowLayout.cpp
+        widgets/layout/FlowLayout.hpp
+
         widgets/listview/GenericItemDelegate.cpp
         widgets/listview/GenericItemDelegate.hpp
         widgets/listview/GenericListItem.cpp
@@ -983,7 +986,6 @@ if (APPLE AND BUILD_APP)
         PROPERTIES
         MACOSX_BUNDLE_BUNDLE_NAME "Chatterino"
         MACOSX_BUNDLE_GUI_IDENTIFIER "com.chatterino"
-        MACOSX_BUNDLE_INFO_STRING "Chat client for Twitch"
         MACOSX_BUNDLE_LONG_VERSION_STRING "${PROJECT_VERSION}"
         MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
         MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
