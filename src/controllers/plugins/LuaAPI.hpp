@@ -2,11 +2,10 @@
 
 #ifdef CHATTERINO_HAVE_PLUGINS
 
-extern "C" {
-#    include <lua.h>
-}
-#    include "controllers/plugins/LuaUtilities.hpp"
+#    include "controllers/plugins/SolTypes.hpp"
 
+#    include <lua.h>
+#    include <magic_enum/magic_enum.hpp>
 #    include <QString>
 
 #    include <cassert>
@@ -95,7 +94,6 @@ struct CompletionEvent {
  * @lua@return boolean ok  Returns `true` if everything went ok, `false` if a command with this name exists.
  * @exposed c2.register_command
  */
-int c2_register_command(lua_State *L);
 
 /**
  * Registers a callback to be invoked when completions for a term are requested.
@@ -247,5 +245,31 @@ struct SharedPtrUserData : public UserData {
 };
 
 }  // namespace chatterino::lua::api
+
+namespace chatterino::lua {
+
+namespace detail {
+
+    template <auto Values, std::size_t N, std::size_t... Idx>
+    sol::table createEnumTable(sol::state_view &lua,
+                               std::index_sequence<Idx...> /*seq*/)
+    {
+        auto table = lua.create_table(0, N);
+        (table.set(magic_enum::enum_name<Values[Idx]>(), Values[Idx]), ...);
+        return table;
+    }
+
+}  // namespace detail
+
+template <typename T>
+    requires std::is_enum_v<T>
+sol::table createEnumTable(sol::state_view &lua)
+{
+    constexpr auto values = magic_enum::enum_values<T>();
+    return detail::createEnumTable<values, values.size()>(
+        lua, std::make_index_sequence<values.size()>{});
+}
+
+}  // namespace chatterino::lua
 
 #endif

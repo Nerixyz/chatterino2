@@ -13,16 +13,16 @@
 #    include "controllers/plugins/api/IOWrapper.hpp"
 #    include "controllers/plugins/LuaAPI.hpp"
 #    include "controllers/plugins/LuaUtilities.hpp"
+#    include "controllers/plugins/SolTypes.hpp"
 #    include "messages/MessageBuilder.hpp"
 #    include "singletons/Paths.hpp"
 #    include "singletons/Settings.hpp"
 
-extern "C" {
 #    include <lauxlib.h>
 #    include <lua.h>
 #    include <lualib.h>
-}
 #    include <QJsonDocument>
+#    include <sol/sol.hpp>
 
 #    include <memory>
 #    include <utility>
@@ -114,7 +114,7 @@ bool PluginController::tryLoadFromDir(const QDir &pluginDir)
 }
 
 void PluginController::openLibrariesFor(lua_State *L, const PluginMeta &meta,
-                                        const QDir &pluginDir)
+                                        const QDir &pluginDir, Plugin *plugin)
 {
     lua::StackGuard guard(L);
     // Stuff to change, remove or hide behind a permission system:
@@ -149,7 +149,6 @@ void PluginController::openLibrariesFor(lua_State *L, const PluginMeta &meta,
 
     // NOLINTNEXTLINE(*-avoid-c-arrays)
     static const luaL_Reg c2Lib[] = {
-        {"register_command", lua::api::c2_register_command},
         {"register_callback", lua::api::c2_register_callback},
         {"log", lua::api::c2_log},
         {"later", lua::api::c2_later},
@@ -169,19 +168,10 @@ void PluginController::openLibrariesFor(lua_State *L, const PluginMeta &meta,
     lua::pushEnumTable<lua::api::EventType>(L);
     lua_setfield(L, c2libIdx, "EventType");
 
-    lua::pushEnumTable<lua::api::LPlatform>(L);
-    lua_setfield(L, c2libIdx, "Platform");
-
-    lua::pushEnumTable<Channel::Type>(L);
-    lua_setfield(L, c2libIdx, "ChannelType");
-
     lua::pushEnumTable<NetworkRequestType>(L);
     lua_setfield(L, c2libIdx, "HTTPMethod");
 
     // Initialize metatables for objects
-    lua::api::ChannelRef::createMetatable(L);
-    lua_setfield(L, c2libIdx, "Channel");
-
     lua::api::HTTPRequest::createMetatable(L);
     lua_setfield(L, c2libIdx, "HTTPRequest");
 
@@ -296,6 +286,20 @@ void PluginController::openLibrariesFor(lua_State *L, const PluginMeta &meta,
 
     lua_pushnil(L);
     lua_setfield(L, LUA_REGISTRYINDEX, "_IO_output");
+
+    sol::state_view lua(L);
+    PluginController::initSol(lua, plugin);
+}
+
+void PluginController::initSol(sol::state_view &lua, Plugin *plugin)
+{
+    sol::table c2 = lua.globals()["c2"];
+    c2.set_function("register_command",
+                    [plugin](const QString &name, sol::protected_function cb) {
+                        return plugin->registerCommand(name, std::move(cb));
+                    });
+    lua::api::ChannelRef::createUserType(c2);
+    c2["ChannelType"] = lua::createEnumTable<Channel::Type>(lua);
 }
 
 void PluginController::load(const QFileInfo &index, const QDir &pluginDir,
@@ -314,7 +318,7 @@ void PluginController::load(const QFileInfo &index, const QDir &pluginDir,
                                  << " because safe mode is enabled.";
         return;
     }
-    PluginController::openLibrariesFor(l, meta, pluginDir);
+    PluginController::openLibrariesFor(l, meta, pluginDir, temp);
 
     if (!PluginController::isPluginEnabled(pluginName) ||
         !getSettings()->pluginsEnabled)
@@ -345,16 +349,18 @@ bool PluginController::reload(const QString &id)
     {
         return false;
     }
-    if (it->second->state_ != nullptr)
-    {
-        lua_close(it->second->state_);
-        it->second->state_ = nullptr;
-    }
+
     for (const auto &[cmd, _] : it->second->ownedCommands)
     {
         getApp()->getCommands()->unregisterPluginCommand(cmd);
     }
     it->second->ownedCommands.clear();
+
+    if (it->second->state_ != nullptr)
+    {
+        lua_close(it->second->state_);
+        it->second->state_ = nullptr;
+    }
     QDir loadDir = it->second->loadDirectory_;
     this->plugins_.erase(id);
     this->tryLoadFromDir(loadDir);
@@ -369,27 +375,34 @@ QString PluginController::tryExecPluginCommand(const QString &commandName,
         if (auto it = plugin->ownedCommands.find(commandName);
             it != plugin->ownedCommands.end())
         {
-            const auto &funcName = it->second;
+            sol::state_view lua(plugin->state_);
+            sol::table args =
+                lua.create_table_with("words", ctx.words, "channel",
+                                      lua::api::ChannelRef(ctx.channel));
 
-            auto *L = plugin->state_;
-            lua_getfield(L, LUA_REGISTRYINDEX, funcName.toStdString().c_str());
-            lua::push(L, ctx);
-
-            auto res = lua_pcall(L, 1, 0, 0);
-            if (res != LUA_OK)
+            auto result =
+                lua::tryCall<std::optional<QString>>(it->second, args);
+            if (!result)
             {
-                ctx.channel->addSystemMessage("Lua error: " +
-                                              lua::humanErrorText(L, res));
-                return "";
+                ctx.channel->addSystemMessage(
+                    QStringView(
+                        u"Failed to evaluate command from plugin %1: %2")
+                        .arg(plugin->meta.name, result.error()));
+                return {};
             }
-            return "";
+
+            if (!*result)
+            {
+                return {};
+            }
+            return **result;
         }
     }
     qCCritical(chatterinoLua)
         << "Something's seriously up, no plugin owns command" << commandName
         << "yet a call to execute it came in";
     assert(false && "missing plugin command owner");
-    return "";
+    return {};
 }
 
 bool PluginController::isPluginEnabled(const QString &id)
@@ -437,7 +450,7 @@ std::pair<bool, QStringList> PluginController::updateCustomCompletions(
 
         lua::StackGuard guard(pl->state_);
 
-        auto opt = pl->getCompletionCallback();
+        /*auto opt = pl->getCompletionCallback();
         if (opt)
         {
             qCDebug(chatterinoLua)
@@ -467,7 +480,7 @@ std::pair<bool, QStringList> PluginController::updateCustomCompletions(
                 return {true, results};
             }
             results += QStringList(list.values.begin(), list.values.end());
-        }
+        }*/
     }
 
     return {false, results};

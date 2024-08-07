@@ -7,14 +7,13 @@
 #    include "controllers/plugins/PluginPermission.hpp"
 #    include "util/QMagicEnum.hpp"
 
-extern "C" {
 #    include <lua.h>
-}
 #    include <magic_enum/magic_enum.hpp>
 #    include <QJsonArray>
 #    include <QJsonObject>
 #    include <QLoggingCategory>
 #    include <QUrl>
+#    include <sol/sol.hpp>
 
 #    include <algorithm>
 #    include <unordered_map>
@@ -190,7 +189,8 @@ PluginMeta::PluginMeta(const QJsonObject &obj)
     }
 }
 
-bool Plugin::registerCommand(const QString &name, const QString &functionName)
+bool Plugin::registerCommand(const QString &name,
+                             sol::protected_function function)
 {
     if (this->ownedCommands.find(name) != this->ownedCommands.end())
     {
@@ -202,7 +202,7 @@ bool Plugin::registerCommand(const QString &name, const QString &functionName)
     {
         return false;
     }
-    this->ownedCommands.insert({name, functionName});
+    this->ownedCommands.emplace(name, std::move(function));
     return true;
 }
 

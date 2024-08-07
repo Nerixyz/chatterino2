@@ -235,14 +235,16 @@ set(SOURCE_FILES
         controllers/plugins/api/HTTPResponse.hpp
         controllers/plugins/LuaAPI.cpp
         controllers/plugins/LuaAPI.hpp
-        controllers/plugins/PluginPermission.cpp
-        controllers/plugins/PluginPermission.hpp
+        controllers/plugins/LuaUtilities.cpp
+        controllers/plugins/LuaUtilities.hpp
         controllers/plugins/Plugin.cpp
         controllers/plugins/Plugin.hpp
         controllers/plugins/PluginController.hpp
         controllers/plugins/PluginController.cpp
-        controllers/plugins/LuaUtilities.cpp
-        controllers/plugins/LuaUtilities.hpp
+        controllers/plugins/PluginPermission.cpp
+        controllers/plugins/PluginPermission.hpp
+        controllers/plugins/SolTypes.cpp
+        controllers/plugins/SolTypes.hpp
 
         controllers/sound/ISoundController.hpp
         controllers/sound/MiniaudioBackend.cpp
@@ -774,7 +776,7 @@ target_link_libraries(${LIBRARY_PROJECT}
         $<$<BOOL:${WIN32}>:Wtsapi32>
         )
 if (CHATTERINO_PLUGINS)
-    target_link_libraries(${LIBRARY_PROJECT} PUBLIC lua)
+    target_link_libraries(${LIBRARY_PROJECT} PUBLIC lua sol2::sol2)
 endif()
 
 if (BUILD_WITH_QTKEYCHAIN)

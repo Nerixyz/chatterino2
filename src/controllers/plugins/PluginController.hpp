@@ -10,6 +10,7 @@
 #    include <QJsonArray>
 #    include <QJsonObject>
 #    include <QString>
+#    include <sol/forward.hpp>
 
 #    include <algorithm>
 #    include <map>
@@ -67,7 +68,10 @@ private:
 
     // This function adds lua standard libraries into the state
     static void openLibrariesFor(lua_State *L, const PluginMeta & /*meta*/,
-                                 const QDir &pluginDir);
+                                 const QDir &pluginDir, Plugin *plugin);
+
+    static void initSol(sol::state_view &lua, Plugin *plugin);
+
     static void loadChatterinoLib(lua_State *l);
     bool tryLoadFromDir(const QDir &pluginDir);
     std::map<QString, std::unique_ptr<Plugin>> plugins_;
