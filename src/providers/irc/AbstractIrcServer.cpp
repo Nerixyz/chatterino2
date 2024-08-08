@@ -110,6 +110,15 @@ void AbstractIrcServer::initializeIrc()
     this->initialized_ = true;
 }
 
+void AbstractIrcServer::initializeConnectionSignals(IrcConnection *connection,
+                                                    ConnectionType type)
+{
+    QObject::connect(connection, &IrcConnection::connectAndInitializeRequested,
+                     this, [this, connection, type]() {
+                         this->initializeConnection(connection, type);
+                     });
+}
+
 void AbstractIrcServer::connect()
 {
     assert(this->initialized_);
