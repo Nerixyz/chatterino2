@@ -448,6 +448,11 @@ set(SOURCE_FILES
         providers/twitch/api/Helix.cpp
         providers/twitch/api/Helix.hpp
 
+        providers/websocket/PubSubPool.cpp
+        providers/websocket/PubSubPool.hpp
+        providers/websocket/WebSocketPool.cpp
+        providers/websocket/WebSocketPool.hpp
+
         singletons/CrashHandler.cpp
         singletons/CrashHandler.hpp
         singletons/Emotes.cpp
