@@ -1,5 +1,6 @@
 #include "providers/twitch/PubSubActions.hpp"
 #include "providers/twitch/PubSubClient.hpp"
+#include "providers/twitch/PubSubDiagnostics.hpp"
 #include "providers/twitch/PubSubManager.hpp"
 #include "providers/twitch/pubsubmessages/AutoMod.hpp"
 #include "providers/twitch/pubsubmessages/Whisper.hpp"
@@ -96,35 +97,35 @@ TEST(TwitchPubSubClient, ServerRespondsToPings)
 
     std::this_thread::sleep_for(50ms);
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 0);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 0);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
-    ASSERT_EQ(pubSub.diag.messagesReceived, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->messagesReceived, 0);
 
     pubSub.listenToChannelModerationActions("123456");
 
     std::this_thread::sleep_for(150ms);
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 1);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 0);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
-    ASSERT_EQ(pubSub.diag.messagesReceived, 2);
-    ASSERT_EQ(pubSub.diag.listenResponses, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->messagesReceived, 2);
+    ASSERT_EQ(pubSub.diag()->listenResponses, 1);
 
     std::this_thread::sleep_for(2s);
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 1);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 0);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
-    ASSERT_EQ(pubSub.diag.messagesReceived, 4);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->messagesReceived, 4);
 
     pubSub.stop();
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 1);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 1);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
-    ASSERT_EQ(pubSub.diag.messagesReceived, 4);
-    ASSERT_EQ(pubSub.diag.listenResponses, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->messagesReceived, 4);
+    ASSERT_EQ(pubSub.diag()->listenResponses, 1);
 }
 
 TEST(TwitchPubSubClient, ServerDoesntRespondToPings)
@@ -136,24 +137,24 @@ TEST(TwitchPubSubClient, ServerDoesntRespondToPings)
 
     std::this_thread::sleep_for(750ms);
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 1);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 0);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
-    ASSERT_EQ(pubSub.diag.messagesReceived, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->messagesReceived, 1);
 
-    std::this_thread::sleep_for(500ms);
+    std::this_thread::sleep_for(2s);
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 2);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 1);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
-    ASSERT_EQ(pubSub.diag.messagesReceived, 2);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 2);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->messagesReceived, 2);
 
     pubSub.stop();
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 2);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 2);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
-    ASSERT_EQ(pubSub.diag.messagesReceived, 2);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 2);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 2);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->messagesReceived, 2);
 }
 
 TEST(TwitchPubSubClient, DisconnectedAfter1s)
@@ -164,29 +165,29 @@ TEST(TwitchPubSubClient, DisconnectedAfter1s)
 
     std::this_thread::sleep_for(50ms);
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 0);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 0);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
-    ASSERT_EQ(pubSub.diag.messagesReceived, 0);
-    ASSERT_EQ(pubSub.diag.listenResponses, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->messagesReceived, 0);
+    ASSERT_EQ(pubSub.diag()->listenResponses, 0);
 
     pubSub.listenToChannelModerationActions("123456");
 
     std::this_thread::sleep_for(500ms);
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 1);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 0);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
-    ASSERT_EQ(pubSub.diag.messagesReceived, 2);  // Listen RESPONSE & Pong
-    ASSERT_EQ(pubSub.diag.listenResponses, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->messagesReceived, 2);  // Listen RESPONSE & Pong
+    ASSERT_EQ(pubSub.diag()->listenResponses, 1);
 
     std::this_thread::sleep_for(950ms);
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 2);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 1);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
-    ASSERT_EQ(pubSub.diag.listenResponses, 2);
-    ASSERT_EQ(pubSub.diag.messagesReceived, 4);  // new listen & new pong
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 2);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->listenResponses, 2);
+    ASSERT_EQ(pubSub.diag()->messagesReceived, 4);  // new listen & new pong
 
     pubSub.stop();
 }
@@ -197,10 +198,10 @@ TEST(TwitchPubSubClient, ExceedTopicLimit)
 
     pubSub.start();
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 0);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 0);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
-    ASSERT_EQ(pubSub.diag.messagesReceived, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->messagesReceived, 0);
 
     for (auto i = 0; i < PubSubClient::MAX_LISTENS; ++i)
     {
@@ -209,26 +210,26 @@ TEST(TwitchPubSubClient, ExceedTopicLimit)
 
     std::this_thread::sleep_for(50ms);
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 1);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 0);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
 
     for (auto i = 0; i < PubSubClient::MAX_LISTENS; ++i)
     {
         pubSub.listenToChannelModerationActions(QString("2%1").arg(i));
     }
 
-    std::this_thread::sleep_for(50ms);
+    std::this_thread::sleep_for(1s + 50ms);
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 2);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 0);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 2);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
 
     pubSub.stop();
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 2);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 2);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 2);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 2);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
 }
 
 TEST(TwitchPubSubClient, ExceedTopicLimitSingleStep)
@@ -237,11 +238,15 @@ TEST(TwitchPubSubClient, ExceedTopicLimitSingleStep)
 
     pubSub.start();
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 0);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 0);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
-    ASSERT_EQ(pubSub.diag.messagesReceived, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->messagesReceived, 0);
 
+    for (auto i = 0; i < PubSubClient::MAX_LISTENS - 1; ++i)
+    {
+        pubSub.listenToChannelModerationActions(QString(u"1%1").arg(i));
+    }
     for (auto i = 0; i < PubSubClient::MAX_LISTENS * 2; ++i)
     {
         pubSub.listenToChannelModerationActions("123456");
@@ -249,15 +254,26 @@ TEST(TwitchPubSubClient, ExceedTopicLimitSingleStep)
 
     std::this_thread::sleep_for(150ms);
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 2);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 0);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
+
+    for (auto i = 0; i < PubSubClient::MAX_LISTENS * 2; ++i)
+    {
+        pubSub.listenToChannelModerationActions(QString("2%1").arg(i));
+    }
+
+    std::this_thread::sleep_for(2s + 50ms);
+
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 3);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
 
     pubSub.stop();
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 2);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 2);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 3);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 3);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
 }
 
 TEST(TwitchPubSubClient, ReceivedWhisper)
@@ -277,11 +293,11 @@ TEST(TwitchPubSubClient, ReceivedWhisper)
 
     std::this_thread::sleep_for(150ms);
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 1);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 0);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
-    ASSERT_EQ(pubSub.diag.messagesReceived, 3);
-    ASSERT_EQ(pubSub.diag.listenResponses, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->messagesReceived, 3);
+    ASSERT_EQ(pubSub.diag()->listenResponses, 1);
 
     ASSERT_TRUE(aReceivedWhisper);
 
@@ -291,9 +307,9 @@ TEST(TwitchPubSubClient, ReceivedWhisper)
 
     pubSub.stop();
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 1);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 1);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
 }
 
 TEST(TwitchPubSubClient, ModeratorActionsUserBanned)
@@ -309,17 +325,17 @@ TEST(TwitchPubSubClient, ModeratorActionsUserBanned)
             received = action;
         });
 
-    ASSERT_EQ(pubSub.diag.listenResponses, 0);
+    ASSERT_EQ(pubSub.diag()->listenResponses, 0);
 
     pubSub.listenToChannelModerationActions("123456");
 
     std::this_thread::sleep_for(50ms);
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 1);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 0);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
-    ASSERT_EQ(pubSub.diag.messagesReceived, 3);
-    ASSERT_EQ(pubSub.diag.listenResponses, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->messagesReceived, 3);
+    ASSERT_EQ(pubSub.diag()->listenResponses, 1);
 
     ASSERT_TRUE(received);
 
@@ -333,9 +349,9 @@ TEST(TwitchPubSubClient, ModeratorActionsUserBanned)
 
     pubSub.stop();
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 1);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 1);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
 }
 
 TEST(TwitchPubSubClient, MissingToken)
@@ -349,18 +365,18 @@ TEST(TwitchPubSubClient, MissingToken)
 
     std::this_thread::sleep_for(150ms);
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 1);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 0);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
-    ASSERT_EQ(pubSub.diag.messagesReceived, 2);
-    ASSERT_EQ(pubSub.diag.listenResponses, 0);
-    ASSERT_EQ(pubSub.diag.failedListenResponses, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->messagesReceived, 2);
+    ASSERT_EQ(pubSub.diag()->listenResponses, 0);
+    ASSERT_EQ(pubSub.diag()->failedListenResponses, 1);
 
     pubSub.stop();
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 1);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 1);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
 }
 
 TEST(TwitchPubSubClient, WrongToken)
@@ -374,18 +390,18 @@ TEST(TwitchPubSubClient, WrongToken)
 
     std::this_thread::sleep_for(50ms);
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 1);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 0);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
-    ASSERT_EQ(pubSub.diag.messagesReceived, 2);
-    ASSERT_EQ(pubSub.diag.listenResponses, 0);
-    ASSERT_EQ(pubSub.diag.failedListenResponses, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->messagesReceived, 2);
+    ASSERT_EQ(pubSub.diag()->listenResponses, 0);
+    ASSERT_EQ(pubSub.diag()->failedListenResponses, 1);
 
     pubSub.stop();
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 1);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 1);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
 }
 
 TEST(TwitchPubSubClient, CorrectToken)
@@ -399,18 +415,18 @@ TEST(TwitchPubSubClient, CorrectToken)
 
     std::this_thread::sleep_for(50ms);
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 1);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 0);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
-    ASSERT_EQ(pubSub.diag.messagesReceived, 2);
-    ASSERT_EQ(pubSub.diag.listenResponses, 1);
-    ASSERT_EQ(pubSub.diag.failedListenResponses, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->messagesReceived, 2);
+    ASSERT_EQ(pubSub.diag()->listenResponses, 1);
+    ASSERT_EQ(pubSub.diag()->failedListenResponses, 0);
 
     pubSub.stop();
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 1);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 1);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
 }
 
 TEST(TwitchPubSubClient, AutoModMessageHeld)
@@ -430,14 +446,14 @@ TEST(TwitchPubSubClient, AutoModMessageHeld)
 
     pubSub.listenToAutomod("117166826");
 
-    std::this_thread::sleep_for(50ms);
+    std::this_thread::sleep_for(100ms);
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 1);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 0);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
-    ASSERT_EQ(pubSub.diag.messagesReceived, 3);
-    ASSERT_EQ(pubSub.diag.listenResponses, 1);
-    ASSERT_EQ(pubSub.diag.failedListenResponses, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->messagesReceived, 3);
+    ASSERT_EQ(pubSub.diag()->listenResponses, 1);
+    ASSERT_EQ(pubSub.diag()->failedListenResponses, 0);
 
     ASSERT_TRUE(received);
     ASSERT_TRUE(channelID);
@@ -447,9 +463,9 @@ TEST(TwitchPubSubClient, AutoModMessageHeld)
 
     pubSub.stop();
 
-    ASSERT_EQ(pubSub.diag.connectionsOpened, 1);
-    ASSERT_EQ(pubSub.diag.connectionsClosed, 1);
-    ASSERT_EQ(pubSub.diag.connectionsFailed, 0);
+    ASSERT_EQ(pubSub.diag()->connectionsOpened, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsClosed, 1);
+    ASSERT_EQ(pubSub.diag()->connectionsFailed, 0);
 }
 
 }  // namespace chatterino
