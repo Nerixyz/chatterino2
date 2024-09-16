@@ -123,24 +123,22 @@ int stripLeadingReplyMention(const QVariantMap &tags, QString &content)
     return 0;
 }
 
-void updateReplyParticipatedStatus(const QVariantMap &tags,
-                                   const QString &senderLogin,
-                                   MessageBuilder &builder,
-                                   std::shared_ptr<MessageThread> &thread,
-                                   bool isNew)
+bool shouldHighlightReplyThread(const QVariantMap &tags,
+                                const QString &senderLogin,
+                                std::shared_ptr<MessageThread> &thread,
+                                bool isNew)
 {
     const auto &currentLogin =
         getApp()->getAccounts()->twitch.getCurrent()->getUserName();
 
     if (thread->subscribed())
     {
-        builder.message().flags.set(MessageFlag::SubscribedThread);
-        return;
+        return true;
     }
 
     if (thread->unsubscribed())
     {
-        return;
+        return false;
     }
 
     if (getSettings()->autoSubToParticipatedThreads)
@@ -154,8 +152,7 @@ void updateReplyParticipatedStatus(const QVariantMap &tags,
                 if (name == currentLogin)
                 {
                     thread->markSubscribed();
-                    builder.message().flags.set(MessageFlag::SubscribedThread);
-                    return;  // already marked as participated
+                    return true;
                 }
             }
         }
@@ -166,6 +163,7 @@ void updateReplyParticipatedStatus(const QVariantMap &tags,
             // don't set the highlight here
         }
     }
+    return false;
 }
 
 ChannelPtr channelOrEmptyByTarget(const QString &target,
@@ -242,10 +240,18 @@ QMap<QString, QString> parseBadges(const QString &badgesString)
     return badges;
 }
 
-void populateReply(TwitchChannel *channel, Communi::IrcMessage *message,
-                   const std::vector<MessagePtr> &otherLoaded,
-                   MessageBuilder &builder)
+struct ReplyContext {
+    std::shared_ptr<MessageThread> thread;
+    MessagePtr parent;
+    bool highlight = false;
+};
+
+ReplyContext getReplyContext(TwitchChannel *channel,
+                             Communi::IrcMessage *message,
+                             const std::vector<MessagePtr> &otherLoaded)
 {
+    ReplyContext ctx;
+
     const auto &tags = message->tags();
     if (const auto it = tags.find("reply-thread-parent-msg-id");
         it != tags.end())
@@ -259,9 +265,9 @@ void populateReply(TwitchChannel *channel, Communi::IrcMessage *message,
             if (owned)
             {
                 // Thread already exists (has a reply)
-                updateReplyParticipatedStatus(tags, message->nick(), builder,
-                                              owned, false);
-                builder.setThread(owned);
+                ctx.highlight = shouldHighlightReplyThread(
+                    tags, message->nick(), owned, false);
+                ctx.thread = owned;
                 rootThread = owned;
             }
         }
@@ -295,10 +301,10 @@ void populateReply(TwitchChannel *channel, Communi::IrcMessage *message,
             {
                 std::shared_ptr<MessageThread> newThread =
                     std::make_shared<MessageThread>(foundMessage);
-                updateReplyParticipatedStatus(tags, message->nick(), builder,
-                                              newThread, true);
+                ctx.highlight = shouldHighlightReplyThread(
+                    tags, message->nick(), newThread, true);
 
-                builder.setThread(newThread);
+                ctx.thread = newThread;
                 rootThread = newThread;
                 // Store weak reference to thread in channel
                 channel->addReplyThread(newThread);
@@ -313,7 +319,7 @@ void populateReply(TwitchChannel *channel, Communi::IrcMessage *message,
             {
                 if (rootThread)
                 {
-                    builder.setParent(rootThread->root());
+                    ctx.parent = rootThread->root();
                 }
             }
             else
@@ -324,7 +330,7 @@ void populateReply(TwitchChannel *channel, Communi::IrcMessage *message,
                     auto thread = parentThreadIt->second.lock();
                     if (thread)
                     {
-                        builder.setParent(thread->root());
+                        ctx.parent = thread->root();
                     }
                 }
                 else
@@ -332,12 +338,14 @@ void populateReply(TwitchChannel *channel, Communi::IrcMessage *message,
                     auto parent = channel->findMessage(parentID);
                     if (parent)
                     {
-                        builder.setParent(parent);
+                        ctx.parent = parent;
                     }
                 }
             }
         }
     }
+
+    return ctx;
 }
 
 std::optional<ClearChatMessage> parseClearChatMessage(
@@ -500,15 +508,17 @@ std::vector<MessagePtr> parseUserNoticeMessage(Channel *channel,
         {
             MessageParseArgs args;
             args.trimSubscriberUsername = true;
+            args.allowIgnore = false;
 
-            MessageBuilder builder(channel, message, args, content, false);
-            builder->flags.set(MessageFlag::Subscription);
-            builder->flags.unset(MessageFlag::Highlighted);
+            auto [built, highlight] = MessageBuilder::makeIrcMessage(
+                channel, message, args, content, 0);
+            built->flags.set(MessageFlag::Subscription);
+            built->flags.unset(MessageFlag::Highlighted);
             if (mirrored)
             {
-                builder->flags.set(MessageFlag::SharedMessage);
+                built->flags.set(MessageFlag::SharedMessage);
             }
-            builtMessages.emplace_back(builder.build());
+            builtMessages.emplace_back(std::move(built));
         }
     }
 
@@ -624,12 +634,12 @@ std::vector<MessagePtr> parsePrivMessage(Channel *channel,
 
     std::vector<MessagePtr> builtMessages;
     MessageParseArgs args;
-    MessageBuilder builder(channel, message, args, message->content(),
-                           message->isAction());
-    if (!builder.isIgnored())
+    auto [built, alert] = MessageBuilder::makeIrcMessage(
+        channel, message, args, message->content(), message->isAction(), 0);
+    if (built)
     {
-        builtMessages.emplace_back(builder.build());
-        builder.triggerHighlights();
+        builtMessages.emplace_back(std::move(built));
+        MessageBuilder::triggerHighlights(channel, alert);
     }
 
     return builtMessages;
@@ -672,16 +682,21 @@ std::vector<MessagePtr> IrcMessageHandler::parseMessageWithReply(
         {
             args.channelPointRewardId = it.value().toString();
         }
-        MessageBuilder builder(channel, message, args, content,
-                               privMsg->isAction());
-        builder.setMessageOffset(messageOffset);
+        args.isAction = privMsg->isAction();
 
-        populateReply(tc, message, otherLoaded, builder);
+        auto replyCtx = getReplyContext(tc, message, otherLoaded);
+        auto [built, alert] = MessageBuilder::makeIrcMessage(
+            channel, message, args, content, messageOffset, replyCtx.thread,
+            replyCtx.parent);
 
-        if (!builder.isIgnored())
+        if (built)
         {
-            builtMessages.emplace_back(builder.build());
-            builder.triggerHighlights();
+            if (replyCtx.highlight)
+            {
+                built->flags.set(MessageFlag::Highlighted);
+            }
+            builtMessages.emplace_back(built);
+            MessageBuilder::triggerHighlights(channel, alert);
         }
 
         if (message->tags().contains(u"pinned-chat-paid-amount"_s))
@@ -973,20 +988,18 @@ void IrcMessageHandler::handleWhisperMessage(Communi::IrcMessage *ircMessage)
 
     auto *c = getApp()->getTwitch()->getWhispersChannel().get();
 
-    MessageBuilder builder(c, ircMessage, args,
-                           unescapeZeroWidthJoiner(ircMessage->parameter(1)),
-                           false);
-
-    if (builder.isIgnored())
+    auto [message, alert] = MessageBuilder::makeIrcMessage(
+        c, ircMessage, args, unescapeZeroWidthJoiner(ircMessage->parameter(1)),
+        false, 0);
+    if (!message)
     {
         return;
     }
 
-    builder->flags.set(MessageFlag::Whisper);
-    MessagePtr message = builder.build();
-    builder.triggerHighlights();
+    message->flags.set(MessageFlag::Whisper);
+    MessageBuilder::triggerHighlights(c, alert);
 
-    getApp()->getTwitch()->setLastUserThatWhisperedMe(builder.userName);
+    getApp()->getTwitch()->setLastUserThatWhisperedMe(message->loginName);
 
     if (message->flags.has(MessageFlag::ShowInMentions))
     {
@@ -1414,6 +1427,7 @@ void IrcMessageHandler::addMessage(Communi::IrcMessage *message,
     {
         args.isStaffOrBroadcaster = true;
     }
+    args.isAction = isAction;
 
     auto *channel = dynamic_cast<TwitchChannel *>(chan.get());
 
@@ -1446,9 +1460,7 @@ void IrcMessageHandler::addMessage(Communi::IrcMessage *message,
     QString content = originalContent;
     int messageOffset = stripLeadingReplyMention(tags, content);
 
-    MessageBuilder builder(channel, message, args, content, isAction);
-    builder.setMessageOffset(messageOffset);
-
+    ReplyContext replyCtx;
     if (const auto it = tags.find("reply-thread-parent-msg-id");
         it != tags.end())
     {
@@ -1459,9 +1471,9 @@ void IrcMessageHandler::addMessage(Communi::IrcMessage *message,
         {
             // Thread already exists (has a reply)
             auto thread = threadIt->second.lock();
-            updateReplyParticipatedStatus(tags, message->nick(), builder,
-                                          thread, false);
-            builder.setThread(thread);
+            replyCtx.highlight = shouldHighlightReplyThread(
+                tags, message->nick(), thread, false);
+            replyCtx.thread = thread;
             rootThread = thread;
         }
         else
@@ -1472,10 +1484,10 @@ void IrcMessageHandler::addMessage(Communi::IrcMessage *message,
             {
                 // Found root reply message
                 auto newThread = std::make_shared<MessageThread>(root);
-                updateReplyParticipatedStatus(tags, message->nick(), builder,
-                                              newThread, true);
+                replyCtx.highlight = shouldHighlightReplyThread(
+                    tags, message->nick(), newThread, true);
 
-                builder.setThread(newThread);
+                replyCtx.thread = newThread;
                 rootThread = newThread;
                 // Store weak reference to thread in channel
                 channel->addReplyThread(newThread);
@@ -1490,7 +1502,7 @@ void IrcMessageHandler::addMessage(Communi::IrcMessage *message,
             {
                 if (rootThread)
                 {
-                    builder.setParent(rootThread->root());
+                    replyCtx.parent = rootThread->root();
                 }
             }
             else
@@ -1501,7 +1513,7 @@ void IrcMessageHandler::addMessage(Communi::IrcMessage *message,
                     auto thread = parentThreadIt->second.lock();
                     if (thread)
                     {
-                        builder.setParent(thread->root());
+                        replyCtx.parent = thread->root();
                     }
                 }
                 else
@@ -1509,21 +1521,29 @@ void IrcMessageHandler::addMessage(Communi::IrcMessage *message,
                     auto parent = channel->findMessage(parentID);
                     if (parent)
                     {
-                        builder.setParent(parent);
+                        replyCtx.parent = parent;
                     }
                 }
             }
         }
     }
 
-    if (isSub || !builder.isIgnored())
+    args.allowIgnore = !isSub;
+    auto [msg, alert] = MessageBuilder::makeIrcMessage(
+        channel, message, args, content, messageOffset, replyCtx.thread,
+        replyCtx.parent);
+
+    if (msg)
     {
         if (isSub)
         {
-            builder->flags.set(MessageFlag::Subscription);
-            builder->flags.unset(MessageFlag::Highlighted);
+            msg->flags.set(MessageFlag::Subscription);
+            msg->flags.unset(MessageFlag::Highlighted);
         }
-        auto msg = builder.build();
+        if (replyCtx.highlight)
+        {
+            msg->flags.set(MessageFlag::SubscribedThread);
+        }
 
         IrcMessageHandler::setSimilarityFlags(msg, chan);
 
@@ -1531,7 +1551,7 @@ void IrcMessageHandler::addMessage(Communi::IrcMessage *message,
             (!getSettings()->hideSimilar &&
              getSettings()->shownSimilarTriggerHighlights))
         {
-            builder.triggerHighlights();
+            MessageBuilder::triggerHighlights(channel, alert);
         }
 
         const auto highlighted = msg->flags.has(MessageFlag::Highlighted);
