@@ -1,11 +1,13 @@
 #pragma once
 
-#include "ForwardDecl.hpp"
+#ifdef USEWINSDK
 
-#include <QTimer>
-#include <QWidget>
+#    include "ForwardDecl.hpp"
 
-#include <memory>
+#    include <QTimer>
+#    include <QWidget>
+
+#    include <memory>
 
 namespace chatterino {
 
@@ -15,7 +17,7 @@ using ChannelPtr = std::shared_ptr<Channel>;
 
 class AttachedWindow : public QWidget
 {
-    AttachedWindow(void *_target, int _yOffset);
+    AttachedWindow(HWND _target);
 
 public:
     struct GetArgs {
@@ -30,18 +32,14 @@ public:
 
     ~AttachedWindow() override;
 
-    static AttachedWindow *get(void *target_, const GetArgs &args);
-#ifdef USEWINSDK
+    static AttachedWindow *get(HWND target_, const GetArgs &args);
     static AttachedWindow *getForeground(const GetArgs &args);
-#endif
     static void detach(const QString &winId);
 
     void setChannel(ChannelPtr channel);
 
 protected:
     void showEvent(QShowEvent *) override;
-    //    virtual void nativeEvent(const QByteArray &eventType, void *message,
-    //    long *result) override;
 
 private:
     struct {
@@ -49,31 +47,32 @@ private:
     } ui_{};
 
     struct Item {
-        void *hwnd;
+        HWND hwnd;
         AttachedWindow *window;
         QString winId;
     };
 
     static std::vector<Item> items;
 
-    void attachToHwnd(void *attached);
-    void updateWindowRect(void *attached);
+    void attachToHwnd(HWND attached);
+    void updateWindowRect(HWND attached);
 
-    void *target_;
-    int yOffset_;
-    int currentYOffset_{};
+    HWND target_;
     double x_ = -1;
     double pixelRatio_ = -1;
     int width_ = 360;
     int height_ = -1;
     bool fullscreen_ = false;
 
-#ifdef USEWINSDK
     bool validProcessName_ = false;
     bool attached_ = false;
-#endif
     QTimer timer_;
     QTimer slowTimer_;
+
+    QRect lastAttachedRect_;
+    size_t lastRectEqCounter_ = 0;
 };
 
 }  // namespace chatterino
+
+#endif

@@ -1,53 +1,69 @@
 #include "widgets/AttachedWindow.hpp"
 
-#include "Application.hpp"
-#include "common/QLogging.hpp"
-#include "singletons/Settings.hpp"
-#include "util/DebugCount.hpp"
-#include "widgets/splits/Split.hpp"
-
-#include <QTimer>
-#include <QVBoxLayout>
-
-#include <memory>
-
 #ifdef USEWINSDK
-#    include "util/WindowsHelper.hpp"
+
+#    include "Application.hpp"
+#    include "common/QLogging.hpp"
+#    include "singletons/Settings.hpp"
+#    include "util/DebugCount.hpp"
+#    include "widgets/splits/Split.hpp"
+
+#    include <QTimer>
+#    include <QVBoxLayout>
+
+#    include <memory>
+
+#    ifdef USEWINSDK
+#        include "util/WindowsHelper.hpp"
 
 // clang-format off
 // don't even think about reordering these
-#    include "Windows.h"
-#    include "Psapi.h"
+#    include <Windows.h>
+#    include <Psapi.h>
 // clang-format on
-#    pragma comment(lib, "Dwmapi.lib")
-#endif
+#        pragma comment(lib, "Dwmapi.lib")
+#    endif
 
-namespace chatterino {
+namespace {
 
-#ifdef USEWINSDK
-static thread_local std::vector<HWND> taskbarHwnds;
+constexpr std::chrono::milliseconds RESIZE_TIMER_FAST{1};
+constexpr std::chrono::milliseconds RESIZE_TIMER_SLOW{1000};
 
-BOOL CALLBACK enumWindows(HWND hwnd, LPARAM)
+QRect qrectFromRECT(RECT r)
+{
+    return {
+        r.left,
+        r.top,
+        r.right - r.left,
+        r.bottom - r.top,
+    };
+}
+
+using TaskbarHwnds = std::vector<HWND>;
+
+BOOL CALLBACK enumWindows(HWND hwnd, LPARAM lParam)
 {
     constexpr int length = 16;
 
-    auto className = std::make_unique<WCHAR[]>(length);
-    GetClassName(hwnd, className.get(), length);
+    std::array<WCHAR, length + 1> className{};
+    GetClassName(hwnd, className.data(), length);
 
-    if (lstrcmp(className.get(), L"Shell_TrayWnd") == 0 ||
-        lstrcmp(className.get(), L"Shell_Secondary") == 0)
+    if (lstrcmp(className.data(), L"Shell_TrayWnd") == 0 ||
+        lstrcmp(className.data(), L"Shell_Secondary") == 0)
     {
-        taskbarHwnds.push_back(hwnd);
+        std::bit_cast<TaskbarHwnds *>(lParam)->push_back(hwnd);
     }
 
-    return true;
+    return TRUE;
 }
-#endif
 
-AttachedWindow::AttachedWindow(void *_target, int _yOffset)
+}  // namespace
+
+namespace chatterino {
+
+AttachedWindow::AttachedWindow(HWND _target)
     : QWidget(nullptr, Qt::FramelessWindowHint | Qt::Window)
     , target_(_target)
-    , yOffset_(_yOffset)
 {
     QLayout *layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -75,7 +91,7 @@ AttachedWindow::~AttachedWindow()
     DebugCount::decrease("attached window");
 }
 
-AttachedWindow *AttachedWindow::get(void *target, const GetArgs &args)
+AttachedWindow *AttachedWindow::get(HWND target, const GetArgs &args)
 {
     AttachedWindow *window = [&]() {
         for (Item &item : items)
@@ -86,8 +102,12 @@ AttachedWindow *AttachedWindow::get(void *target, const GetArgs &args)
             }
         }
 
-        auto *window = new AttachedWindow(target, args.yOffset);
-        items.push_back(Item{target, window, args.winId});
+        auto *window = new AttachedWindow(target);
+        items.push_back(Item{
+            .hwnd = target,
+            .window = window,
+            .winId = args.winId,
+        });
         return window;
     }();
 
@@ -135,12 +155,12 @@ AttachedWindow *AttachedWindow::get(void *target, const GetArgs &args)
     return window;
 }
 
-#ifdef USEWINSDK
+#    ifdef USEWINSDK
 AttachedWindow *AttachedWindow::getForeground(const GetArgs &args)
 {
     return AttachedWindow::get(::GetForegroundWindow(), args);
 }
-#endif
+#    endif
 
 void AttachedWindow::detach(const QString &winId)
 {
@@ -153,46 +173,58 @@ void AttachedWindow::detach(const QString &winId)
     }
 }
 
+// technically, const is fine here, but semantically, it doesn't make sense
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void AttachedWindow::setChannel(ChannelPtr channel)
 {
+    if (this->ui_.split->getChannel() == channel)
+    {
+        return;
+    }
     this->ui_.split->setChannel(std::move(channel));
 }
 
-void AttachedWindow::showEvent(QShowEvent *)
+void AttachedWindow::showEvent(QShowEvent * /*event*/)
 {
     this->attachToHwnd(this->target_);
 }
 
-void AttachedWindow::attachToHwnd(void *_attachedPtr)
+void AttachedWindow::attachToHwnd(HWND attached)
 {
-#ifdef USEWINSDK
     if (this->attached_)
     {
+        if (this->validProcessName_ &&
+            this->timer_.intervalAsDuration() == RESIZE_TIMER_SLOW)
+        {
+            // force an update immediately
+            this->updateWindowRect(attached);
+        }
+
         return;
     }
 
     this->attached_ = true;
 
-    //auto hwnd = HWND(this->winId());
-    auto attached = HWND(_attachedPtr);
-
     // FAST TIMER - used to resize/reorder windows
-    this->timer_.setInterval(1);
+    // once the attached-to window remains in its position, this slows down to
+    // RESIZE_TIMER_SLOW.
+    this->timer_.setInterval(RESIZE_TIMER_FAST);
     QObject::connect(&this->timer_, &QTimer::timeout, [this, attached] {
         // check process id
         if (!this->validProcessName_)
         {
-            DWORD processId;
+            DWORD processId{};
             ::GetWindowThreadProcessId(attached, &processId);
 
             HANDLE process = ::OpenProcess(
                 PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, processId);
 
-            std::unique_ptr<TCHAR[]> filename(new TCHAR[512]);
-            DWORD filenameLength =
-                ::GetModuleFileNameEx(process, nullptr, filename.get(), 512);
-            QString qfilename =
-                QString::fromWCharArray(filename.get(), int(filenameLength));
+            std::array<TCHAR, 512> filename{};
+            DWORD filenameLength = ::GetModuleFileNameEx(
+                process, nullptr, filename.data(), filename.size());
+            auto qfilename = QString::fromWCharArray(
+                filename.data(),
+                static_cast<QString::size_type>(filenameLength));
 
             if (!getSettings()->attachExtensionToAnyProcess)
             {
@@ -225,10 +257,10 @@ void AttachedWindow::attachToHwnd(void *_attachedPtr)
     QObject::connect(&this->slowTimer_, &QTimer::timeout, [this, attached] {
         if (this->fullscreen_)
         {
-            taskbarHwnds.clear();
-            ::EnumWindows(&enumWindows, 0);
+            std::vector<HWND> taskbarHwnds;
+            ::EnumWindows(&enumWindows, std::bit_cast<LPARAM>(&taskbarHwnds));
 
-            for (auto taskbarHwnd : taskbarHwnds)
+            for (auto *taskbarHwnd : taskbarHwnds)
             {
                 ::SetWindowPos(taskbarHwnd,
                                GetNextWindow(attached, GW_HWNDNEXT), 0, 0, 0, 0,
@@ -237,14 +269,12 @@ void AttachedWindow::attachToHwnd(void *_attachedPtr)
         }
     });
     this->slowTimer_.start();
-#endif
 }
 
-void AttachedWindow::updateWindowRect(void *_attachedPtr)
+void AttachedWindow::updateWindowRect(HWND attached)
 {
-#ifdef USEWINSDK
-    auto hwnd = HWND(this->winId());
-    auto attached = HWND(_attachedPtr);
+    // NOLINTNEXTLINE
+    auto *hwnd = reinterpret_cast<HWND>(this->winId());
 
     // We get the window rect first so we can close this window when it returns
     // an error. If we query the process first and check the filename then it
@@ -262,6 +292,34 @@ void AttachedWindow::updateWindowRect(void *_attachedPtr)
         return;
     }
 
+    // update timer interval
+    // if the rect changed recently, change the timer to be every tick
+    // if it stayed the same for some time, backoff
+    auto qCurrentRect = qrectFromRECT(rect);
+    if (qCurrentRect == this->lastAttachedRect_)
+    {
+        if (this->lastRectEqCounter_ == 0)
+        {
+            if (this->timer_.intervalAsDuration() != RESIZE_TIMER_SLOW)
+            {
+                this->timer_.setInterval(RESIZE_TIMER_SLOW);
+            }
+        }
+        else
+        {
+            this->lastRectEqCounter_--;
+        }
+    }
+    else
+    {
+        this->lastAttachedRect_ = qCurrentRect;
+        this->lastRectEqCounter_ = 512;
+        if (this->timer_.intervalAsDuration() != RESIZE_TIMER_FAST)
+        {
+            this->timer_.setInterval(RESIZE_TIMER_FAST);
+        }
+    }
+
     // set the correct z-order
     if (HWND next = ::GetNextWindow(attached, GW_HWNDPREV))
     {
@@ -269,72 +327,57 @@ void AttachedWindow::updateWindowRect(void *_attachedPtr)
                        SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
     }
 
-    float scale = 1.f;
-    float ourScale = 1.F;
+    qreal scale = 1.F;
+    qreal ourScale = 1.F;
     if (auto dpi = getWindowDpi(attached))
     {
-        scale = *dpi / 96.f;
+        scale = static_cast<qreal>(*dpi) / 96.F;
         ourScale = scale / this->devicePixelRatio();
 
-        for (auto w : this->ui_.split->findChildren<BaseWidget *>())
+        for (auto *w : this->ui_.split->findChildren<BaseWidget *>())
         {
             w->setOverrideScale(ourScale);
         }
         this->ui_.split->setOverrideScale(ourScale);
     }
 
-    if (this->height_ != -1)
+    if (this->height_ == -1 || this->pixelRatio_ == -1)
     {
-        this->ui_.split->setFixedWidth(int(this->width_ * ourScale));
-
-        // offset
-        int o = this->fullscreen_ ? 0 : 8;
-
-        if (this->pixelRatio_ != -1.0)
-        {
-            ::MoveWindow(
-                hwnd,
-                int(rect.left + this->x_ * scale * this->pixelRatio_ + o - 2),
-                int(rect.bottom - this->height_ * scale - o),
-                int(this->width_ * scale), int(this->height_ * scale), true);
-        }
-        //support for old extension version 1.3
-        else if (this->x_ != -1.0)
-        {
-            ::MoveWindow(hwnd, int(rect.left + this->x_ * scale + o),
-                         int(rect.bottom - this->height_ * scale - o),
-                         int(this->width_ * scale), int(this->height_ * scale),
-                         true);
-        }
-        //support for old extension version 1.2
-        else
-        {
-            ::MoveWindow(hwnd, int(rect.right - this->width_ * scale - o),
-                         int(rect.bottom - this->height_ * scale - o),
-                         int(this->width_ * scale), int(this->height_ * scale),
-                         true);
-        }
+        // old extension versions (older than 3y)
+        return;
     }
 
-//    if (this->fullscreen_)
-//    {
-//        ::BringWindowToTop(attached);
-//    }
+    this->ui_.split->setFixedWidth(static_cast<int>(this->width_ * ourScale));
 
-//        ::MoveWindow(hwnd, rect.right - 360, rect.top + 82, 360 - 8,
-//        rect.bottom - rect.top - 82 - 8, false);
-#endif
+    // inset of the window
+    int windowInset = this->fullscreen_ ? 0 : 8;
+
+    QRect myRect{
+        static_cast<int>(rect.left + (this->x_ * scale * this->pixelRatio_) +
+                         windowInset - 2),
+        static_cast<int>(rect.bottom - (this->height_ * scale) - windowInset),
+        static_cast<int>(this->width_ * scale),
+        static_cast<int>(this->height_ * scale),
+    };
+
+    RECT myPrevRect;
+    ::GetWindowRect(hwnd, &myPrevRect);
+
+    // avoid moving the window if nothing changed
+    // (accounts for QRect's off-by one definition)
+    if (myPrevRect.left == myRect.left() && myPrevRect.top == myRect.top() &&
+        myPrevRect.right == myRect.right() + 1 &&
+        myPrevRect.bottom == myRect.bottom() + 1)
+    {
+        return;
+    }
+
+    ::MoveWindow(hwnd, myRect.left(), myRect.top(), myRect.width(),
+                 myRect.height(), TRUE);
 }
-
-// void AttachedWindow::nativeEvent(const QByteArray &eventType, void *message,
-// long *result)
-//{
-//    MSG *msg = reinterpret_cast
-
-//    case WM_NCCALCSIZE: {
-//    }
-//}
 
 std::vector<AttachedWindow::Item> AttachedWindow::items;
 
 }  // namespace chatterino
+
+#endif
