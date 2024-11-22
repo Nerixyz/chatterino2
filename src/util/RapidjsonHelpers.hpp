@@ -67,20 +67,41 @@ namespace rj {
         arr.PushBack(pajlada::Serialize<Type>::get(value, a), a);
     }
 
-    bool checkJsonValue(const rapidjson::Value &obj, const char *key);
+    bool checkJsonValue(const rapidjson::Value &obj,
+                        const rapidjson::Value &key);
 
     template <typename Type>
-    bool getSafe(const rapidjson::Value &obj, const char *key, Type &out)
+    bool getSafe(const rapidjson::Value &obj, std::string_view key, Type &out)
     {
-        if (!checkJsonValue(obj, key))
+        rapidjson::Value kv(key.data(), key.size());
+        if (!checkJsonValue(obj, kv))
         {
             return false;
         }
 
         bool error = false;
-        out = pajlada::Deserialize<Type>::get(obj[key], &error);
+        out = pajlada::Deserialize<Type>::get(obj[kv], &error);
 
         return !error;
+    }
+
+    inline bool getSafe(const rapidjson::Value &obj, std::string_view key,
+                        std::string_view &out)
+    {
+        if (!obj.IsObject())
+        {
+            return false;
+        }
+
+        rapidjson::Value kv(key.data(), key.size());
+        auto it = obj.FindMember(kv);
+        if (it != obj.MemberEnd() && it->value.IsString())
+        {
+            out = {it->value.GetString(), it->value.GetStringLength()};
+            return true;
+        }
+
+        return false;
     }
 
     template <typename Type>
@@ -92,7 +113,7 @@ namespace rj {
         return !error;
     }
 
-    bool getSafeObject(rapidjson::Value &obj, const char *key,
+    bool getSafeObject(rapidjson::Value &obj, std::string_view key,
                        rapidjson::Value &out);
 
     QString stringify(const rapidjson::Value &value);

@@ -6,6 +6,7 @@
 #    include <IrcCommand>
 #    include <IrcConnection>
 #    include <IrcMessage>
+#    include <nonstd/expected.hpp>
 #    include <pajlada/serialize.hpp>
 #    include <pajlada/settings/setting.hpp>
 #    include <pajlada/settings/settinglistener.hpp>
@@ -127,6 +128,10 @@
 #    include <unordered_map>
 #    include <unordered_set>
 #    include <vector>
+
+#    ifdef CHATTERINO_HAVE_PLUGINS
+#        include <sol/sol.hpp>
+#    endif
 
 #    ifndef UNUSED
 #        define UNUSED(x) (void)(x)

@@ -9,7 +9,7 @@ namespace rj {
                    rapidjson::Value &&value,
                    rapidjson::Document::AllocatorType &a)
     {
-        obj.AddMember(rapidjson::Value(key, a).Move(), value, a);
+        obj.AddMember(rapidjson::Value(key, a).Move(), std::move(value), a);
     }
 
     void addMember(rapidjson::Value &obj, const char *key,
@@ -28,21 +28,28 @@ namespace rj {
         return buffer.GetString();
     }
 
-    bool getSafeObject(rapidjson::Value &obj, const char *key,
+    bool getSafeObject(rapidjson::Value &obj, std::string_view key,
                        rapidjson::Value &out)
     {
-        if (!checkJsonValue(obj, key))
+        if (!obj.IsObject())
         {
             return false;
         }
 
-        out = obj[key].Move();
-        return true;
+        rapidjson::Value kv(key.data(), key.size());
+        auto it = obj.FindMember(kv);
+        if (it != obj.MemberEnd())
+        {
+            out = it->value.Move();
+            return true;
+        }
+        return false;
     }
 
-    bool checkJsonValue(const rapidjson::Value &obj, const char *key)
+    bool checkJsonValue(const rapidjson::Value &obj,
+                        const rapidjson::Value &key)
     {
-        return obj.IsObject() && !obj.IsNull() && obj.HasMember(key);
+        return obj.IsObject() && obj.HasMember(key);
     }
 
 }  // namespace rj

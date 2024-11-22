@@ -25,6 +25,8 @@ using TimeoutButton = std::pair<QString, int>;
 
 namespace chatterino {
 
+class Args;
+
 #ifdef Q_OS_WIN32
 #    define DEFAULT_FONT_FAMILY "Segoe UI"
 #    define DEFAULT_FONT_SIZE 10
@@ -67,6 +69,13 @@ enum class ChatSendProtocol : int {
     Helix = 2,
 };
 
+enum class ShowModerationState : int {
+    // Always show this moderation-related item
+    Always = 0,
+    // Never show this moderation-related item
+    Never = 1,
+};
+
 enum StreamerModeSetting {
     Disabled = 0,
     Enabled = 1,
@@ -80,11 +89,18 @@ class Settings
     static Settings *instance_;
     Settings *prevInstance_ = nullptr;
 
+    const bool disableSaving;
+
 public:
-    Settings(const QString &settingsDirectory);
+    Settings(const Args &args, const QString &settingsDirectory);
     ~Settings();
 
     static Settings &instance();
+
+    /// Request the settings to be saved to file
+    ///
+    /// Depending on the launch options, a save might end up not happening
+    void requestSave() const;
 
     void saveSnapshot();
     void restoreSnapshot();
@@ -174,6 +190,18 @@ public:
     // BoolSetting useCustomWindowFrame = {"/appearance/useCustomWindowFrame",
     // false};
 
+    IntSetting overlayBackgroundOpacity = {
+        "/appearance/overlay/backgroundOpacity", 50};
+    BoolSetting enableOverlayShadow = {"/appearance/overlay/shadow", true};
+    IntSetting overlayShadowOpacity = {"/appearance/overlay/shadowOpacity",
+                                       255};
+    QStringSetting overlayShadowColor = {"/appearance/overlay/shadowColor",
+                                         "#000"};
+    // These should be floats, but there's no good input UI for them
+    IntSetting overlayShadowOffsetX = {"/appearance/overlay/shadowOffsetX", 2};
+    IntSetting overlayShadowOffsetY = {"/appearance/overlay/shadowOffsetY", 2};
+    IntSetting overlayShadowRadius = {"/appearance/overlay/shadowRadius", 8};
+
     // Badges
     BoolSetting showBadgesGlobalAuthority = {
         "/appearance/badges/GlobalAuthority", true};
@@ -191,6 +219,10 @@ public:
     BoolSetting useCustomFfzVipBadges = {
         "/appearance/badges/useCustomFfzVipBadges", true};
     BoolSetting showBadgesSevenTV = {"/appearance/badges/seventv", true};
+    QSizeSetting lastPopupSize = {
+        "/appearance/lastPopup/size",
+        {300, 500},
+    };
 
     /// Behaviour
     BoolSetting allowDuplicateMessages = {"/behaviour/allowDuplicateMessages",
@@ -320,6 +352,10 @@ public:
     IntSetting timeoutStackStyle = {
         "/moderation/timeoutStackStyle",
         static_cast<int>(TimeoutStackStyle::Default)};
+    EnumStringSetting<ShowModerationState> showBlockedTermAutomodMessages = {
+        "/moderation/showBlockedTermAutomodMessages",
+        ShowModerationState::Always,
+    };
 
     /// Highlighting
     //    BoolSetting enableHighlights = {"/highlighting/enabled", true};
@@ -475,6 +511,8 @@ public:
                                             "qrc:/sounds/ping3.wav"};
     BoolSetting notificationOnAnyChannel = {"/notifications/onAnyChannel",
                                             false};
+    BoolSetting suppressInitialLiveNotification = {
+        "/notifications/suppressInitialLive", false};
 
     BoolSetting notificationToast = {"/notifications/enableToast", false};
     IntSetting openFromToast = {"/notifications/openFromToast",
@@ -509,10 +547,10 @@ public:
 #ifdef Q_OS_LINUX
     BoolSetting useKeyring = {"/misc/useKeyring", true};
 #endif
-    BoolSetting enableExperimentalIrc = {"/misc/experimentalIrc", false};
 
     IntSetting startUpNotification = {"/misc/startUpNotification", 0};
     QStringSetting currentVersion = {"/misc/currentVersion", ""};
+    IntSetting overlayKnowledgeLevel = {"/misc/overlayKnowledgeLevel", 0};
 
     BoolSetting loadTwitchMessageHistoryOnConnect = {
         "/misc/twitch/loadMessageHistoryOnConnect", true};
@@ -545,15 +583,9 @@ public:
     BoolSetting informOnTabVisibilityToggle = {"/misc/askOnTabVisibilityToggle",
                                                true};
     BoolSetting lockNotebookLayout = {"/misc/lockNotebookLayout", false};
-
-    /// Debug
-    BoolSetting showUnhandledIrcMessages = {"/debug/showUnhandledIrcMessages",
-                                            false};
+    BoolSetting showPronouns = {"/misc/showPronouns", false};
 
     /// UI
-    // Purely QOL settings are here (like last item in a list).
-    IntSetting lastSelectChannelTab = {"/ui/lastSelectChannelTab", 0};
-    IntSetting lastSelectIrcConn = {"/ui/lastSelectIrcConn", 0};
 
     BoolSetting showSendButton = {"/ui/showSendButton", false};
 

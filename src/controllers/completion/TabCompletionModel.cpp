@@ -39,15 +39,19 @@ void TabCompletionModel::updateResults(const QString &query,
         // Try plugins first
         bool done{};
         std::tie(done, results) =
-            getIApp()->getPlugins()->updateCustomCompletions(
+            getApp()->getPlugins()->updateCustomCompletions(
                 query, fullTextContent, cursorPosition, isFirstWord);
         if (done)
         {
+            auto uniqueResults = std::unique(results.begin(), results.end());
+            results.erase(uniqueResults, results.end());
             this->setStringList(results);
             return;
         }
 #endif
         this->source_->addToStringList(results, 0, isFirstWord);
+        auto uniqueResults = std::unique(results.begin(), results.end());
+        results.erase(uniqueResults, results.end());
         this->setStringList(results);
     }
 }

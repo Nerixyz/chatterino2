@@ -1,27 +1,18 @@
 #include "providers/twitch/PubSubManager.hpp"
 
+#include "Application.hpp"
 #include "common/QLogging.hpp"
-#include "providers/NetworkConfigurationProvider.hpp"
+#include "controllers/accounts/AccountController.hpp"
 #include "providers/twitch/PubSubActions.hpp"
-#include "providers/twitch/PubSubClient.hpp"
 #include "providers/twitch/PubSubHelpers.hpp"
 #include "providers/twitch/PubSubMessages.hpp"
 #include "providers/twitch/TwitchAccount.hpp"
-#include "util/DebugCount.hpp"
-#include "util/Helpers.hpp"
-#include "util/RapidjsonHelpers.hpp"
+#include "providers/websocket/PubSubPool.hpp"
 
 #include <QJsonArray>
 
-#include <algorithm>
-#include <exception>
-#include <future>
-#include <iostream>
-#include <thread>
+#include <memory>
 
-using websocketpp::lib::bind;
-using websocketpp::lib::placeholders::_1;
-using websocketpp::lib::placeholders::_2;
 using namespace std::chrono_literals;
 
 namespace chatterino {
@@ -31,7 +22,19 @@ PubSub::PubSub(const QString &host, std::chrono::seconds pingInterval)
     , clientOptions_({
           pingInterval,
       })
+    , pool_(new PubSubPool(ws::Endpoint::fromUrl(host)))
 {
+    this->pool_->setMessageHandler(
+        [this](const auto &topic, const auto &message) {
+            this->handleMessageResponse({
+                .topic = topic,
+                .messageObject = message,
+            });
+        });
+    this->pool_->setTokenProvider([this] {
+        return this->token_;
+    });
+
     this->moderationActionHandlers["clear"] = [this](const auto &data,
                                                      const auto &roomID) {
         ClearChatAction action(data, roomID);
@@ -316,39 +319,34 @@ PubSub::PubSub(const QString &host, std::chrono::seconds pingInterval)
         this->moderation.userWarned.invoke(action);
     };
 
-    /*
-    // This handler is no longer required as we use the automod-queue topic now
-    this->moderationActionHandlers["automod_rejected"] =
-        [this](const auto &data, const auto &roomID) {
-            AutomodAction action(data, roomID);
+    this->moderationActionHandlers["raid"] = [this](const auto &data,
+                                                    const auto &roomID) {
+        RaidAction action(data, roomID);
 
-            action.source.id = data.value("created_by_user_id").toString();
-            action.source.login = data.value("created_by").toString();
+        action.source.id = data.value("created_by_user_id").toString();
+        action.source.login = data.value("created_by").toString();
 
-            action.target.id = data.value("target_user_id").toString();
+        const auto args = data.value("args").toArray();
 
-            const auto args = data.value("args").toArray();
+        if (args.isEmpty())
+        {
+            return;
+        }
 
-            if (args.isEmpty())
-            {
-                return;
-            }
+        action.target = args[0].toString();
 
-            action.msgID = data.value("msg_id").toString();
+        this->moderation.raidStarted.invoke(action);
+    };
 
-            if (action.msgID.isEmpty())
-            {
-                // Missing required msg_id parameter
-                return;
-            }
+    this->moderationActionHandlers["unraid"] = [this](const auto &data,
+                                                      const auto &roomID) {
+        UnraidAction action(data, roomID);
 
-            action.target.login = args[0].toString();
-            action.message = args[1].toString();  // May be omitted
-            action.reason = args[2].toString();   // May be omitted
+        action.source.id = data.value("created_by_user_id").toString();
+        action.source.login = data.value("created_by").toString();
 
-            this->moderation.autoModMessageBlocked.invoke(action);
-        };
-    */
+        this->moderation.raidCanceled.invoke(action);
+    };
 
     this->moderationActionHandlers["automod_message_rejected"] =
         [this](const auto &data, const auto &roomID) {
@@ -479,105 +477,34 @@ PubSub::PubSub(const QString &host, std::chrono::seconds pingInterval)
             // This message got approved by a moderator
             // qCDebug(chatterinoPubSub) << rj::stringify(data);
         };
-
-    this->websocketClient.set_access_channels(websocketpp::log::alevel::all);
-    this->websocketClient.clear_access_channels(
-        websocketpp::log::alevel::frame_payload |
-        websocketpp::log::alevel::frame_header);
-
-    this->websocketClient.init_asio();
-
-    // SSL Handshake
-    this->websocketClient.set_tls_init_handler(
-        bind(&PubSub::onTLSInit, this, ::_1));
-
-    this->websocketClient.set_message_handler(
-        bind(&PubSub::onMessage, this, ::_1, ::_2));
-    this->websocketClient.set_open_handler(
-        bind(&PubSub::onConnectionOpen, this, ::_1));
-    this->websocketClient.set_close_handler(
-        bind(&PubSub::onConnectionClose, this, ::_1));
-    this->websocketClient.set_fail_handler(
-        bind(&PubSub::onConnectionFail, this, ::_1));
 }
 
 PubSub::~PubSub()
 {
-    this->stop();
+    this->pool_->shutdown();
+}
+
+void PubSub::initialize()
+{
+    this->setAccount(getApp()->getAccounts()->twitch.getCurrent());
+    this->pool_->run();
+
+    getApp()->getAccounts()->twitch.currentUserChanged.connect(
+        [this] {
+            this->unlistenChannelModerationActions();
+            this->unlistenAutomod();
+            this->unlistenLowTrustUsers();
+            this->unlistenChannelPointRewards();
+
+            this->setAccount(getApp()->getAccounts()->twitch.getCurrent());
+        },
+        boost::signals2::at_front);
 }
 
 void PubSub::setAccount(std::shared_ptr<TwitchAccount> account)
 {
     this->token_ = account->getOAuthToken();
     this->userID_ = account->getUserId();
-}
-
-void PubSub::addClient()
-{
-    if (this->addingClient)
-    {
-        return;
-    }
-
-    qCDebug(chatterinoPubSub) << "Adding an additional client";
-
-    this->addingClient = true;
-
-    websocketpp::lib::error_code ec;
-    auto con =
-        this->websocketClient.get_connection(this->host_.toStdString(), ec);
-
-    if (ec)
-    {
-        qCDebug(chatterinoPubSub)
-            << "Unable to establish connection:" << ec.message().c_str();
-        return;
-    }
-
-    NetworkConfigurationProvider::applyToWebSocket(con);
-
-    this->websocketClient.connect(con);
-}
-
-void PubSub::start()
-{
-    this->work = std::make_shared<boost::asio::io_service::work>(
-        this->websocketClient.get_io_service());
-    this->thread.reset(new std::thread(std::bind(&PubSub::runThread, this)));
-}
-
-void PubSub::stop()
-{
-    this->stopping_ = true;
-
-    for (const auto &[hdl, client] : this->clients)
-    {
-        (void)hdl;
-
-        client->close("Shutting down");
-    }
-
-    this->work.reset();
-
-    if (this->thread->joinable())
-    {
-        // NOTE: We spawn a new thread to join the websocket thread.
-        // There is a case where a new client was initiated but not added to the clients list.
-        // We just don't join the thread & let the operating system nuke the thread if joining fails
-        // within 1s.
-        // We could fix the underlying bug, but this is easier & we realistically won't use this exact code
-        // for super much longer.
-        auto joiner = std::async(std::launch::async, &std::thread::join,
-                                 this->thread.get());
-        if (joiner.wait_for(1s) == std::future_status::timeout)
-        {
-            qCWarning(chatterinoPubSub)
-                << "Thread didn't join within 1 second, rip it out";
-            this->websocketClient.stop();
-        }
-    }
-
-    assert(this->clients.empty());
 }
 
 bool PubSub::listenToWhispers()
@@ -594,14 +521,14 @@ bool PubSub::listenToWhispers()
 
     qCDebug(chatterinoPubSub) << "Listen to whispers" << topic;
 
-    this->listenToTopic(topic);
+    this->pool_->subscribe(topic);
 
     return true;
 }
 
 void PubSub::unlistenWhispers()
 {
-    this->unlistenPrefix("whispers.");
+    this->pool_->unsubscribePrefix("whispers.");
 }
 
 void PubSub::listenToChannelModerationActions(const QString &channelID)
@@ -618,19 +545,19 @@ void PubSub::listenToChannelModerationActions(const QString &channelID)
 
     auto topic = topicFormat.arg(this->userID_, channelID);
 
-    if (this->isListeningToTopic(topic))
+    if (this->pool_->isSubscribed(topic))
     {
         return;
     }
 
     qCDebug(chatterinoPubSub) << "Listen to topic" << topic;
 
-    this->listenToTopic(topic);
+    this->pool_->subscribe(topic);
 }
 
 void PubSub::unlistenChannelModerationActions()
 {
-    this->unlistenPrefix("chat_moderator_actions.");
+    this->pool_->unsubscribePrefix("chat_moderator_actions.");
 }
 
 void PubSub::listenToAutomod(const QString &channelID)
@@ -647,19 +574,19 @@ void PubSub::listenToAutomod(const QString &channelID)
 
     auto topic = topicFormat.arg(this->userID_, channelID);
 
-    if (this->isListeningToTopic(topic))
+    if (this->pool_->isSubscribed(topic))
     {
         return;
     }
 
     qCDebug(chatterinoPubSub) << "Listen to topic" << topic;
 
-    this->listenToTopic(topic);
+    this->pool_->subscribe(topic);
 }
 
 void PubSub::unlistenAutomod()
 {
-    this->unlistenPrefix("automod-queue.");
+    this->pool_->unsubscribePrefix("automod-queue.");
 }
 
 void PubSub::listenToLowTrustUsers(const QString &channelID)
@@ -676,19 +603,19 @@ void PubSub::listenToLowTrustUsers(const QString &channelID)
 
     auto topic = topicFormat.arg(this->userID_, channelID);
 
-    if (this->isListeningToTopic(topic))
+    if (this->pool_->isSubscribed(topic))
     {
         return;
     }
 
     qCDebug(chatterinoPubSub) << "Listen to topic" << topic;
 
-    this->listenToTopic(topic);
+    this->pool_->subscribe(topic);
 }
 
 void PubSub::unlistenLowTrustUsers()
 {
-    this->unlistenPrefix("low-trust-users.");
+    this->pool_->unsubscribePrefix("low-trust-users.");
 }
 
 void PubSub::listenToChannelPointRewards(const QString &channelID)
@@ -698,374 +625,18 @@ void PubSub::listenToChannelPointRewards(const QString &channelID)
 
     auto topic = topicFormat.arg(channelID);
 
-    if (this->isListeningToTopic(topic))
+    if (this->pool_->isSubscribed(topic))
     {
         return;
     }
     qCDebug(chatterinoPubSub) << "Listen to topic" << topic;
 
-    this->listenToTopic(topic);
+    this->pool_->subscribe(topic);
 }
 
 void PubSub::unlistenChannelPointRewards()
 {
-    this->unlistenPrefix("community-points-channel-v1.");
-}
-
-void PubSub::unlistenPrefix(const QString &prefix)
-{
-    for (const auto &p : this->clients)
-    {
-        const auto &client = p.second;
-        if (const auto &[topics, nonce] = client->unlistenPrefix(prefix);
-            !topics.empty())
-        {
-            NonceInfo nonceInfo{
-                client,
-                "UNLISTEN",
-                topics,
-                topics.size(),
-            };
-            this->registerNonce(nonce, nonceInfo);
-        }
-    }
-}
-
-void PubSub::listen(PubSubListenMessage msg)
-{
-    if (this->tryListen(msg))
-    {
-        return;
-    }
-
-    this->addClient();
-
-    std::copy(msg.topics.begin(), msg.topics.end(),
-              std::back_inserter(this->requests));
-
-    DebugCount::increase("PubSub topic backlog", msg.topics.size());
-}
-
-bool PubSub::tryListen(PubSubListenMessage msg)
-{
-    for (const auto &p : this->clients)
-    {
-        const auto &client = p.second;
-        if (auto success = client->listen(msg); success)
-        {
-            this->registerNonce(msg.nonce, {
-                                               client,
-                                               "LISTEN",
-                                               msg.topics,
-                                               msg.topics.size(),
-                                           });
-            return true;
-        }
-    }
-
-    return false;
-}
-
-void PubSub::registerNonce(QString nonce, NonceInfo info)
-{
-    this->nonces_[nonce] = std::move(info);
-}
-
-std::optional<PubSub::NonceInfo> PubSub::findNonceInfo(QString nonce)
-{
-    // TODO: This should also DELETE the nonceinfo from the map
-    auto it = this->nonces_.find(nonce);
-
-    if (it == this->nonces_.end())
-    {
-        return std::nullopt;
-    }
-
-    return it->second;
-}
-
-bool PubSub::isListeningToTopic(const QString &topic)
-{
-    for (const auto &p : this->clients)
-    {
-        const auto &client = p.second;
-        if (client->isListeningToTopic(topic))
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-void PubSub::onMessage(websocketpp::connection_hdl hdl,
-                       WebsocketMessagePtr websocketMessage)
-{
-    this->diag.messagesReceived += 1;
-
-    const auto &payload =
-        QString::fromStdString(websocketMessage->get_payload());
-
-    auto oMessage = parsePubSubBaseMessage(payload);
-
-    if (!oMessage)
-    {
-        qCDebug(chatterinoPubSub)
-            << "Unable to parse incoming pubsub message" << payload;
-        this->diag.messagesFailedToParse += 1;
-        return;
-    }
-
-    auto message = *oMessage;
-
-    switch (message.type)
-    {
-        case PubSubMessage::Type::Pong: {
-            auto clientIt = this->clients.find(hdl);
-
-            // If this assert goes off, there's something wrong with the connection
-            // creation/preserving code KKona
-            assert(clientIt != this->clients.end());
-
-            auto &client = *clientIt;
-
-            client.second->handlePong();
-        }
-        break;
-
-        case PubSubMessage::Type::Response: {
-            this->handleResponse(message);
-        }
-        break;
-
-        case PubSubMessage::Type::Message: {
-            auto oMessageMessage = message.toInner<PubSubMessageMessage>();
-            if (!oMessageMessage)
-            {
-                qCDebug(chatterinoPubSub) << "Malformed MESSAGE:" << payload;
-                return;
-            }
-
-            this->handleMessageResponse(*oMessageMessage);
-        }
-        break;
-
-        case PubSubMessage::Type::INVALID:
-        default: {
-            qCDebug(chatterinoPubSub)
-                << "Unknown message type:" << message.typeString;
-        }
-        break;
-    }
-}
-
-void PubSub::onConnectionOpen(WebsocketHandle hdl)
-{
-    this->diag.connectionsOpened += 1;
-
-    DebugCount::increase("PubSub connections");
-    this->addingClient = false;
-
-    this->connectBackoff.reset();
-
-    auto client = std::make_shared<PubSubClient>(this->websocketClient, hdl,
-                                                 this->clientOptions_);
-
-    // We separate the starting from the constructor because we will want to use
-    // shared_from_this
-    client->start();
-
-    this->clients.emplace(hdl, client);
-
-    qCDebug(chatterinoPubSub) << "PubSub connection opened!";
-
-    const auto topicsToTake =
-        std::min(this->requests.size(), PubSubClient::MAX_LISTENS);
-
-    std::vector<QString> newTopics(
-        std::make_move_iterator(this->requests.begin()),
-        std::make_move_iterator(this->requests.begin() + topicsToTake));
-
-    this->requests.erase(this->requests.begin(),
-                         this->requests.begin() + topicsToTake);
-
-    PubSubListenMessage msg(newTopics);
-    msg.setToken(this->token_);
-
-    if (auto success = client->listen(msg); !success)
-    {
-        qCWarning(chatterinoPubSub) << "Failed to listen to " << topicsToTake
-                                    << "new topics on new client";
-        return;
-    }
-    DebugCount::decrease("PubSub topic backlog", msg.topics.size());
-
-    this->registerNonce(msg.nonce, {
-                                       client,
-                                       "LISTEN",
-                                       msg.topics,
-                                       topicsToTake,
-                                   });
-
-    if (!this->requests.empty())
-    {
-        this->addClient();
-    }
-}
-
-void PubSub::onConnectionFail(WebsocketHandle hdl)
-{
-    this->diag.connectionsFailed += 1;
-
-    DebugCount::increase("PubSub failed connections");
-    if (auto conn = this->websocketClient.get_con_from_hdl(std::move(hdl)))
-    {
-        qCDebug(chatterinoPubSub) << "PubSub connection attempt failed (error: "
-                                  << conn->get_ec().message().c_str() << ")";
-    }
-    else
-    {
-        qCDebug(chatterinoPubSub)
-            << "PubSub connection attempt failed but we can't "
-               "get the connection from a handle.";
-    }
-
-    this->addingClient = false;
-    if (!this->requests.empty())
-    {
-        runAfter(this->websocketClient.get_io_service(),
-                 this->connectBackoff.next(), [this](auto timer) {
-                     this->addClient();  //
-                 });
-    }
-}
-
-void PubSub::onConnectionClose(WebsocketHandle hdl)
-{
-    qCDebug(chatterinoPubSub) << "Connection closed";
-    this->diag.connectionsClosed += 1;
-
-    DebugCount::decrease("PubSub connections");
-    auto clientIt = this->clients.find(hdl);
-
-    // If this assert goes off, there's something wrong with the connection
-    // creation/preserving code KKona
-    assert(clientIt != this->clients.end());
-
-    auto client = clientIt->second;
-
-    this->clients.erase(clientIt);
-
-    client->stop();
-
-    if (!this->stopping_)
-    {
-        auto clientListeners = client->getListeners();
-        for (const auto &listener : clientListeners)
-        {
-            this->listenToTopic(listener.topic);
-        }
-    }
-}
-
-PubSub::WebsocketContextPtr PubSub::onTLSInit(websocketpp::connection_hdl hdl)
-{
-    WebsocketContextPtr ctx(
-        new boost::asio::ssl::context(boost::asio::ssl::context::tlsv12));
-
-    try
-    {
-        ctx->set_options(boost::asio::ssl::context::default_workarounds |
-                         boost::asio::ssl::context::no_sslv2 |
-                         boost::asio::ssl::context::single_dh_use);
-    }
-    catch (const std::exception &e)
-    {
-        qCDebug(chatterinoPubSub)
-            << "Exception caught in OnTLSInit:" << e.what();
-    }
-
-    return ctx;
-}
-
-void PubSub::handleResponse(const PubSubMessage &message)
-{
-    const bool failed = !message.error.isEmpty();
-
-    if (failed)
-    {
-        qCDebug(chatterinoPubSub)
-            << "Error" << message.error << "on nonce" << message.nonce;
-    }
-
-    if (message.nonce.isEmpty())
-    {
-        // Can't do any specific handling since no nonce was specified
-        return;
-    }
-
-    if (auto oInfo = this->findNonceInfo(message.nonce); oInfo)
-    {
-        const auto info = *oInfo;
-        auto client = info.client.lock();
-        if (!client)
-        {
-            qCDebug(chatterinoPubSub) << "Client associated with nonce"
-                                      << message.nonce << "is no longer alive";
-            return;
-        }
-        if (info.messageType == "LISTEN")
-        {
-            client->handleListenResponse(message);
-            this->handleListenResponse(info, failed);
-        }
-        else if (info.messageType == "UNLISTEN")
-        {
-            client->handleUnlistenResponse(message);
-            this->handleUnlistenResponse(info, failed);
-        }
-        else
-        {
-            qCDebug(chatterinoPubSub)
-                << "Unhandled nonce message type" << info.messageType;
-        }
-
-        return;
-    }
-
-    qCDebug(chatterinoPubSub) << "Response on unused" << message.nonce
-                              << "client/topic listener mismatch?";
-}
-
-void PubSub::handleListenResponse(const NonceInfo &info, bool failed)
-{
-    DebugCount::decrease("PubSub topic pending listens", info.topicCount);
-    if (failed)
-    {
-        this->diag.failedListenResponses++;
-        DebugCount::increase("PubSub topic failed listens", info.topicCount);
-    }
-    else
-    {
-        this->diag.listenResponses++;
-        DebugCount::increase("PubSub topic listening", info.topicCount);
-    }
-}
-
-void PubSub::handleUnlistenResponse(const NonceInfo &info, bool failed)
-{
-    this->diag.unlistenResponses++;
-    DebugCount::decrease("PubSub topic pending unlistens", info.topicCount);
-    if (failed)
-    {
-        qCDebug(chatterinoPubSub) << "Failed unlistening to" << info.topics;
-        DebugCount::increase("PubSub topic failed unlistens", info.topicCount);
-    }
-    else
-    {
-        qCDebug(chatterinoPubSub) << "Successful unlistened to" << info.topics;
-        DebugCount::decrease("PubSub topic listening", info.topicCount);
-    }
+    this->pool_->unsubscribePrefix("community-points-channel-v1.");
 }
 
 void PubSub::handleMessageResponse(const PubSubMessageMessage &message)
@@ -1251,21 +822,6 @@ void PubSub::handleMessageResponse(const PubSubMessageMessage &message)
         qCDebug(chatterinoPubSub) << "Unknown topic:" << topic;
         return;
     }
-}
-
-void PubSub::runThread()
-{
-    qCDebug(chatterinoPubSub) << "Start pubsub manager thread";
-    this->websocketClient.run();
-    qCDebug(chatterinoPubSub) << "Done with pubsub manager thread";
-}
-
-void PubSub::listenToTopic(const QString &topic)
-{
-    PubSubListenMessage msg({topic});
-    msg.setToken(this->token_);
-
-    this->listen(std::move(msg));
 }
 
 }  // namespace chatterino

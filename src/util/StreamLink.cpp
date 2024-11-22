@@ -3,7 +3,6 @@
 #include "Application.hpp"
 #include "common/QLogging.hpp"
 #include "common/Version.hpp"
-#include "providers/irc/IrcMessageBuilder.hpp"
 #include "singletons/Settings.hpp"
 #include "singletons/WindowManager.hpp"
 #include "util/Helpers.hpp"
@@ -183,7 +182,7 @@ void openStreamlinkForChannel(const QString &channel)
 {
     static const QString INFO_TEMPLATE("Opening %1 in Streamlink ...");
 
-    auto *currentPage = dynamic_cast<SplitContainer *>(getIApp()
+    auto *currentPage = dynamic_cast<SplitContainer *>(getApp()
                                                            ->getWindows()
                                                            ->getMainWindow()
                                                            .getNotebook()

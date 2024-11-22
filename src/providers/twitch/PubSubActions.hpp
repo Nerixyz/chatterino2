@@ -1,5 +1,7 @@
 #pragma once
 
+#include "providers/twitch/pubsubmessages/AutoMod.hpp"
+
 #include <QColor>
 #include <QDebug>
 #include <QJsonObject>
@@ -143,6 +145,7 @@ struct AutomodAction : PubSubAction {
     QString message;
 
     QString reason;
+    PubSubAutoModQueueMessage::Reason reasonCode;
 
     QString msgID;
 };
@@ -170,6 +173,16 @@ struct AutomodInfoAction : PubSubAction {
         Denied,
         Approved,
     } type;
+};
+
+struct RaidAction : PubSubAction {
+    using PubSubAction::PubSubAction;
+
+    QString target;
+};
+
+struct UnraidAction : PubSubAction {
+    using PubSubAction::PubSubAction;
 };
 
 struct WarnAction : PubSubAction {
