@@ -299,6 +299,12 @@ jobs:
           brew install boost openssl rapidjson p7zip create-dmg cmake tree
         shell: bash
 
+      - name: Setup tmate session
+        if: startsWith(matrix.os, 'macos')
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+
       - name: Build (MacOS)
         if: startsWith(matrix.os, 'macos')
         run: |
