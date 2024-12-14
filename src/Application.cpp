@@ -12,6 +12,7 @@
 #include "controllers/ignores/IgnoreController.hpp"
 #include "controllers/notifications/NotificationController.hpp"
 #include "controllers/sound/ISoundController.hpp"
+#include "controllers/tracing/TracingController.hpp"
 #include "providers/bttv/BttvEmotes.hpp"
 #include "providers/ffz/FfzEmotes.hpp"
 #include "providers/links/LinkResolver.hpp"
@@ -147,6 +148,8 @@ Application::Application(Settings &_settings, const Paths &paths,
                          const Args &_args, Updates &_updates)
     : paths_(paths)
     , args_(_args)
+    , tracing(
+          new TracingController(!_args.traceFile.isEmpty(), _args.traceFile))
     , themes(new Theme(paths))
     , fonts(new Fonts(_settings))
     , logging(new Logging(_settings))
@@ -574,6 +577,14 @@ pronouns::Pronouns *Application::getPronouns()
     assert(this->pronouns);
 
     return this->pronouns.get();
+}
+
+TracingController *Application::getTracing()
+{
+    // TracingController handles its own locks, so we don't need to assert that this is called in the GUI thread
+    assert(this->tracing);
+
+    return this->tracing.get();
 }
 
 void Application::save()

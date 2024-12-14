@@ -1,8 +1,13 @@
 #pragma once
 
+#include "Application.hpp"
+#include "controllers/tracing/TracingController.hpp"
 #include "debug/AssertInGuiThread.hpp"
+#include "util/TypeName.hpp"
 
 #include <QCoreApplication>
+
+#include <chrono>
 
 namespace chatterino {
 
@@ -27,7 +32,16 @@ static void postToThread(F &&fun, QObject *obj = QCoreApplication::instance())
         }
         ~Event() override
         {
+            auto *app = getApp();
+            if (app)
+            {
+                app->getTracing()->asyncBegin(type_name<Fun>(), this);
+            }
             fun();
+            if (app)
+            {
+                app->getTracing()->asyncEnd(type_name<Fun>(), this);
+            }
         }
     };
     QCoreApplication::postEvent(obj, new Event(std::forward<F>(fun)));

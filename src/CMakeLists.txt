@@ -263,6 +263,9 @@ set(SOURCE_FILES
         controllers/userdata/UserDataController.hpp
         controllers/userdata/UserData.hpp
 
+        controllers/tracing/TracingController.cpp
+        controllers/tracing/TracingController.hpp
+
         debug/Benchmark.cpp
         debug/Benchmark.hpp
 

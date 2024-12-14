@@ -1,8 +1,10 @@
 #include "common/network/NetworkRequest.hpp"
 
+#include "Application.hpp"
 #include "common/network/NetworkPrivate.hpp"
 #include "common/QLogging.hpp"
 #include "common/Version.hpp"
+#include "controllers/tracing/TracingController.hpp"
 
 #include <QApplication>
 #include <QDebug>
@@ -189,6 +191,13 @@ void NetworkRequest::initializeDefaultValues()
                                .toUtf8();
 
     this->data->request.setRawHeader("User-Agent", userAgent);
+
+    auto url = this->data->request.url();
+    url.setQuery(QUrlQuery{});
+    auto encoded = url.toEncoded();
+    getApp()->getTracing()->asyncBegin(
+        std::string_view{encoded.data(), static_cast<size_t>(encoded.length())},
+        this->data.get());
 }
 
 NetworkRequest NetworkRequest::json(const QJsonArray &root) &&

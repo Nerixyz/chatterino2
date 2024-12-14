@@ -24,6 +24,7 @@ class ISoundController;
 class SoundController;
 class ITwitchLiveController;
 class TwitchLiveController;
+class TracingController;
 class TwitchBadges;
 #ifdef CHATTERINO_HAVE_PLUGINS
 class PluginController;
@@ -109,6 +110,7 @@ public:
     virtual IStreamerMode *getStreamerMode() = 0;
     virtual ITwitchUsers *getTwitchUsers() = 0;
     virtual pronouns::Pronouns *getPronouns() = 0;
+    virtual TracingController *getTracing() = 0;
 };
 
 class Application : public IApplication
@@ -142,6 +144,7 @@ public:
     friend void test();
 
 private:
+    std::unique_ptr<TracingController> tracing;
     std::unique_ptr<Theme> themes;
     std::unique_ptr<Fonts> fonts;
     const std::unique_ptr<Logging> logging;
@@ -225,6 +228,7 @@ public:
     ILinkResolver *getLinkResolver() override;
     IStreamerMode *getStreamerMode() override;
     ITwitchUsers *getTwitchUsers() override;
+    TracingController *getTracing() override;
 
 private:
     void initBttvLiveUpdates();

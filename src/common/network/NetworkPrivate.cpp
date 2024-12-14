@@ -5,6 +5,7 @@
 #include "common/network/NetworkResult.hpp"
 #include "common/network/NetworkTask.hpp"
 #include "common/QLogging.hpp"
+#include "controllers/tracing/TracingController.hpp"
 #include "singletons/Paths.hpp"
 #include "util/AbandonObject.hpp"
 #include "util/DebugCount.hpp"
@@ -90,6 +91,12 @@ NetworkData::NetworkData()
 
 NetworkData::~NetworkData()
 {
+    auto url = this->request.url();
+    url.setQuery(QUrlQuery{});
+    auto encoded = url.toEncoded();
+    getApp()->getTracing()->asyncEnd(
+        std::string_view{encoded.data(), static_cast<size_t>(encoded.length())},
+        this);
     DebugCount::decrease("NetworkData");
 }
 

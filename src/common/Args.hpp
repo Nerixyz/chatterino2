@@ -29,6 +29,7 @@ class Paths;
 /// -c, --channels=t:channel1;t:channel2;...
 /// -a, --activate=t:channel
 ///     --safe-mode
+///     --trace=<file.json>
 ///
 /// See documentation on `QGuiApplication` for documentation on Qt arguments like -platform.
 class Args
@@ -63,6 +64,7 @@ public:
     std::optional<QString> initialLogin;
     bool verbose{};
     bool safeMode{};
+    QString traceFile;
 
     QStringList currentArguments() const;
 

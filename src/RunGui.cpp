@@ -5,6 +5,7 @@
 #include "common/Modes.hpp"
 #include "common/network/NetworkManager.hpp"
 #include "common/QLogging.hpp"
+#include "controllers/tracing/TracingController.hpp"
 #include "singletons/CrashHandler.hpp"
 #include "singletons/Paths.hpp"
 #include "singletons/Resources.hpp"
@@ -265,6 +266,7 @@ void runGui(QApplication &a, const Paths &paths, Settings &settings,
     app.initialize(settings, paths);
     app.run();
     app.save();
+    app.getTracing()->finish();
 
     settings.requestSave();
 

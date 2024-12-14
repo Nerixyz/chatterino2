@@ -140,6 +140,8 @@ Args::Args(const QApplication &app, const Paths &paths)
         "specified, Twitch is assumed.",
         "t:channel");
 
+    QCommandLineOption tracingOption("trace", "Export traces", "file path");
+
     parser.addOptions({
         {{"V", "version"}, "Displays version information."},
         crashRecoveryOption,
@@ -152,6 +154,7 @@ Args::Args(const QApplication &app, const Paths &paths)
         loginOption,
         channelLayout,
         activateOption,
+        tracingOption,
     });
 
     if (!parser.parse(app.arguments()))
@@ -216,12 +219,18 @@ Args::Args(const QApplication &app, const Paths &paths)
             parseActivateOption(parser.value(activateOption));
     }
 
+    if (parser.isSet(tracingOption))
+    {
+        this->traceFile = parser.value(tracingOption);
+    }
+
     this->currentArguments_ = extractCommandLine(parser, {
                                                              verboseOption,
                                                              safeModeOption,
                                                              loginOption,
                                                              channelLayout,
                                                              activateOption,
+                                                             tracingOption,
                                                          });
 }
 
