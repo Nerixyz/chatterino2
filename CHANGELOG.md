@@ -2,6 +2,13 @@
 
 ## Unversioned
 
+- Bugfix: Fixed scrollbar highlights being visible in overlay windows. (#5769)
+- Bugfix: Make macos fonts look the same as v2.5.1. (#5775)
+- Bugfix: Fixed 7TV usernames messing with Qt's HTML (#5780)
+- Dev: Hard-code Boost 1.86.0 in macos CI builders. (#5774)
+
+## 2.5.2-beta.1
+
 - Major: Add option to show pronouns in user card. (#5442, #5583)
 - Major: Release plugins alpha. (#5288)
 - Major: Improve high-DPI support on Windows. (#4868, #5391, #5664, #5666)
