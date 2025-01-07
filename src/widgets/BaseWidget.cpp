@@ -55,10 +55,10 @@ float BaseWidget::scale() const
 
 void BaseWidget::setScale(float value)
 {
-    // if (this->scale_ == value)
-    // {
-    //     return;
-    // }
+    if (this->scale_ == value)
+    {
+        return;
+    }
 
     this->scale_ = value;
 
