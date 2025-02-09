@@ -115,6 +115,7 @@ find_package(Qt${MAJOR_QT_VERSION} REQUIRED
     Core
     Widgets
     Gui
+    GuiPrivate
     Network
     Svg
     Concurrent

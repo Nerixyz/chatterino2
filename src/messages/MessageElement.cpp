@@ -16,6 +16,7 @@
 #include "util/DebugCount.hpp"
 #include "util/Variant.hpp"
 
+#include <private/qtextengine_p.h>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QJsonValue>
@@ -629,47 +630,56 @@ void TextElement::addToContainer(MessageLayoutContainer &container,
             }
 
             // we done goofed, we need to wrap the text
-            auto textLength = word.length();
-            int wordStart = 0;
-            width = 0;
+            auto font =
+                app->getFonts()->getFont(this->style_, container.getScale());
 
-            // QChar::isHighSurrogate(text[0].unicode()) ? 2 : 1
+            qsizetype actualStart = 0;
+            QString view = word;
 
-            for (int i = 0; i < textLength; i++)
+            do
             {
-                auto isSurrogate = word.size() > i + 1 &&
-                                   QChar::isHighSurrogate(word[i].unicode());
+                QStackTextEngine engine(view, font);
+                engine.validate();
 
-                auto charWidth = isSurrogate
-                                     ? metrics.horizontalAdvance(word.mid(i, 2))
-                                     : metrics.horizontalAdvance(word[i]);
+                int pos = 0;
+                int nextBreak = 0;
+                QFixed currentWidth = 0;
+                int to = static_cast<int>(view.size());
+                bool needsBreak = false;
 
-                if (!container.fitsInLine(width + charWidth))
+                do
                 {
-                    container.addElementNoLineBreak(getTextLayoutElement(
-                        word.mid(wordStart, i - wordStart), width, false));
-                    container.breakLine();
+                    pos = nextBreak;
 
-                    wordStart = i;
-                    width = charWidth;
-
-                    if (isSurrogate)
+                    ++nextBreak;
+                    while (nextBreak < engine.layoutData->string.size() &&
+                           !engine.attributes()[nextBreak].graphemeBoundary)
                     {
-                        i++;
+                        ++nextBreak;
                     }
-                    continue;
-                }
 
-                width += charWidth;
+                    currentWidth += engine.width(pos, nextBreak - pos);
+                    if (!container.fitsInLine(currentWidth.toInt()))
+                    {
+                        needsBreak = true;
+                        break;
+                    }
+                } while (nextBreak < to);
 
-                if (isSurrogate)
+                //add the final piece of wrapped text
+                container.addElementNoLineBreak(getTextLayoutElement(
+                    word.sliced(actualStart, nextBreak), currentWidth.toInt(),
+                    !needsBreak && this->hasTrailingSpace()));
+                if (needsBreak)
                 {
-                    i++;
+                    container.breakLine();
                 }
-            }
-            //add the final piece of wrapped text
-            container.addElementNoLineBreak(getTextLayoutElement(
-                word.mid(wordStart), width, this->hasTrailingSpace()));
+                view = QString::fromRawData(
+                    word.constData() + actualStart + nextBreak,
+                    word.size() - actualStart - nextBreak);
+                actualStart += nextBreak;
+                assert(needsBreak || view.isEmpty());
+            } while (!view.isEmpty());
         }
     }
 }
