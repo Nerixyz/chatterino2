@@ -9,7 +9,7 @@ def parse(filename: str, additional_includes: list[str] = []) -> clang.cindex.Tr
         raise ValueError(f"Path {filename} is not a file. cwd: {os.getcwd()}")
 
     parse_args = [
-        "-std=c++17",
+        "-std=c++20",
         # Uncomment this if you need to debug where it tries to find headers
         # "-H",
     ]

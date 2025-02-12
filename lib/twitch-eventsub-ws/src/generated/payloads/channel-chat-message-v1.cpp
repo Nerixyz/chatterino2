@@ -2,835 +2,577 @@
 #include "twitch-eventsub-ws/chrono.hpp"  // IWYU pragma: keep
 #include "twitch-eventsub-ws/detail/errors.hpp"
 #include "twitch-eventsub-ws/detail/variant.hpp"  // IWYU pragma: keep
+#include "twitch-eventsub-ws/json.hpp"
 #include "twitch-eventsub-ws/payloads/channel-chat-message-v1.hpp"
 
 #include <boost/json.hpp>
 
 namespace chatterino::eventsub::lib::payload::channel_chat_message::v1 {
 
-boost::json::result_for<Badge, boost::json::value>::type tag_invoke(
-    boost::json::try_value_to_tag<Badge> /* tag */,
-    const boost::json::value &jvRoot)
+void tag_invoke(json::FromJsonTag<Badge> /* tag */, Badge &target,
+                boost::system::error_code &ec, const boost::json::value &jvRoot)
 {
     if (!jvRoot.is_object())
     {
-        EVENTSUB_BAIL_HERE(error::Kind::ExpectedObject);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::ExpectedObject);
     }
     const auto &root = jvRoot.get_object();
 
     const auto *jvsetID = root.if_contains("set_id");
     if (jvsetID == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto setID = boost::json::try_value_to<std::string>(*jvsetID);
-
-    if (setID.has_error())
+    if (!json::fromJson(target.setID, ec, *jvsetID))
     {
-        return setID.error();
+        return;
     }
-
     const auto *jvid = root.if_contains("id");
     if (jvid == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto id = boost::json::try_value_to<std::string>(*jvid);
-
-    if (id.has_error())
+    if (!json::fromJson(target.id, ec, *jvid))
     {
-        return id.error();
+        return;
     }
-
     const auto *jvinfo = root.if_contains("info");
     if (jvinfo == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto info = boost::json::try_value_to<std::string>(*jvinfo);
-
-    if (info.has_error())
+    if (!json::fromJson(target.info, ec, *jvinfo))
     {
-        return info.error();
+        return;
     }
-
-    return Badge{
-        .setID = std::move(setID.value()),
-        .id = std::move(id.value()),
-        .info = std::move(info.value()),
-    };
 }
 
-boost::json::result_for<Cheermote, boost::json::value>::type tag_invoke(
-    boost::json::try_value_to_tag<Cheermote> /* tag */,
-    const boost::json::value &jvRoot)
+void tag_invoke(json::FromJsonTag<Cheermote> /* tag */, Cheermote &target,
+                boost::system::error_code &ec, const boost::json::value &jvRoot)
 {
     if (!jvRoot.is_object())
     {
-        EVENTSUB_BAIL_HERE(error::Kind::ExpectedObject);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::ExpectedObject);
     }
     const auto &root = jvRoot.get_object();
 
     const auto *jvprefix = root.if_contains("prefix");
     if (jvprefix == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto prefix = boost::json::try_value_to<std::string>(*jvprefix);
-
-    if (prefix.has_error())
+    if (!json::fromJson(target.prefix, ec, *jvprefix))
     {
-        return prefix.error();
+        return;
     }
-
-    static_assert(
-        std::is_trivially_copyable_v<
-            std::remove_reference_t<decltype(std::declval<Cheermote>().bits)>>);
     const auto *jvbits = root.if_contains("bits");
     if (jvbits == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto bits = boost::json::try_value_to<int>(*jvbits);
-
-    if (bits.has_error())
+    if (!json::fromJson(target.bits, ec, *jvbits))
     {
-        return bits.error();
+        return;
     }
-
-    static_assert(
-        std::is_trivially_copyable_v<
-            std::remove_reference_t<decltype(std::declval<Cheermote>().tier)>>);
     const auto *jvtier = root.if_contains("tier");
     if (jvtier == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto tier = boost::json::try_value_to<int>(*jvtier);
-
-    if (tier.has_error())
+    if (!json::fromJson(target.tier, ec, *jvtier))
     {
-        return tier.error();
+        return;
     }
-
-    return Cheermote{
-        .prefix = std::move(prefix.value()),
-        .bits = bits.value(),
-        .tier = tier.value(),
-    };
 }
 
-boost::json::result_for<Emote, boost::json::value>::type tag_invoke(
-    boost::json::try_value_to_tag<Emote> /* tag */,
-    const boost::json::value &jvRoot)
+void tag_invoke(json::FromJsonTag<Emote> /* tag */, Emote &target,
+                boost::system::error_code &ec, const boost::json::value &jvRoot)
 {
     if (!jvRoot.is_object())
     {
-        EVENTSUB_BAIL_HERE(error::Kind::ExpectedObject);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::ExpectedObject);
     }
     const auto &root = jvRoot.get_object();
 
     const auto *jvid = root.if_contains("id");
     if (jvid == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto id = boost::json::try_value_to<std::string>(*jvid);
-
-    if (id.has_error())
+    if (!json::fromJson(target.id, ec, *jvid))
     {
-        return id.error();
+        return;
     }
-
     const auto *jvemoteSetID = root.if_contains("emote_set_id");
     if (jvemoteSetID == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto emoteSetID = boost::json::try_value_to<std::string>(*jvemoteSetID);
-
-    if (emoteSetID.has_error())
+    if (!json::fromJson(target.emoteSetID, ec, *jvemoteSetID))
     {
-        return emoteSetID.error();
+        return;
     }
-
     const auto *jvownerID = root.if_contains("owner_id");
     if (jvownerID == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto ownerID = boost::json::try_value_to<std::string>(*jvownerID);
-
-    if (ownerID.has_error())
+    if (!json::fromJson(target.ownerID, ec, *jvownerID))
     {
-        return ownerID.error();
+        return;
     }
 
-    std::vector<std::string> vformat;
     const auto *jvformat = root.if_contains("format");
     if (jvformat != nullptr && !jvformat->is_null())
     {
-        auto format =
-            boost::json::try_value_to<std::vector<std::string>>(*jvformat);
-        if (format.has_error())
+        if (!json::fromJson(target.format, ec, *jvformat))
         {
-            return format.error();
-        }
-        else
-        {
-            vformat = std::move(format.value());
+            return;
         }
     }
-
-    return Emote{
-        .id = std::move(id.value()),
-        .emoteSetID = std::move(emoteSetID.value()),
-        .ownerID = std::move(ownerID.value()),
-        .format = std::move(vformat),
-    };
 }
 
-boost::json::result_for<Mention, boost::json::value>::type tag_invoke(
-    boost::json::try_value_to_tag<Mention> /* tag */,
-    const boost::json::value &jvRoot)
+void tag_invoke(json::FromJsonTag<Mention> /* tag */, Mention &target,
+                boost::system::error_code &ec, const boost::json::value &jvRoot)
 {
     if (!jvRoot.is_object())
     {
-        EVENTSUB_BAIL_HERE(error::Kind::ExpectedObject);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::ExpectedObject);
     }
     const auto &root = jvRoot.get_object();
 
     const auto *jvuserID = root.if_contains("user_id");
     if (jvuserID == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto userID = boost::json::try_value_to<std::string>(*jvuserID);
-
-    if (userID.has_error())
+    if (!json::fromJson(target.userID, ec, *jvuserID))
     {
-        return userID.error();
+        return;
     }
-
     const auto *jvuserName = root.if_contains("user_name");
     if (jvuserName == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto userName = boost::json::try_value_to<std::string>(*jvuserName);
-
-    if (userName.has_error())
+    if (!json::fromJson(target.userName, ec, *jvuserName))
     {
-        return userName.error();
+        return;
     }
-
     const auto *jvuserLogin = root.if_contains("user_login");
     if (jvuserLogin == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto userLogin = boost::json::try_value_to<std::string>(*jvuserLogin);
-
-    if (userLogin.has_error())
+    if (!json::fromJson(target.userLogin, ec, *jvuserLogin))
     {
-        return userLogin.error();
+        return;
     }
-
-    return Mention{
-        .userID = std::move(userID.value()),
-        .userName = std::move(userName.value()),
-        .userLogin = std::move(userLogin.value()),
-    };
 }
 
-boost::json::result_for<MessageFragment, boost::json::value>::type tag_invoke(
-    boost::json::try_value_to_tag<MessageFragment> /* tag */,
-    const boost::json::value &jvRoot)
+void tag_invoke(json::FromJsonTag<MessageFragment> /* tag */,
+                MessageFragment &target, boost::system::error_code &ec,
+                const boost::json::value &jvRoot)
 {
     if (!jvRoot.is_object())
     {
-        EVENTSUB_BAIL_HERE(error::Kind::ExpectedObject);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::ExpectedObject);
     }
     const auto &root = jvRoot.get_object();
 
     const auto *jvtype = root.if_contains("type");
     if (jvtype == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto type = boost::json::try_value_to<std::string>(*jvtype);
-
-    if (type.has_error())
+    if (!json::fromJson(target.type, ec, *jvtype))
     {
-        return type.error();
+        return;
     }
-
     const auto *jvtext = root.if_contains("text");
     if (jvtext == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto text = boost::json::try_value_to<std::string>(*jvtext);
-
-    if (text.has_error())
+    if (!json::fromJson(target.text, ec, *jvtext))
     {
-        return text.error();
+        return;
     }
-
-    std::optional<Cheermote> cheermote = std::nullopt;
     const auto *jvcheermote = root.if_contains("cheermote");
     if (jvcheermote != nullptr && !jvcheermote->is_null())
     {
-        auto tcheermote = boost::json::try_value_to<Cheermote>(*jvcheermote);
-
-        if (tcheermote.has_error())
+        if (!json::fromJson(target.cheermote.emplace(), ec, *jvcheermote))
         {
-            return tcheermote.error();
+            return;
         }
-        cheermote = std::move(tcheermote.value());
     }
 
-    std::optional<Emote> emote = std::nullopt;
     const auto *jvemote = root.if_contains("emote");
     if (jvemote != nullptr && !jvemote->is_null())
     {
-        auto temote = boost::json::try_value_to<Emote>(*jvemote);
-
-        if (temote.has_error())
+        if (!json::fromJson(target.emote.emplace(), ec, *jvemote))
         {
-            return temote.error();
+            return;
         }
-        emote = std::move(temote.value());
     }
 
-    std::optional<Mention> mention = std::nullopt;
     const auto *jvmention = root.if_contains("mention");
     if (jvmention != nullptr && !jvmention->is_null())
     {
-        auto tmention = boost::json::try_value_to<Mention>(*jvmention);
-
-        if (tmention.has_error())
+        if (!json::fromJson(target.mention.emplace(), ec, *jvmention))
         {
-            return tmention.error();
+            return;
         }
-        mention = std::move(tmention.value());
     }
-
-    return MessageFragment{
-        .type = std::move(type.value()),
-        .text = std::move(text.value()),
-        .cheermote = std::move(cheermote),
-        .emote = std::move(emote),
-        .mention = std::move(mention),
-    };
 }
 
-boost::json::result_for<Message, boost::json::value>::type tag_invoke(
-    boost::json::try_value_to_tag<Message> /* tag */,
-    const boost::json::value &jvRoot)
+void tag_invoke(json::FromJsonTag<Message> /* tag */, Message &target,
+                boost::system::error_code &ec, const boost::json::value &jvRoot)
 {
     if (!jvRoot.is_object())
     {
-        EVENTSUB_BAIL_HERE(error::Kind::ExpectedObject);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::ExpectedObject);
     }
     const auto &root = jvRoot.get_object();
 
     const auto *jvtext = root.if_contains("text");
     if (jvtext == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto text = boost::json::try_value_to<std::string>(*jvtext);
-
-    if (text.has_error())
+    if (!json::fromJson(target.text, ec, *jvtext))
     {
-        return text.error();
+        return;
     }
 
-    std::vector<MessageFragment> vfragments;
     const auto *jvfragments = root.if_contains("fragments");
     if (jvfragments != nullptr && !jvfragments->is_null())
     {
-        auto fragments =
-            boost::json::try_value_to<std::vector<MessageFragment>>(
-                *jvfragments);
-        if (fragments.has_error())
+        if (!json::fromJson(target.fragments, ec, *jvfragments))
         {
-            return fragments.error();
-        }
-        else
-        {
-            vfragments = std::move(fragments.value());
+            return;
         }
     }
-
-    return Message{
-        .text = std::move(text.value()),
-        .fragments = std::move(vfragments),
-    };
 }
 
-boost::json::result_for<Cheer, boost::json::value>::type tag_invoke(
-    boost::json::try_value_to_tag<Cheer> /* tag */,
-    const boost::json::value &jvRoot)
+void tag_invoke(json::FromJsonTag<Cheer> /* tag */, Cheer &target,
+                boost::system::error_code &ec, const boost::json::value &jvRoot)
 {
     if (!jvRoot.is_object())
     {
-        EVENTSUB_BAIL_HERE(error::Kind::ExpectedObject);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::ExpectedObject);
     }
     const auto &root = jvRoot.get_object();
 
-    static_assert(
-        std::is_trivially_copyable_v<
-            std::remove_reference_t<decltype(std::declval<Cheer>().bits)>>);
     const auto *jvbits = root.if_contains("bits");
     if (jvbits == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto bits = boost::json::try_value_to<int>(*jvbits);
-
-    if (bits.has_error())
+    if (!json::fromJson(target.bits, ec, *jvbits))
     {
-        return bits.error();
+        return;
     }
-
-    return Cheer{
-        .bits = bits.value(),
-    };
 }
 
-boost::json::result_for<Reply, boost::json::value>::type tag_invoke(
-    boost::json::try_value_to_tag<Reply> /* tag */,
-    const boost::json::value &jvRoot)
+void tag_invoke(json::FromJsonTag<Reply> /* tag */, Reply &target,
+                boost::system::error_code &ec, const boost::json::value &jvRoot)
 {
     if (!jvRoot.is_object())
     {
-        EVENTSUB_BAIL_HERE(error::Kind::ExpectedObject);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::ExpectedObject);
     }
     const auto &root = jvRoot.get_object();
 
     const auto *jvparentMessageID = root.if_contains("parent_message_id");
     if (jvparentMessageID == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto parentMessageID =
-        boost::json::try_value_to<std::string>(*jvparentMessageID);
-
-    if (parentMessageID.has_error())
+    if (!json::fromJson(target.parentMessageID, ec, *jvparentMessageID))
     {
-        return parentMessageID.error();
+        return;
     }
-
     const auto *jvparentUserID = root.if_contains("parent_user_id");
     if (jvparentUserID == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto parentUserID = boost::json::try_value_to<std::string>(*jvparentUserID);
-
-    if (parentUserID.has_error())
+    if (!json::fromJson(target.parentUserID, ec, *jvparentUserID))
     {
-        return parentUserID.error();
+        return;
     }
-
     const auto *jvparentUserLogin = root.if_contains("parent_user_login");
     if (jvparentUserLogin == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto parentUserLogin =
-        boost::json::try_value_to<std::string>(*jvparentUserLogin);
-
-    if (parentUserLogin.has_error())
+    if (!json::fromJson(target.parentUserLogin, ec, *jvparentUserLogin))
     {
-        return parentUserLogin.error();
+        return;
     }
-
     const auto *jvparentUserName = root.if_contains("parent_user_name");
     if (jvparentUserName == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto parentUserName =
-        boost::json::try_value_to<std::string>(*jvparentUserName);
-
-    if (parentUserName.has_error())
+    if (!json::fromJson(target.parentUserName, ec, *jvparentUserName))
     {
-        return parentUserName.error();
+        return;
     }
-
     const auto *jvparentMessageBody = root.if_contains("parent_message_body");
     if (jvparentMessageBody == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto parentMessageBody =
-        boost::json::try_value_to<std::string>(*jvparentMessageBody);
-
-    if (parentMessageBody.has_error())
+    if (!json::fromJson(target.parentMessageBody, ec, *jvparentMessageBody))
     {
-        return parentMessageBody.error();
+        return;
     }
-
     const auto *jvthreadMessageID = root.if_contains("thread_message_id");
     if (jvthreadMessageID == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto threadMessageID =
-        boost::json::try_value_to<std::string>(*jvthreadMessageID);
-
-    if (threadMessageID.has_error())
+    if (!json::fromJson(target.threadMessageID, ec, *jvthreadMessageID))
     {
-        return threadMessageID.error();
+        return;
     }
-
     const auto *jvthreadUserID = root.if_contains("thread_user_id");
     if (jvthreadUserID == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto threadUserID = boost::json::try_value_to<std::string>(*jvthreadUserID);
-
-    if (threadUserID.has_error())
+    if (!json::fromJson(target.threadUserID, ec, *jvthreadUserID))
     {
-        return threadUserID.error();
+        return;
     }
-
     const auto *jvthreadUserLogin = root.if_contains("thread_user_login");
     if (jvthreadUserLogin == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto threadUserLogin =
-        boost::json::try_value_to<std::string>(*jvthreadUserLogin);
-
-    if (threadUserLogin.has_error())
+    if (!json::fromJson(target.threadUserLogin, ec, *jvthreadUserLogin))
     {
-        return threadUserLogin.error();
+        return;
     }
-
     const auto *jvthreadUserName = root.if_contains("thread_user_name");
     if (jvthreadUserName == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto threadUserName =
-        boost::json::try_value_to<std::string>(*jvthreadUserName);
-
-    if (threadUserName.has_error())
+    if (!json::fromJson(target.threadUserName, ec, *jvthreadUserName))
     {
-        return threadUserName.error();
+        return;
     }
-
-    return Reply{
-        .parentMessageID = std::move(parentMessageID.value()),
-        .parentUserID = std::move(parentUserID.value()),
-        .parentUserLogin = std::move(parentUserLogin.value()),
-        .parentUserName = std::move(parentUserName.value()),
-        .parentMessageBody = std::move(parentMessageBody.value()),
-        .threadMessageID = std::move(threadMessageID.value()),
-        .threadUserID = std::move(threadUserID.value()),
-        .threadUserLogin = std::move(threadUserLogin.value()),
-        .threadUserName = std::move(threadUserName.value()),
-    };
 }
 
-boost::json::result_for<Event, boost::json::value>::type tag_invoke(
-    boost::json::try_value_to_tag<Event> /* tag */,
-    const boost::json::value &jvRoot)
+void tag_invoke(json::FromJsonTag<Event> /* tag */, Event &target,
+                boost::system::error_code &ec, const boost::json::value &jvRoot)
 {
     if (!jvRoot.is_object())
     {
-        EVENTSUB_BAIL_HERE(error::Kind::ExpectedObject);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::ExpectedObject);
     }
     const auto &root = jvRoot.get_object();
 
     const auto *jvbroadcasterUserID = root.if_contains("broadcaster_user_id");
     if (jvbroadcasterUserID == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto broadcasterUserID =
-        boost::json::try_value_to<std::string>(*jvbroadcasterUserID);
-
-    if (broadcasterUserID.has_error())
+    if (!json::fromJson(target.broadcasterUserID, ec, *jvbroadcasterUserID))
     {
-        return broadcasterUserID.error();
+        return;
     }
-
     const auto *jvbroadcasterUserLogin =
         root.if_contains("broadcaster_user_login");
     if (jvbroadcasterUserLogin == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto broadcasterUserLogin =
-        boost::json::try_value_to<std::string>(*jvbroadcasterUserLogin);
-
-    if (broadcasterUserLogin.has_error())
+    if (!json::fromJson(target.broadcasterUserLogin, ec,
+                        *jvbroadcasterUserLogin))
     {
-        return broadcasterUserLogin.error();
+        return;
     }
-
     const auto *jvbroadcasterUserName =
         root.if_contains("broadcaster_user_name");
     if (jvbroadcasterUserName == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto broadcasterUserName =
-        boost::json::try_value_to<std::string>(*jvbroadcasterUserName);
-
-    if (broadcasterUserName.has_error())
+    if (!json::fromJson(target.broadcasterUserName, ec, *jvbroadcasterUserName))
     {
-        return broadcasterUserName.error();
+        return;
     }
-
     const auto *jvchatterUserID = root.if_contains("chatter_user_id");
     if (jvchatterUserID == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto chatterUserID =
-        boost::json::try_value_to<std::string>(*jvchatterUserID);
-
-    if (chatterUserID.has_error())
+    if (!json::fromJson(target.chatterUserID, ec, *jvchatterUserID))
     {
-        return chatterUserID.error();
+        return;
     }
-
     const auto *jvchatterUserLogin = root.if_contains("chatter_user_login");
     if (jvchatterUserLogin == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto chatterUserLogin =
-        boost::json::try_value_to<std::string>(*jvchatterUserLogin);
-
-    if (chatterUserLogin.has_error())
+    if (!json::fromJson(target.chatterUserLogin, ec, *jvchatterUserLogin))
     {
-        return chatterUserLogin.error();
+        return;
     }
-
     const auto *jvchatterUserName = root.if_contains("chatter_user_name");
     if (jvchatterUserName == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto chatterUserName =
-        boost::json::try_value_to<std::string>(*jvchatterUserName);
-
-    if (chatterUserName.has_error())
+    if (!json::fromJson(target.chatterUserName, ec, *jvchatterUserName))
     {
-        return chatterUserName.error();
+        return;
     }
-
     const auto *jvcolor = root.if_contains("color");
     if (jvcolor == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto color = boost::json::try_value_to<std::string>(*jvcolor);
-
-    if (color.has_error())
+    if (!json::fromJson(target.color, ec, *jvcolor))
     {
-        return color.error();
+        return;
     }
 
-    std::vector<Badge> vbadges;
     const auto *jvbadges = root.if_contains("badges");
     if (jvbadges != nullptr && !jvbadges->is_null())
     {
-        auto badges = boost::json::try_value_to<std::vector<Badge>>(*jvbadges);
-        if (badges.has_error())
+        if (!json::fromJson(target.badges, ec, *jvbadges))
         {
-            return badges.error();
-        }
-        else
-        {
-            vbadges = std::move(badges.value());
+            return;
         }
     }
     const auto *jvmessageID = root.if_contains("message_id");
     if (jvmessageID == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto messageID = boost::json::try_value_to<std::string>(*jvmessageID);
-
-    if (messageID.has_error())
+    if (!json::fromJson(target.messageID, ec, *jvmessageID))
     {
-        return messageID.error();
+        return;
     }
-
     const auto *jvmessageType = root.if_contains("message_type");
     if (jvmessageType == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto messageType = boost::json::try_value_to<std::string>(*jvmessageType);
-
-    if (messageType.has_error())
+    if (!json::fromJson(target.messageType, ec, *jvmessageType))
     {
-        return messageType.error();
+        return;
     }
-
     const auto *jvmessage = root.if_contains("message");
     if (jvmessage == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto message = boost::json::try_value_to<Message>(*jvmessage);
-
-    if (message.has_error())
+    if (!json::fromJson(target.message, ec, *jvmessage))
     {
-        return message.error();
+        return;
     }
-
-    static_assert(
-        std::is_trivially_copyable_v<
-            std::remove_reference_t<decltype(std::declval<Event>().cheer)>>);
-    std::optional<Cheer> cheer = std::nullopt;
     const auto *jvcheer = root.if_contains("cheer");
     if (jvcheer != nullptr && !jvcheer->is_null())
     {
-        auto tcheer = boost::json::try_value_to<Cheer>(*jvcheer);
-
-        if (tcheer.has_error())
+        if (!json::fromJson(target.cheer.emplace(), ec, *jvcheer))
         {
-            return tcheer.error();
+            return;
         }
-        cheer = tcheer.value();
     }
 
-    std::optional<Reply> reply = std::nullopt;
     const auto *jvreply = root.if_contains("reply");
     if (jvreply != nullptr && !jvreply->is_null())
     {
-        auto treply = boost::json::try_value_to<Reply>(*jvreply);
-
-        if (treply.has_error())
+        if (!json::fromJson(target.reply.emplace(), ec, *jvreply))
         {
-            return treply.error();
+            return;
         }
-        reply = std::move(treply.value());
     }
 
-    std::optional<std::string> channelPointsCustomRewardID = std::nullopt;
     const auto *jvchannelPointsCustomRewardID =
         root.if_contains("channel_points_custom_reward_id");
     if (jvchannelPointsCustomRewardID != nullptr &&
         !jvchannelPointsCustomRewardID->is_null())
     {
-        auto tchannelPointsCustomRewardID =
-            boost::json::try_value_to<std::string>(
-                *jvchannelPointsCustomRewardID);
-
-        if (tchannelPointsCustomRewardID.has_error())
+        if (!json::fromJson(target.channelPointsCustomRewardID.emplace(), ec,
+                            *jvchannelPointsCustomRewardID))
         {
-            return tchannelPointsCustomRewardID.error();
+            return;
         }
-        channelPointsCustomRewardID =
-            std::move(tchannelPointsCustomRewardID.value());
     }
-
-    return Event{
-        .broadcasterUserID = std::move(broadcasterUserID.value()),
-        .broadcasterUserLogin = std::move(broadcasterUserLogin.value()),
-        .broadcasterUserName = std::move(broadcasterUserName.value()),
-        .chatterUserID = std::move(chatterUserID.value()),
-        .chatterUserLogin = std::move(chatterUserLogin.value()),
-        .chatterUserName = std::move(chatterUserName.value()),
-        .color = std::move(color.value()),
-        .badges = std::move(vbadges),
-        .messageID = std::move(messageID.value()),
-        .messageType = std::move(messageType.value()),
-        .message = std::move(message.value()),
-        .cheer = cheer,
-        .reply = std::move(reply),
-        .channelPointsCustomRewardID = std::move(channelPointsCustomRewardID),
-    };
 }
 
-boost::json::result_for<Payload, boost::json::value>::type tag_invoke(
-    boost::json::try_value_to_tag<Payload> /* tag */,
-    const boost::json::value &jvRoot)
+void tag_invoke(json::FromJsonTag<Payload> /* tag */, Payload &target,
+                boost::system::error_code &ec, const boost::json::value &jvRoot)
 {
     if (!jvRoot.is_object())
     {
-        EVENTSUB_BAIL_HERE(error::Kind::ExpectedObject);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::ExpectedObject);
     }
     const auto &root = jvRoot.get_object();
 
     const auto *jvsubscription = root.if_contains("subscription");
     if (jvsubscription == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto subscription =
-        boost::json::try_value_to<subscription::Subscription>(*jvsubscription);
-
-    if (subscription.has_error())
+    if (!json::fromJson(target.subscription, ec, *jvsubscription))
     {
-        return subscription.error();
+        return;
     }
-
     const auto *jvevent = root.if_contains("event");
     if (jvevent == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto event = boost::json::try_value_to<Event>(*jvevent);
-
-    if (event.has_error())
+    if (!json::fromJson(target.event, ec, *jvevent))
     {
-        return event.error();
+        return;
     }
-
-    return Payload{
-        .subscription = std::move(subscription.value()),
-        .event = std::move(event.value()),
-    };
 }
 
 }  // namespace chatterino::eventsub::lib::payload::channel_chat_message::v1

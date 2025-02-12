@@ -78,11 +78,9 @@ struct Event {
     bool isPermanent;
 
     // Time point when the timeout or ban took place
-    /// json_tag=AsISO8601
     std::chrono::system_clock::time_point bannedAt;
 
     // Time point when the timeout will end
-    /// json_tag=AsISO8601
     std::optional<std::chrono::system_clock::time_point> endsAt;
 
     // Returns the duration of the timeout
@@ -91,11 +89,11 @@ struct Event {
 };
 
 struct Payload {
-    const subscription::Subscription subscription;
+    subscription::Subscription subscription;
 
-    const Event event;
+    Event event;
 };
 
-#include "twitch-eventsub-ws/payloads/channel-ban-v1.inc"
-
 }  // namespace chatterino::eventsub::lib::payload::channel_ban::v1
+
+#include "twitch-eventsub-ws/payloads/channel-ban-v1.inc"

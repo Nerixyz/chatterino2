@@ -1,2 +1,2 @@
-boost::json::result_for<{{struct.full_name}}, boost::json::value>::type tag_invoke(
-    boost::json::try_value_to_tag<{{struct.full_name}}>, const boost::json::value &jvRoot);
+void tag_invoke(json::FromJsonTag<{{struct.full_name}}>, {{struct.full_name}} &target,
+                boost::system::error_code &ec, const boost::json::value &jvRoot);

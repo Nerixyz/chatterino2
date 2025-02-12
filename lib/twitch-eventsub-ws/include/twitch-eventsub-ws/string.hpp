@@ -18,7 +18,9 @@ constexpr bool DEPENDENT_FALSE = false;  // workaround before CWG2518/P2593R1
 /// the `qt` function to convert the backing string to a QString,
 /// while we ensure the conversion is only done once.
 struct String {
-    explicit String(std::string &&v)
+    constexpr String() noexcept = default;
+
+    explicit String(std::string &&v) noexcept
         : backingString(std::move(v))
     {
     }
@@ -30,6 +32,11 @@ struct String {
 
     String &operator=(const String &) = delete;
     String &operator=(String &&) = default;
+    String &operator=(std::string &&v) noexcept
+    {
+        this->backingString = std::move(v);
+        return *this;
+    }
 
     /// Returns the string as a QString, modifying the backing string to ensure
     /// the copy only happens once.

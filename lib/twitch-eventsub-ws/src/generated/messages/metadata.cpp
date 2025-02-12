@@ -2,98 +2,72 @@
 #include "twitch-eventsub-ws/chrono.hpp"  // IWYU pragma: keep
 #include "twitch-eventsub-ws/detail/errors.hpp"
 #include "twitch-eventsub-ws/detail/variant.hpp"  // IWYU pragma: keep
+#include "twitch-eventsub-ws/json.hpp"
 #include "twitch-eventsub-ws/messages/metadata.hpp"
 
 #include <boost/json.hpp>
 
 namespace chatterino::eventsub::lib::messages {
 
-boost::json::result_for<Metadata, boost::json::value>::type tag_invoke(
-    boost::json::try_value_to_tag<Metadata> /* tag */,
-    const boost::json::value &jvRoot)
+void tag_invoke(json::FromJsonTag<Metadata> /* tag */, Metadata &target,
+                boost::system::error_code &ec, const boost::json::value &jvRoot)
 {
     if (!jvRoot.is_object())
     {
-        EVENTSUB_BAIL_HERE(error::Kind::ExpectedObject);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::ExpectedObject);
     }
     const auto &root = jvRoot.get_object();
 
     const auto *jvmessageID = root.if_contains("message_id");
     if (jvmessageID == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto messageID = boost::json::try_value_to<std::string>(*jvmessageID);
-
-    if (messageID.has_error())
+    if (!json::fromJson(target.messageID, ec, *jvmessageID))
     {
-        return messageID.error();
+        return;
     }
-
     const auto *jvmessageType = root.if_contains("message_type");
     if (jvmessageType == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto messageType = boost::json::try_value_to<std::string>(*jvmessageType);
-
-    if (messageType.has_error())
+    if (!json::fromJson(target.messageType, ec, *jvmessageType))
     {
-        return messageType.error();
+        return;
     }
-
     const auto *jvmessageTimestamp = root.if_contains("message_timestamp");
     if (jvmessageTimestamp == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto messageTimestamp =
-        boost::json::try_value_to<std::string>(*jvmessageTimestamp);
-
-    if (messageTimestamp.has_error())
+    if (!json::fromJson(target.messageTimestamp, ec, *jvmessageTimestamp))
     {
-        return messageTimestamp.error();
+        return;
     }
-
-    std::optional<std::string> subscriptionType = std::nullopt;
     const auto *jvsubscriptionType = root.if_contains("subscription_type");
     if (jvsubscriptionType != nullptr && !jvsubscriptionType->is_null())
     {
-        auto tsubscriptionType =
-            boost::json::try_value_to<std::string>(*jvsubscriptionType);
-
-        if (tsubscriptionType.has_error())
+        if (!json::fromJson(target.subscriptionType.emplace(), ec,
+                            *jvsubscriptionType))
         {
-            return tsubscriptionType.error();
+            return;
         }
-        subscriptionType = std::move(tsubscriptionType.value());
     }
 
-    std::optional<std::string> subscriptionVersion = std::nullopt;
     const auto *jvsubscriptionVersion =
         root.if_contains("subscription_version");
     if (jvsubscriptionVersion != nullptr && !jvsubscriptionVersion->is_null())
     {
-        auto tsubscriptionVersion =
-            boost::json::try_value_to<std::string>(*jvsubscriptionVersion);
-
-        if (tsubscriptionVersion.has_error())
+        if (!json::fromJson(target.subscriptionVersion.emplace(), ec,
+                            *jvsubscriptionVersion))
         {
-            return tsubscriptionVersion.error();
+            return;
         }
-        subscriptionVersion = std::move(tsubscriptionVersion.value());
     }
-
-    return Metadata{
-        .messageID = std::move(messageID.value()),
-        .messageType = std::move(messageType.value()),
-        .messageTimestamp = std::move(messageTimestamp.value()),
-        .subscriptionType = std::move(subscriptionType),
-        .subscriptionVersion = std::move(subscriptionVersion),
-    };
 }
 
 }  // namespace chatterino::eventsub::lib::messages

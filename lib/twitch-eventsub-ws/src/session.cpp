@@ -32,15 +32,16 @@ using EventSubSubscription = std::pair<std::string, std::string>;
 
 using NotificationHandlers = std::unordered_map<
     EventSubSubscription,
-    std::function<boost::system::error_code(
-        messages::Metadata, boost::json::value, std::unique_ptr<Listener> &)>,
+    std::function<boost::system::error_code(const messages::Metadata &,
+                                            const boost::json::value &,
+                                            const std::unique_ptr<Listener> &)>,
     boost::hash<EventSubSubscription>>;
 
-using MessageHandlers =
-    std::unordered_map<std::string, std::function<boost::system::error_code(
-                                        messages::Metadata, boost::json::value,
-                                        std::unique_ptr<Listener> &,
-                                        const NotificationHandlers &)>>;
+using MessageHandlers = std::unordered_map<
+    std::string,
+    std::function<boost::system::error_code(
+        const messages::Metadata &, const boost::json::value &,
+        const std::unique_ptr<Listener> &, const NotificationHandlers &)>>;
 
 namespace {
 
@@ -52,108 +53,109 @@ namespace {
     }
 
     template <class T>
-    boost::system::result<T> parsePayload(const boost::json::value &jv)
+    boost::system::result<std::unique_ptr<T>> parsePayload(
+        const boost::json::value &jv)
     {
-        auto result = boost::json::try_value_to<T>(jv);
-        if (!result.has_value())
+        auto ptr = std::make_unique<T>();
+        boost::system::error_code ec;
+        if (!json::fromJson(*ptr, ec, jv))
         {
-            return result.error();
+            return ec;
         }
-
-        return std::move(result.value());
+        return ptr;
     }
 
     // Subscription types
     const NotificationHandlers NOTIFICATION_HANDLERS{
         {
             {"channel.ban", "1"},
-            [](const auto &metadata, const auto &jv, auto &listener) {
-                auto oPayload =
+            [](const auto &metadata, const auto &jv, const auto &listener) {
+                auto payload =
                     parsePayload<payload::channel_ban::v1::Payload>(jv);
-                if (!oPayload)
+                if (!payload)
                 {
-                    return oPayload.error();
+                    return payload.error();
                 }
-                listener->onChannelBan(metadata, *oPayload);
+                listener->onChannelBan(metadata, **payload);
                 return boost::system::error_code{};
             },
         },
         {
             {"stream.online", "1"},
-            [](const auto &metadata, const auto &jv, auto &listener) {
-                auto oPayload =
+            [](const auto &metadata, const auto &jv, const auto &listener) {
+                auto payload =
                     parsePayload<payload::stream_online::v1::Payload>(jv);
-                if (!oPayload)
+                if (!payload)
                 {
-                    return oPayload.error();
+                    return payload.error();
                 }
-                listener->onStreamOnline(metadata, *oPayload);
+                listener->onStreamOnline(metadata, **payload);
                 return boost::system::error_code{};
             },
         },
         {
             {"stream.offline", "1"},
-            [](const auto &metadata, const auto &jv, auto &listener) {
-                auto oPayload =
+            [](const auto &metadata, const auto &jv, const auto &listener) {
+                auto payload =
                     parsePayload<payload::stream_offline::v1::Payload>(jv);
-                if (!oPayload)
+                if (!payload)
                 {
-                    return oPayload.error();
+                    return payload.error();
                 }
-                listener->onStreamOffline(metadata, *oPayload);
+                listener->onStreamOffline(metadata, **payload);
                 return boost::system::error_code{};
             },
         },
         {
             {"channel.chat.notification", "1"},
-            [](const auto &metadata, const auto &jv, auto &listener) {
-                auto oPayload = parsePayload<
+            [](const auto &metadata, const auto &jv, const auto &listener) {
+                auto payload = parsePayload<
                     payload::channel_chat_notification::v1::Payload>(jv);
-                if (!oPayload)
+                if (!payload)
                 {
-                    return oPayload.error();
+                    return payload.error();
                 }
-                listener->onChannelChatNotification(metadata, *oPayload);
+                listener->onChannelChatNotification(metadata, **payload);
                 return boost::system::error_code{};
             },
         },
         {
             {"channel.update", "1"},
-            [](const auto &metadata, const auto &jv, auto &listener) {
-                auto oPayload =
+            [](const auto &metadata, const auto &jv, const auto &listener) {
+                auto payload =
                     parsePayload<payload::channel_update::v1::Payload>(jv);
-                if (!oPayload)
+                if (!payload)
                 {
-                    return oPayload.error();
+                    return payload.error();
                 }
-                listener->onChannelUpdate(metadata, *oPayload);
+                listener->onChannelUpdate(metadata, **payload);
                 return boost::system::error_code{};
             },
         },
         {
             {"channel.chat.message", "1"},
-            [](const auto &metadata, const auto &jv, auto &listener) {
-                auto oPayload =
+            [](const auto &metadata, const auto &jv, const auto &listener) {
+                auto payload =
                     parsePayload<payload::channel_chat_message::v1::Payload>(
                         jv);
-                if (!oPayload)
+                if (!payload)
                 {
-                    return oPayload.error();
+                    return payload.error();
                 }
-                listener->onChannelChatMessage(metadata, *oPayload);
+                listener->onChannelChatMessage(metadata, **payload);
                 return boost::system::error_code{};
             },
         },
         {
             {"channel.moderate", "2"},
-            [](const auto &metadata, const auto &jv, auto &listener) {
-                auto oPayload =
+            [](const auto &metadata, const auto &jv, const auto &listener) {
+                auto payload =
                     parsePayload<payload::channel_moderate::v2::Payload>(jv);
-                if (!oPayload)
+                if (!payload)
                 {
-                    return oPayload.error();
+                    return payload.error();
                 }
-                listener->onChannelModerate(metadata, std::move(*oPayload));
+                listener->onChannelModerate(metadata, **payload);
                 return boost::system::error_code{};
             },
         },
@@ -163,24 +165,22 @@ namespace {
     const MessageHandlers MESSAGE_HANDLERS{
         {
             "session_welcome",
-            [](const auto &metadata, const auto &jv, auto &listener,
+            [](const auto &metadata, const auto &jv, const auto &listener,
                const auto & /*notificationHandlers*/) {
-                auto oPayload =
+                auto payload =
                     parsePayload<payload::session_welcome::Payload>(jv);
-                if (!oPayload)
+                if (!payload)
                 {
-                    // TODO: error handling
-                    return oPayload.error();
+                    return payload.error();
                 }
-                const auto &payload = *oPayload;
 
-                listener->onSessionWelcome(metadata, payload);
+                listener->onSessionWelcome(metadata, **payload);
                 return boost::system::error_code{};
             },
         },
         {
             "session_keepalive",
-            [](const auto &metadata, const auto &jv, auto &listener,
+            [](const auto &metadata, const auto &jv, const auto &listener,
                const auto &notificationHandlers) {
                 // TODO: should we do something here?
                 return boost::system::error_code{};
@@ -188,7 +188,7 @@ namespace {
         },
         {
             "notification",
-            [](const auto &metadata, const auto &jv, auto &listener,
+            [](const auto &metadata, const auto &jv, const auto &listener,
                const auto &notificationHandlers) {
                 listener->onNotification(metadata, jv);
 
@@ -236,15 +236,13 @@ boost::system::error_code handleMessage(std::unique_ptr<Listener> &listener,
     {
         EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
     }
-    auto metadataResult =
-        boost::json::try_value_to<messages::Metadata>(*metadataV);
-    if (metadataResult.has_error())
-    {
-        // TODO: wrap error?
-        return metadataResult.error();
-    }
 
-    const auto &metadata = metadataResult.value();
+    messages::Metadata metadata;
+    boost::system::error_code ec;
+    if (!json::fromJson(metadata, ec, *metadataV))
+    {
+        return ec;
+    }
 
     auto handler = MESSAGE_HANDLERS.find(metadata.messageType);
 

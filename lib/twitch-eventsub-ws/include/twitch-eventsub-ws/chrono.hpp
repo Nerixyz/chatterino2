@@ -1,19 +1,16 @@
 #pragma once
 
+#include "twitch-eventsub-ws/json.hpp"
+
 #include <boost/json.hpp>
 
 #include <chrono>
-#include <sstream>
 
-namespace chatterino::eventsub::lib {
+namespace chatterino::eventsub::lib::json {
 
-struct AsISO8601 {
-};
+template <>
+bool fromJson<std::chrono::system_clock::time_point>(
+    std::chrono::system_clock::time_point &target,
+    boost::system::error_code &ec, const boost::json::value &jvRoot);
 
-boost::json::result_for<std::chrono::system_clock::time_point,
-                        boost::json::value>::type
-    tag_invoke(
-        boost::json::try_value_to_tag<std::chrono::system_clock::time_point>,
-        const boost::json::value &jvRoot, const AsISO8601 &);
-
-}  // namespace chatterino::eventsub::lib
+}  // namespace chatterino::eventsub::lib::json

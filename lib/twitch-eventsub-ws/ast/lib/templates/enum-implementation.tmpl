@@ -1,9 +1,9 @@
-boost::json::result_for<{{enum.full_name}}, boost::json::value>::type tag_invoke(
-    boost::json::try_value_to_tag<{{enum.full_name}}> /* tag */, const boost::json::value &jvRoot)
+void tag_invoke(json::FromJsonTag<{{enum.full_name}}> /* tag */, {{enum.full_name}} &target,
+                boost::system::error_code &ec, const boost::json::value &jvRoot)
 {
     if (!jvRoot.is_string())
     {
-        EVENTSUB_BAIL_HERE(error::Kind::ExpectedString);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::ExpectedString);
     }
     std::string_view eString(jvRoot.get_string());
 
@@ -11,9 +11,10 @@ boost::json::result_for<{{enum.full_name}}, boost::json::value>::type tag_invoke
 
 {%- for constant in enum.constants %}
     if (eString == "{{constant.json_name}}"sv) {
-        return {{enum.full_name}}::{{constant.name}};
+        target = {{enum.full_name}}::{{constant.name}};
+        return;
     }
 {%- endfor %}
 
-    EVENTSUB_BAIL_HERE(error::Kind::UnknownEnumValue);
+    EVENTSUB_INTO_BAIL_HERE(error::Kind::UnknownEnumValue);
 }

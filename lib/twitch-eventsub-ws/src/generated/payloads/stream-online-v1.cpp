@@ -2,156 +2,116 @@
 #include "twitch-eventsub-ws/chrono.hpp"  // IWYU pragma: keep
 #include "twitch-eventsub-ws/detail/errors.hpp"
 #include "twitch-eventsub-ws/detail/variant.hpp"  // IWYU pragma: keep
+#include "twitch-eventsub-ws/json.hpp"
 #include "twitch-eventsub-ws/payloads/stream-online-v1.hpp"
 
 #include <boost/json.hpp>
 
 namespace chatterino::eventsub::lib::payload::stream_online::v1 {
 
-boost::json::result_for<Event, boost::json::value>::type tag_invoke(
-    boost::json::try_value_to_tag<Event> /* tag */,
-    const boost::json::value &jvRoot)
+void tag_invoke(json::FromJsonTag<Event> /* tag */, Event &target,
+                boost::system::error_code &ec, const boost::json::value &jvRoot)
 {
     if (!jvRoot.is_object())
     {
-        EVENTSUB_BAIL_HERE(error::Kind::ExpectedObject);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::ExpectedObject);
     }
     const auto &root = jvRoot.get_object();
 
     const auto *jvid = root.if_contains("id");
     if (jvid == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto id = boost::json::try_value_to<std::string>(*jvid);
-
-    if (id.has_error())
+    if (!json::fromJson(target.id, ec, *jvid))
     {
-        return id.error();
+        return;
     }
-
     const auto *jvbroadcasterUserID = root.if_contains("broadcaster_user_id");
     if (jvbroadcasterUserID == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto broadcasterUserID =
-        boost::json::try_value_to<std::string>(*jvbroadcasterUserID);
-
-    if (broadcasterUserID.has_error())
+    if (!json::fromJson(target.broadcasterUserID, ec, *jvbroadcasterUserID))
     {
-        return broadcasterUserID.error();
+        return;
     }
-
     const auto *jvbroadcasterUserLogin =
         root.if_contains("broadcaster_user_login");
     if (jvbroadcasterUserLogin == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto broadcasterUserLogin =
-        boost::json::try_value_to<std::string>(*jvbroadcasterUserLogin);
-
-    if (broadcasterUserLogin.has_error())
+    if (!json::fromJson(target.broadcasterUserLogin, ec,
+                        *jvbroadcasterUserLogin))
     {
-        return broadcasterUserLogin.error();
+        return;
     }
-
     const auto *jvbroadcasterUserName =
         root.if_contains("broadcaster_user_name");
     if (jvbroadcasterUserName == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto broadcasterUserName =
-        boost::json::try_value_to<std::string>(*jvbroadcasterUserName);
-
-    if (broadcasterUserName.has_error())
+    if (!json::fromJson(target.broadcasterUserName, ec, *jvbroadcasterUserName))
     {
-        return broadcasterUserName.error();
+        return;
     }
-
     const auto *jvtype = root.if_contains("type");
     if (jvtype == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto type = boost::json::try_value_to<std::string>(*jvtype);
-
-    if (type.has_error())
+    if (!json::fromJson(target.type, ec, *jvtype))
     {
-        return type.error();
+        return;
     }
-
     const auto *jvstartedAt = root.if_contains("started_at");
     if (jvstartedAt == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto startedAt = boost::json::try_value_to<std::string>(*jvstartedAt);
-
-    if (startedAt.has_error())
+    if (!json::fromJson(target.startedAt, ec, *jvstartedAt))
     {
-        return startedAt.error();
+        return;
     }
-
-    return Event{
-        .id = std::move(id.value()),
-        .broadcasterUserID = std::move(broadcasterUserID.value()),
-        .broadcasterUserLogin = std::move(broadcasterUserLogin.value()),
-        .broadcasterUserName = std::move(broadcasterUserName.value()),
-        .type = std::move(type.value()),
-        .startedAt = std::move(startedAt.value()),
-    };
 }
 
-boost::json::result_for<Payload, boost::json::value>::type tag_invoke(
-    boost::json::try_value_to_tag<Payload> /* tag */,
-    const boost::json::value &jvRoot)
+void tag_invoke(json::FromJsonTag<Payload> /* tag */, Payload &target,
+                boost::system::error_code &ec, const boost::json::value &jvRoot)
 {
     if (!jvRoot.is_object())
     {
-        EVENTSUB_BAIL_HERE(error::Kind::ExpectedObject);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::ExpectedObject);
     }
     const auto &root = jvRoot.get_object();
 
     const auto *jvsubscription = root.if_contains("subscription");
     if (jvsubscription == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto subscription =
-        boost::json::try_value_to<subscription::Subscription>(*jvsubscription);
-
-    if (subscription.has_error())
+    if (!json::fromJson(target.subscription, ec, *jvsubscription))
     {
-        return subscription.error();
+        return;
     }
-
     const auto *jvevent = root.if_contains("event");
     if (jvevent == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto event = boost::json::try_value_to<Event>(*jvevent);
-
-    if (event.has_error())
+    if (!json::fromJson(target.event, ec, *jvevent))
     {
-        return event.error();
+        return;
     }
-
-    return Payload{
-        .subscription = std::move(subscription.value()),
-        .event = std::move(event.value()),
-    };
 }
 
 }  // namespace chatterino::eventsub::lib::payload::stream_online::v1

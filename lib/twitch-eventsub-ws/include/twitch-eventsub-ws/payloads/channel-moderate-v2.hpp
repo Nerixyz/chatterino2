@@ -447,6 +447,6 @@ struct Payload {
     Event event;
 };
 
-#include "twitch-eventsub-ws/payloads/channel-moderate-v2.inc"
-
 }  // namespace chatterino::eventsub::lib::payload::channel_moderate::v2
+
+#include "twitch-eventsub-ws/payloads/channel-moderate-v2.inc"

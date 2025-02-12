@@ -2,49 +2,43 @@
 #include "twitch-eventsub-ws/chrono.hpp"  // IWYU pragma: keep
 #include "twitch-eventsub-ws/detail/errors.hpp"
 #include "twitch-eventsub-ws/detail/variant.hpp"  // IWYU pragma: keep
+#include "twitch-eventsub-ws/json.hpp"
 #include "twitch-eventsub-ws/payloads/session-welcome.hpp"
 
 #include <boost/json.hpp>
 
 namespace chatterino::eventsub::lib::payload::session_welcome {
 
-boost::json::result_for<Payload, boost::json::value>::type tag_invoke(
-    boost::json::try_value_to_tag<Payload> /* tag */,
-    const boost::json::value &jvRoot)
+void tag_invoke(json::FromJsonTag<Payload> /* tag */, Payload &target,
+                boost::system::error_code &ec, const boost::json::value &jvRoot)
 {
     if (!jvRoot.is_object())
     {
-        EVENTSUB_BAIL_HERE(error::Kind::ExpectedObject);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::ExpectedObject);
     }
     const auto &outerRoot = jvRoot.get_object();
 
     const auto *jvInnerRoot = outerRoot.if_contains("session");
     if (jvInnerRoot == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::InnerRootMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::InnerRootMissing);
     }
     if (!jvInnerRoot->is_object())
     {
-        EVENTSUB_BAIL_HERE(error::Kind::ExpectedObject);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::ExpectedObject);
     }
     const auto &root = jvInnerRoot->get_object();
 
     const auto *jvid = root.if_contains("id");
     if (jvid == nullptr)
     {
-        EVENTSUB_BAIL_HERE(error::Kind::FieldMissing);
+        EVENTSUB_INTO_BAIL_HERE(error::Kind::FieldMissing);
     }
 
-    auto id = boost::json::try_value_to<std::string>(*jvid);
-
-    if (id.has_error())
+    if (!json::fromJson(target.id, ec, *jvid))
     {
-        return id.error();
+        return;
     }
-
-    return Payload{
-        .id = std::move(id.value()),
-    };
 }
 
 }  // namespace chatterino::eventsub::lib::payload::session_welcome
