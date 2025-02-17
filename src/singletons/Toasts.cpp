@@ -3,6 +3,7 @@
 #include "Application.hpp"
 #include "common/Common.hpp"
 #include "common/Literals.hpp"
+#include "common/Modes.hpp"
 #include "common/QLogging.hpp"
 #include "common/Version.hpp"
 #include "controllers/notifications/NotificationController.hpp"
@@ -71,6 +72,17 @@ namespace chatterino {
 using WinToastLib::WinToast;
 using WinToastLib::WinToastTemplate;
 #endif
+
+Toasts::Toasts()
+{
+#ifdef Q_OS_WIN
+    // ...?
+    if (Modes::instance().isPortable)
+    {
+        this->ensureInitialized();
+    }
+#endif
+}
 
 Toasts::~Toasts()
 {
@@ -232,7 +244,11 @@ void Toasts::ensureInitialized()
     instance->setAppUserModelId(
         WinToast::configureAUMI(L"", L"Chatterino 2", L"",
                                 Version::instance().version().toStdWString()));
-    instance->setShortcutPolicy(WinToast::SHORTCUT_POLICY_IGNORE);
+    // Otherwise, WinToast will create a shortcut "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Chatterino2.lnk"
+    if (Modes::instance().isPortable)
+    {
+        instance->setShortcutPolicy(WinToast::SHORTCUT_POLICY_IGNORE);
+    }
     WinToast::WinToastError error{};
     instance->initialize(&error);
 
