@@ -168,7 +168,7 @@ void DeviceLoginWidget::reset(const QString &prevError)
     layout->addWidget(this->detailLabel, 0, Qt::AlignCenter);
 
     this->scopes_ = QString{};
-    for (auto scope : DEVICE_AUTH_SCOPES)
+    for (auto scope : AUTH_SCOPES)
     {
         if (!this->scopes_.isEmpty())
         {
