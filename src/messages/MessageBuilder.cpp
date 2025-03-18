@@ -2063,7 +2063,7 @@ MessagePtrMut MessageBuilder::makeAccountExpiredMessage(
     auto loginPromptText = u"Try adding your account again."_s;
 
     MessageBuilder builder;
-    auto text = expirationText % ' ' % loginPromptText;
+    QString text = expirationText % ' ' % loginPromptText;
     builder->messageText = text;
     builder->searchText = text;
     builder->flags.set(MessageFlag::System,
@@ -2083,13 +2083,13 @@ MessagePtrMut MessageBuilder::makeAccountExpiredMessage(
 MessagePtrMut MessageBuilder::makeMissingScopesMessage(
     const QString &missingScopes)
 {
-    auto warnText = u"Your account is missing the following permission(s): " %
-                    missingScopes %
-                    u". Some features might not work correctly.";
+    QString warnText =
+        u"Your account is missing the following permission(s): " %
+        missingScopes % u". Some features might not work correctly.";
     auto linkText = u"Consider re-adding your account."_s;
 
     MessageBuilder builder;
-    auto text = warnText % ' ' % linkText;
+    QString text = warnText % ' ' % linkText;
     builder->messageText = text;
     builder->searchText = text;
     builder->flags.set(MessageFlag::System,

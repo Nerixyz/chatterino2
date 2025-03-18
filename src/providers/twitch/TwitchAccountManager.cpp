@@ -5,7 +5,6 @@
 #include "common/Common.hpp"
 #include "common/Literals.hpp"
 #include "common/network/NetworkResult.hpp"
-#include "common/Outcome.hpp"
 #include "common/QLogging.hpp"
 #include "messages/MessageBuilder.hpp"
 #include "providers/twitch/api/Helix.hpp"
@@ -18,11 +17,10 @@
 
 #include <QStringBuilder>
 
-#include <set>
-
 namespace {
 
 using namespace chatterino;
+using namespace literals;
 
 QString missingScopes(const QJsonArray &scopesArray)
 {
@@ -33,7 +31,7 @@ QString missingScopes(const QJsonArray &scopesArray)
     }
 
     QString missingList;
-    for (auto scope : DEVICE_AUTH_SCOPES)
+    for (auto scope : AUTH_SCOPES)
     {
         if (!scopes.contains(scope))
         {
@@ -48,14 +46,44 @@ QString missingScopes(const QJsonArray &scopesArray)
     return missingList;
 }
 
+void checkMissingScopes(const QString &token)
+{
+    NetworkRequest(u"https://id.twitch.tv/oauth2/validate"_s,
+                   NetworkRequestType::Get)
+        .header("Authorization", u"OAuth " % token)
+        .timeout(20000)
+        .onSuccess([](const auto &res) {
+            auto *app = tryGetApp();
+            if (!app)
+            {
+                return;
+            }
+
+            const auto json = res.parseJson();
+            auto missing = missingScopes(json["scopes"_L1].toArray());
+            if (missing.isEmpty())
+            {
+                return;
+            }
+
+            auto msg = MessageBuilder::makeMissingScopesMessage(missing);
+            app->getTwitch()->forEachChannel([msg](const auto &chan) {
+                chan->addMessage(msg, MessageContext::Original);
+            });
+        })
+        .onError([](const auto &res) {
+            qCWarning(chatterinoTwitch)
+                << "Failed to check for missing scopes:" << res.formatError();
+        })
+        .execute();
+}
+
 }  // namespace
 
 namespace chatterino {
 
-using namespace literals;
-
 const QString DEVICE_AUTH_CLIENT_ID = u"ows8k58flcricj1oe1pm53eb78xwql"_s;
-const std::vector<QStringView> DEVICE_AUTH_SCOPES{
+const std::vector<QStringView> AUTH_SCOPES{
     u"channel:moderate",  // for seeing automod & which moderator banned/unbanned a user (felanbird unbanned weeb123)
     u"channel:read:redemptions",  // for getting the list of channel point redemptions (not currently used)
     u"chat:edit",      // for sending messages in chat
@@ -176,6 +204,10 @@ TwitchAccountManager::TwitchAccountManager()
         auto currentUser = this->getCurrent();
         currentUser->loadBlocks();
         currentUser->loadSeventvUserID();
+        if (!currentUser->isAnon())
+        {
+            checkMissingScopes(currentUser->getOAuthToken());
+        }
     });
 
     // We can safely ignore this signal connection since accounts will always be removed
