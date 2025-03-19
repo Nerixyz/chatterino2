@@ -79,6 +79,9 @@ private:
 
 public:
     struct Node final {
+        /**
+         * @exposeenum c2.SplitContainerNodeType
+         */
         enum class Type {
             EmptyRoot,
             Split,
@@ -91,7 +94,7 @@ public:
         Node *getParent() const;
         qreal getHorizontalFlex() const;
         qreal getVerticalFlex() const;
-        const std::vector<std::unique_ptr<Node>> &getChildren();
+        const std::vector<std::unique_ptr<Node>> &getChildren() const;
 
     private:
         Node();

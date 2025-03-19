@@ -11,12 +11,14 @@
 #    include "controllers/plugins/api/HTTPRequest.hpp"
 #    include "controllers/plugins/api/HTTPResponse.hpp"
 #    include "controllers/plugins/api/IOWrapper.hpp"
+#    include "controllers/plugins/api/Ui.hpp"
 #    include "controllers/plugins/LuaAPI.hpp"
 #    include "controllers/plugins/LuaUtilities.hpp"
 #    include "controllers/plugins/SolTypes.hpp"
 #    include "messages/MessageBuilder.hpp"
 #    include "singletons/Paths.hpp"
 #    include "singletons/Settings.hpp"
+#    include "singletons/WindowManager.hpp"
 
 #    include <lauxlib.h>
 #    include <lua.h>
@@ -224,6 +226,10 @@ void PluginController::initSol(sol::state_view &lua, Plugin *plugin)
     c2["HTTPMethod"] = lua::createEnumTable<NetworkRequestType>(lua);
     c2["EventType"] = lua::createEnumTable<lua::api::EventType>(lua);
     c2["LogLevel"] = lua::createEnumTable<lua::api::LogLevel>(lua);
+
+    lua::api::ui::createQtTypes(lua);
+    lua::api::ui::createUserTypes(c2);
+    c2["window_manager"] = getApp()->getWindows();
 
     sol::table io = g["io"];
     io.set_function(

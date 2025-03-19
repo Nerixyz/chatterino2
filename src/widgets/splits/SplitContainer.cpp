@@ -1048,7 +1048,7 @@ qreal SplitContainer::Node::getVerticalFlex() const
 }
 
 const std::vector<std::unique_ptr<SplitContainer::Node>> &
-    SplitContainer::Node::getChildren()
+    SplitContainer::Node::getChildren() const
 {
     return this->children_;
 }

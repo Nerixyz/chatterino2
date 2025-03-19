@@ -10,6 +10,9 @@
 #    include <QStringList>
 #    include <sol/sol.hpp>
 
+class QObject;
+class QWidget;
+
 namespace chatterino::detail {
 
 // NOLINTBEGIN(readability-identifier-naming)
@@ -24,6 +27,11 @@ constexpr bool IsOptional<std::optional<T>> = true;
 namespace chatterino {
 
 class Plugin;
+class BaseWidget;
+class BaseWindow;
+class Window;
+class SplitNotebook;
+class Notebook;
 
 }  // namespace chatterino
 
@@ -159,6 +167,21 @@ inline nonstd::expected_lite::expected<T, QString> tryCall(
 
 SOL_STACK_FUNCTIONS(chatterino::lua::ThisPluginState)
 
+template <typename Target, typename Owner>
+struct QGuardedPtr {
+    QPointer<Owner> guard;
+    Target *target;
+
+    Target *get()
+    {
+        if (guard.isNull())  // XXX: is this necessary?
+        {
+            return nullptr;
+        }
+        return this->target;
+    }
+};
+
 }  // namespace chatterino::lua
 
 SOL_STACK_FUNCTIONS(QString)
@@ -166,5 +189,58 @@ SOL_STACK_FUNCTIONS(QStringList)
 SOL_STACK_FUNCTIONS(QByteArray)
 
 #    undef SOL_STACK_FUNCTIONS
+
+namespace sol {
+
+// NOLINTBEGIN(readability-identifier-naming)
+template <typename T>
+struct unique_usertype_traits<QPointer<T>> {
+    using type = T;
+    using actual_type = QPointer<T>;
+    static const bool value = true;
+
+    static bool is_null(const actual_type &ptr)
+    {
+        return ptr == nullptr;
+    }
+
+    static type *get(const actual_type &ptr)
+    {
+        return ptr.get();
+    }
+};
+
+template <typename Target, typename Owner>
+struct unique_usertype_traits<chatterino::lua::QGuardedPtr<Target, Owner>> {
+    using type = Target;
+    using actual_type = chatterino::lua::QGuardedPtr<Target, Owner>;
+    static const bool value = true;
+
+    static bool is_null(const actual_type &ptr)
+    {
+        return ptr.guard == nullptr || ptr.target == nullptr;
+    }
+
+    static type *get(const actual_type &ptr)
+    {
+        return ptr.target;
+    }
+};
+// NOLINTEND(readability-identifier-naming)
+
+}  // namespace sol
+
+SOL_BASE_CLASSES(chatterino::SplitNotebook, chatterino::Notebook);
+SOL_DERIVED_CLASSES(chatterino::Notebook, chatterino::SplitNotebook);
+
+SOL_BASE_CLASSES(QWidget, QObject);
+SOL_BASE_CLASSES(chatterino::BaseWidget, QWidget);
+SOL_BASE_CLASSES(chatterino::BaseWindow, chatterino::BaseWidget);
+SOL_BASE_CLASSES(chatterino::Window, chatterino::BaseWindow);
+
+SOL_DERIVED_CLASSES(QObject, QWidget);
+SOL_DERIVED_CLASSES(QWidget, chatterino::BaseWidget);
+SOL_DERIVED_CLASSES(chatterino::BaseWidget, chatterino::BaseWindow);
+SOL_DERIVED_CLASSES(chatterino::BaseWindow, chatterino::Window);
 
 #endif

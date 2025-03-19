@@ -1,6 +1,6 @@
 /** @noSelfInFile */
 
-declare module c2 {
+declare namespace c2 {
     enum LogLevel {
         Debug,
         Info,
@@ -129,4 +129,65 @@ declare module c2 {
 
     function register_callback<T>(type: T, func: CbFunc<T>): void;
     function later(callback: () => void, msec: number): void;
+
+    class BaseWidget extends QWidget {}
+    class BaseWindow extends BaseWidget {}
+
+    enum SplitContainerNodeType {
+        EmptyRoot,
+        Split,
+        VerticalContainer,
+        HorizontalContainer,
+    }
+    enum WindowType {
+        Main,
+        Popup,
+        Attached,
+    }
+
+    class Split {
+        readonly channel: Channel;
+    }
+
+    class SplitContainerNode {
+        readonly type: SplitContainerNodeType;
+        readonly split: Split | null;
+        get_children(): SplitContainerNode[];
+    }
+
+    class SplitContainer {
+        selected_split: Split;
+        readonly base_node: SplitContainerNode;
+        popup(): void;
+        get_splits(): Split[];
+    }
+
+    class Notebook {
+        readonly page_count: number;
+        get_page_at(index: number): SplitContainer | null;
+    }
+
+    class SplitNotebook extends Notebook {
+        readonly selected_page: SplitContainer;
+    }
+
+    class Window extends BaseWindow {
+        readonly notebook: SplitNotebook;
+        readonly type: WindowType;
+    }
+
+    class WindowManager {
+        readonly main_window: Window;
+        readonly last_selected_window: Window;
+        open_in_popup(channel: Channel): Window;
+        select(split: Split): void;
+        select(container: SplitContainer): void;
+        get_windows(): Window[];
+    }
+
+    var window_manager: WindowManager;
+}
+
+declare class QWidget {
+    close(): boolean;
 }
