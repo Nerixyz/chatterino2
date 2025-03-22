@@ -386,8 +386,36 @@ EmotePtr makeAutoModBadge()
         Url{"https://dashboard.twitch.tv/settings/moderation/automod"}});
 }
 
-EmotePtr makeSharedChatBadge(const QString &sourceName)
+EmotePtr makeSharedChatBadge(const QString &sourceName,
+                             const QString &sourceProfileURL,
+                             const QString &sourceLogin)
 {
+    if (!sourceProfileURL.isEmpty())
+    {
+        QString modifiedUrl = sourceProfileURL;
+        modifiedUrl.replace("300x300", "28x28");
+
+        auto badgeLink = [&] {
+            if (sourceLogin.isEmpty())
+            {
+                return Url{"https://link.twitch.tv/SharedChatViewer"};
+            }
+
+            return Url{u"https://twitch.tv/%1"_s.arg(sourceLogin)};
+        }();
+
+        return std::make_shared<Emote>(Emote{
+            .name = EmoteName{},
+            .images = ImageSet{Image::fromUrl(
+                Url{modifiedUrl},
+                18.F / 28.F)},  // get as close to 18x18 as possible
+            .tooltip =
+                Tooltip{"Shared Message" +
+                        (sourceName.isEmpty() ? "" : " from " + sourceName)},
+            .homePage = badgeLink,
+        });
+    }
+
     return std::make_shared<Emote>(Emote{
         .name = EmoteName{},
         .images = ImageSet{Image::fromResourcePixmap(
@@ -2069,6 +2097,29 @@ MessagePtr MessageBuilder::makeLowTrustUpdateMessage(
     return builder.release();
 }
 
+MessagePtrMut MessageBuilder::makeAccountExpiredMessage(
+    const QString &expirationText)
+{
+    auto loginPromptText = u"Try adding your account again."_s;
+
+    MessageBuilder builder;
+    QString text = expirationText % ' ' % loginPromptText;
+    builder->messageText = text;
+    builder->searchText = text;
+    builder->flags.set(MessageFlag::System,
+                       MessageFlag::DoNotTriggerNotification);
+
+    builder.emplace<TimestampElement>();
+    builder.emplace<TextElement>(expirationText, MessageElementFlag::Text,
+                                 MessageColor::System);
+    builder
+        .emplace<TextElement>(loginPromptText, MessageElementFlag::Text,
+                              MessageColor::Link)
+        ->setLink({Link::OpenAccountsPage, {}});
+
+    return builder.release();
+}
+
 MessagePtrMut MessageBuilder::makeMissingScopesMessage(
     const QString &missingScopes)
 {
@@ -2998,22 +3049,33 @@ void MessageBuilder::appendTwitchBadges(const QVariantMap &tags,
     {
         const QString sourceId = tags["source-room-id"].toString();
         QString sourceName;
+        QString sourceProfilePicture;
+        QString sourceLogin;
+
         if (sourceId.isEmpty())
         {
             sourceName = "";
         }
-        else if (twitchChannel->roomId() == sourceId)
-        {
-            sourceName = twitchChannel->getName();
-        }
         else
         {
-            sourceName =
-                getApp()->getTwitchUsers()->resolveID({sourceId})->displayName;
+            auto twitchUser = getApp()->getTwitchUsers()->resolveID({sourceId});
+            sourceProfilePicture = twitchUser->profilePictureUrl;
+            sourceLogin = twitchUser->name;
+
+            if (twitchChannel->roomId() == sourceId)
+            {
+                // We have the source channel open, but we still need to load the profile picture URL
+                sourceName = twitchChannel->getName();
+            }
+            else
+            {
+                sourceName = twitchUser->displayName;
+            }
         }
 
-        this->emplace<BadgeElement>(makeSharedChatBadge(sourceName),
-                                    MessageElementFlag::BadgeSharedChannel);
+        this->emplace<BadgeElement>(
+            makeSharedChatBadge(sourceName, sourceProfilePicture, sourceLogin),
+            MessageElementFlag::BadgeSharedChannel);
     }
 
     auto badgeInfos = parseBadgeInfoTag(tags);

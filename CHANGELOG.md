@@ -2,6 +2,13 @@
 
 ## Unversioned
 
+- Minor: Shared chat messages now use the source channel's profile picture to denote it's a shared chat message. (#5760)
+- Minor: Moved the "Delete message" menu option into a "Moderate" sub-menu. (#6100)
+- Bugfix: Fixed the channel name input not being focused when opening the select-channel dialog. (#6096)
+- Bugfix: Fixed inputs in dialogs not having a border around and padding in them. (#6098)
+- Bugfix: Don't set default binding for "Toggle local R9K" on macOS. Was <kbd>CTRL</kbd> + <kdb>H</kdb> before, which clashes with a system binding. (#5764)
+- Dev: Temporarily disable precompiled header support for macOS. (#6104)
+
 ## 2.5.3-beta.1
 
 - Minor: Added an option to allow multiple user-selected extensions to interact with Chatterino. (#5997)
@@ -12,6 +19,7 @@
 - Minor: Remove incognito browser support for `opera/launcher` (this should no longer be a thing). (#5805)
 - Minor: Remove incognito browser support for `iexplore`, because internet explorer is EOL. (#5810)
 - Minor: When (re-)connecting, visible channels are now joined first. (#5850)
+- Minor: Added support for the "Device code grant flow" for authentication. (#5680)
 - Minor: Added the ability to filter on messages by the author's user ID (example: `author.user_id == "22484632"`). (#5862)
 - Minor: Improved error messaging of the `/clip` command. (#5879)
 - Minor: Clicking on a live notification can now open the channel in a custom player. (#5880)
