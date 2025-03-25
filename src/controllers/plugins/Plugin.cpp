@@ -218,6 +218,12 @@ std::unordered_set<QString> Plugin::listRegisteredCommands()
 
 Plugin::~Plugin()
 {
+    if (this->connectionGuard_)
+    {
+        this->connectionGuard_->deleteLater();
+        this->connectionGuard_ = nullptr;
+    }
+
     for (auto *timer : this->activeTimeouts)
     {
         QObject::disconnect(timer, nullptr, nullptr, nullptr);

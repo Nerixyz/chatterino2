@@ -5,6 +5,11 @@
 
 #    include <QObject>
 #    include <sol/thread.hpp>
+
+#    include <string>
+
+using namespace std::string_view_literals;
+
 namespace chatterino::lua {
 
 Plugin *ThisPluginState::plugin()
@@ -96,6 +101,167 @@ int sol_lua_push(sol::types<QByteArray>, lua_State *L, const QByteArray &value)
 {
     return sol::stack::push(L,
                             std::string_view(value.constData(), value.size()));
+}
+
+// QRect
+bool sol_lua_check(sol::types<QRect>, lua_State *L, int index,
+                   std::function<sol::check_handler_type> handler,
+                   sol::stack::record &tracking)
+{
+    return sol::stack::check<sol::table>(L, index, handler, tracking);
+}
+
+QRect sol_lua_get(sol::types<QRect>, lua_State *L, int index,
+                  sol::stack::record &tracking)
+{
+    sol::state_view lua(L);
+    sol::table table = sol::stack::get<sol::table>(L, index, tracking);
+    switch (table.size())
+    {
+        case 0:
+            return {
+                table.get<int>("x"sv),
+                table.get<int>("y"sv),
+                table.get<int>("width"sv),
+                table.get<int>("height"sv),
+            };
+        case 2:
+            return {
+                table.get<QPoint>(1),
+                table.get<QSize>(2),
+            };
+        case 4:
+            return {
+                table.get<int>(1),
+                table.get<int>(2),
+                table.get<int>(3),
+                table.get<int>(4),
+            };
+        default:
+            throw sol::error("QRect must be a table {x=, y=, width=, height=}, "
+                             "{QPoint, QSize}, or {x, y, width, height}.");
+    }
+}
+
+int sol_lua_push(sol::types<QRect>, lua_State *L, const QRect &value)
+{
+    sol::state_view lua(L);
+    sol::table table =
+        lua.create_table_with("x"sv, value.x(), "y"sv, value.y(), "width"sv,
+                              value.width(), "height"sv, value.height());
+    return sol::stack::push(L, table);
+}
+
+// QMargins
+bool sol_lua_check(sol::types<QMargins>, lua_State *L, int index,
+                   std::function<sol::check_handler_type> handler,
+                   sol::stack::record &tracking)
+{
+    return sol::stack::check<sol::table>(L, index, handler, tracking);
+}
+
+QMargins sol_lua_get(sol::types<QMargins>, lua_State *L, int index,
+                     sol::stack::record &tracking)
+{
+    sol::state_view lua(L);
+    sol::table table = sol::stack::get<sol::table>(L, index, tracking);
+    switch (table.size())
+    {
+        case 0:
+            return {
+                table.get<int>("left"sv),
+                table.get<int>("top"sv),
+                table.get<int>("right"sv),
+                table.get<int>("bottom"sv),
+            };
+        case 4:
+            return {
+                table.get<int>(1),
+                table.get<int>(2),
+                table.get<int>(3),
+                table.get<int>(4),
+            };
+        default:
+            throw sol::error("QMargins must be a table {left=, top=, right=, "
+                             "bottom=} or {left, top, right, bottom}.");
+    }
+}
+
+int sol_lua_push(sol::types<QMargins>, lua_State *L, const QMargins &value)
+{
+    sol::state_view lua(L);
+    sol::table table = lua.create_table_with(
+        "left"sv, value.left(), "top"sv, value.top(), "right"sv, value.right(),
+        "bottom"sv, value.bottom());
+    return sol::stack::push(L, table);
+}
+
+// QSize
+bool sol_lua_check(sol::types<QSize>, lua_State *L, int index,
+                   std::function<sol::check_handler_type> handler,
+                   sol::stack::record &tracking)
+{
+    return sol::stack::check<sol::lua_table>(L, index, handler, tracking);
+}
+
+QSize sol_lua_get(sol::types<QSize>, lua_State *L, int index,
+                  sol::stack::record &tracking)
+{
+    sol::state_view lua(L);
+    sol::table table = sol::stack::get<sol::table>(L, index, tracking);
+    switch (table.size())
+    {
+        case 0:
+            return {
+                table.get<int>("width"sv),
+                table.get<int>("height"sv),
+            };
+        case 2:
+            return {table.get<int>(1), table.get<int>(2)};
+        default:
+            throw sol::error(
+                "QSize must be a table {width=, height=} or {width, height}.");
+    }
+}
+
+int sol_lua_push(sol::types<QSize>, lua_State *L, const QSize &value)
+{
+    sol::state_view lua(L);
+    sol::table table = lua.create_table_with("width"sv, value.width(),
+                                             "height"sv, value.height());
+    return sol::stack::push(L, table);
+}
+
+// QPoint
+bool sol_lua_check(sol::types<QPoint>, lua_State *L, int index,
+                   std::function<sol::check_handler_type> handler,
+                   sol::stack::record &tracking)
+{
+    return sol::stack::check<sol::table>(L, index, handler, tracking);
+}
+
+QPoint sol_lua_get(sol::types<QPoint>, lua_State *L, int index,
+                   sol::stack::record &tracking)
+{
+    sol::state_view lua(L);
+    sol::table table = sol::stack::get<sol::table>(L, index, tracking);
+    switch (table.size())
+    {
+        case 0:
+            return {table.get<int>("x"sv), table.get<int>("y"sv)};
+        case 2:
+            return {table.get<int>(1), table.get<int>(2)};
+        default:
+            throw sol::error("QPoint must be a table {x=, y=} or {x, y}");
+    }
+}
+
+int sol_lua_push(sol::types<QPoint>, lua_State *L, const QPoint &value)
+{
+    sol::state_view lua(L);
+    sol::table table =
+        lua.create_table_with("x"sv, value.x(), "y"sv, value.y());
+    return sol::stack::push(L, table);
 }
 
 namespace chatterino::lua {

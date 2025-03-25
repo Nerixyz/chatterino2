@@ -164,7 +164,114 @@ SOL_STACK_FUNCTIONS(chatterino::lua::ThisPluginState)
 SOL_STACK_FUNCTIONS(QString)
 SOL_STACK_FUNCTIONS(QStringList)
 SOL_STACK_FUNCTIONS(QByteArray)
+SOL_STACK_FUNCTIONS(QRect)
+SOL_STACK_FUNCTIONS(QMargins)
+SOL_STACK_FUNCTIONS(QSize)
+SOL_STACK_FUNCTIONS(QPoint)
 
 #    undef SOL_STACK_FUNCTIONS
+
+SOL_BASE_CLASSES(QWidget, QObject);
+SOL_BASE_CLASSES(QLabel, QWidget);
+SOL_BASE_CLASSES(QPushButton, QWidget);
+SOL_BASE_CLASSES(QLayout, QObject);
+SOL_BASE_CLASSES(QBoxLayout, QLayout);
+SOL_BASE_CLASSES(QVBoxLayout, QBoxLayout);
+SOL_BASE_CLASSES(QHBoxLayout, QBoxLayout);
+
+SOL_DERIVED_CLASSES(QBoxLayout, QVBoxLayout, QHBoxLayout);
+SOL_DERIVED_CLASSES(QLayout, QBoxLayout);
+SOL_DERIVED_CLASSES(QWidget, QLabel, QPushButton);
+SOL_DERIVED_CLASSES(QObject, QWidget, QLayout);
+
+template <typename T>
+struct OwnedQPointer {
+    OwnedQPointer(T *ptr)
+        : ptr(ptr)
+    {
+    }
+    OwnedQPointer(const OwnedQPointer &) = delete;
+    OwnedQPointer &operator=(const OwnedQPointer &) = delete;
+    OwnedQPointer(OwnedQPointer &&) = default;
+    OwnedQPointer &operator=(OwnedQPointer &&) = default;
+    ~OwnedQPointer()
+    {
+        auto *p = this->ptr.get();
+        if (p)
+        {
+            p->deleteLater();
+        }
+    }
+
+    QPointer<T> ptr;
+};
+
+namespace sol {
+
+template <typename T>
+struct unique_usertype_traits<OwnedQPointer<T>> {
+    using type = T;
+    using actual_type = OwnedQPointer<T>;
+    static const bool value = true;
+
+    static bool is_null(const actual_type &ptr)
+    {
+        return ptr.ptr.isNull();
+    }
+
+    static type *get(const actual_type &ptr)
+    {
+        return ptr.ptr.get();
+    }
+};
+
+template <typename T>
+struct unique_usertype_traits<QPointer<T>> {
+    using type = T;
+    using actual_type = QPointer<T>;
+    static const bool value = true;
+
+    static bool is_null(const actual_type &ptr)
+    {
+        return ptr.ptr.isNull();
+    }
+
+    static type *get(const actual_type &ptr)
+    {
+        return ptr.ptr.get();
+    }
+};
+
+}  // namespace sol
+
+template <std::derived_from<QObject> T>
+void sol_lua_check_access(sol::types<T> /* tag */, lua_State *L, int index,
+                          sol::stack::record &tracking)
+{
+    sol::optional<OwnedQPointer<T> &> owned =
+        sol::stack::check_get<OwnedQPointer<T> &>(L, index, sol::no_panic,
+                                                  tracking);
+
+    if (!owned.has_value())
+    {
+        sol::optional<QPointer<T> &> owned =
+            sol::stack::check_get<QPointer<T> &>(L, index, sol::no_panic,
+                                                 tracking);
+        if (!owned.has_value())
+        {
+            return;
+        }
+        if (owned->isNull())
+        {
+            throw sol::error("QObject has been deleted");
+        }
+        return;
+    }
+
+    if (owned->ptr.isNull())
+    {
+        throw sol::error("QObject has been deleted");
+    }
+}
 
 #endif

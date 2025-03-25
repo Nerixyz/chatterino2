@@ -11,6 +11,7 @@
 #    include "controllers/plugins/api/HTTPRequest.hpp"
 #    include "controllers/plugins/api/HTTPResponse.hpp"
 #    include "controllers/plugins/api/IOWrapper.hpp"
+#    include "controllers/plugins/api/Ui.hpp"
 #    include "controllers/plugins/LuaAPI.hpp"
 #    include "controllers/plugins/LuaUtilities.hpp"
 #    include "controllers/plugins/SolTypes.hpp"
@@ -220,6 +221,7 @@ void PluginController::initSol(sol::state_view &lua, Plugin *plugin)
     lua::api::ChannelRef::createUserType(c2);
     lua::api::HTTPResponse::createUserType(c2);
     lua::api::HTTPRequest::createUserType(c2);
+    lua::api::ui::registerTypes(c2, plugin->connectionGuard());
     c2["ChannelType"] = lua::createEnumTable<Channel::Type>(lua);
     c2["HTTPMethod"] = lua::createEnumTable<NetworkRequestType>(lua);
     c2["EventType"] = lua::createEnumTable<lua::api::EventType>(lua);

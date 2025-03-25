@@ -75,6 +75,7 @@ public:
         , meta(std::move(meta))
         , loadDirectory_(loadDirectory)
         , state_(state)
+        , connectionGuard_(new QObject)
     {
     }
 
@@ -131,6 +132,11 @@ public:
         return this->error_;
     }
 
+    QObject *connectionGuard() const
+    {
+        return this->connectionGuard_;
+    }
+
     int addTimeout(QTimer *timer);
     void removeTimeout(QTimer *timer);
 
@@ -153,6 +159,8 @@ private:
     std::unordered_map<QString, sol::protected_function> ownedCommands;
     std::vector<QTimer *> activeTimeouts;
     int lastTimerId = 0;
+
+    QObject *connectionGuard_;
 
     friend class PluginController;
     friend class PluginControllerAccess;  // this is for tests
