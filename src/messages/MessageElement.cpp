@@ -872,9 +872,9 @@ QJsonObject SingleLineTextElement::toJson() const
     return base;
 }
 
-LinkElement::LinkElement(const Parsed &parsed, const QString &fullUrl,
-                         MessageElementFlags flags, const MessageColor &color,
-                         FontStyle style)
+WebLinkElement::WebLinkElement(const Parsed &parsed, const QString &fullUrl,
+                               MessageElementFlags flags,
+                               const MessageColor &color, FontStyle style)
     : TextElement({}, flags, color, style)
     , linkInfo_(fullUrl)
     , lowercase_({parsed.lowercase})
@@ -883,23 +883,23 @@ LinkElement::LinkElement(const Parsed &parsed, const QString &fullUrl,
     this->setTooltip(parsed.original);
 }
 
-void LinkElement::addToContainer(MessageLayoutContainer &container,
-                                 const MessageLayoutContext &ctx)
+void WebLinkElement::addToContainer(MessageLayoutContainer &container,
+                                    const MessageLayoutContext &ctx)
 {
     this->words_ =
         getSettings()->lowercaseDomains ? this->lowercase_ : this->original_;
     TextElement::addToContainer(container, ctx);
 }
 
-Link LinkElement::getLink() const
+Link WebLinkElement::getLink() const
 {
     return {Link::Url, this->linkInfo_.url()};
 }
 
-QJsonObject LinkElement::toJson() const
+QJsonObject WebLinkElement::toJson() const
 {
     auto base = TextElement::toJson();
-    base["type"_L1] = u"LinkElement"_s;
+    base["type"_L1] = u"WebLinkElement"_s;
     base["link"_L1] = this->linkInfo_.originalUrl();
     base["lowercase"_L1] = QJsonArray::fromStringList(this->lowercase_);
     base["original"_L1] = QJsonArray::fromStringList(this->original_);

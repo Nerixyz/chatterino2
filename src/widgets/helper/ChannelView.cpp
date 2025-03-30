@@ -2075,7 +2075,7 @@ void ChannelView::mouseMoveEvent(QMouseEvent *event)
         else
         {
             auto thumbnailSize = getSettings()->thumbnailSize;
-            auto *linkElement = dynamic_cast<LinkElement *>(element);
+            auto *linkElement = dynamic_cast<WebLinkElement *>(element);
             if (linkElement)
             {
                 if (linkElement->linkInfo()->isPending())

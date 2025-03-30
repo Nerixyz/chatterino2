@@ -1252,9 +1252,9 @@ void MessageBuilder::addLink(const linkparser::Parsed &parsedLink,
                                    MessageElementFlag::Text, this->textColor_)
             ->setTrailingSpace(false);
     }
-    auto *el = this->emplace<LinkElement>(
-        LinkElement::Parsed{.lowercase = lowercaseLinkString,
-                            .original = origLink},
+    auto *el = this->emplace<WebLinkElement>(
+        WebLinkElement::Parsed{.lowercase = lowercaseLinkString,
+                               .original = origLink},
         fullUrl, MessageElementFlag::Text, textColor);
     if (parsedLink.hasSuffix(source))
     {
@@ -1293,7 +1293,7 @@ void MessageBuilder::appendOrEmplaceText(const QString &text,
         dynamic_cast<TextElement *>(this->message_->elements.back().get());
     if (!back ||                                         //
         dynamic_cast<MentionElement *>(back) ||          //
-        dynamic_cast<LinkElement *>(back) ||             //
+        dynamic_cast<WebLinkElement *>(back) ||          //
         !back->hasTrailingSpace() ||                     //
         back->getFlags() != MessageElementFlag::Text ||  //
         back->color() != color)

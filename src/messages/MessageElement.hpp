@@ -288,7 +288,7 @@ private:
     std::vector<Word> words_;
 };
 
-class LinkElement : public TextElement
+class WebLinkElement : public TextElement
 {
 public:
     struct Parsed {
@@ -298,15 +298,15 @@ public:
 
     /// @param parsed The link as it appeared in the message
     /// @param fullUrl A full URL (notably with a protocol)
-    LinkElement(const Parsed &parsed, const QString &fullUrl,
-                MessageElementFlags flags,
-                const MessageColor &color = MessageColor::Text,
-                FontStyle style = FontStyle::ChatMedium);
-    ~LinkElement() override = default;
-    LinkElement(const LinkElement &) = delete;
-    LinkElement(LinkElement &&) = delete;
-    LinkElement &operator=(const LinkElement &) = delete;
-    LinkElement &operator=(LinkElement &&) = delete;
+    WebLinkElement(const Parsed &parsed, const QString &fullUrl,
+                   MessageElementFlags flags,
+                   const MessageColor &color = MessageColor::Text,
+                   FontStyle style = FontStyle::ChatMedium);
+    ~WebLinkElement() override = default;
+    WebLinkElement(const WebLinkElement &) = delete;
+    WebLinkElement(WebLinkElement &&) = delete;
+    WebLinkElement &operator=(const WebLinkElement &) = delete;
+    WebLinkElement &operator=(WebLinkElement &&) = delete;
 
     void addToContainer(MessageLayoutContainer &container,
                         const MessageLayoutContext &ctx) override;
