@@ -24,7 +24,7 @@
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "#pajlada"
                     ]
@@ -33,10 +33,6 @@
                     "element": {
                         "color": "System",
                         "flags": "Timestamp",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "TimestampMedium",
                         "tooltip": "",
                         "trailingSpace": true,
@@ -47,10 +43,6 @@
                     },
                     "flags": "Timestamp",
                     "format": "",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "time": "11:57:15",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -67,10 +59,6 @@
                         "tooltip": "Broadcaster"
                     },
                     "flags": "BadgeChannelAuthority",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "Broadcaster",
                     "trailingSpace": true,
                     "type": "BadgeElement"
@@ -86,10 +74,6 @@
                         "tooltip": "Subscriber"
                     },
                     "flags": "BadgeSubscription",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "Subscriber (Tier 3, 80 months)",
                     "trailingSpace": true,
                     "type": "BadgeElement"
@@ -106,10 +90,6 @@
                         "tooltip": "Verified"
                     },
                     "flags": "BadgeVanity",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "Verified",
                     "trailingSpace": true,
                     "type": "BadgeElement"
@@ -124,7 +104,7 @@
                     "style": "ChatMediumBold",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "pajlada"
                     ]
@@ -140,17 +120,9 @@
                         "tooltip": "Kappa<br>Twitch Emote"
                     },
                     "flags": "TwitchEmoteImage|TwitchEmoteText",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "text": {
                         "color": "#ffcc44ff",
                         "flags": "Misc",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "ChatMedium",
                         "tooltip": "",
                         "trailingSpace": true,

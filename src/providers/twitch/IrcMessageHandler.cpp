@@ -76,10 +76,8 @@ MessagePtr generateBannedMessage(bool confirmedBan)
     builder.emplace<TimestampElement>();
     builder.emplace<TextElement>(bannedText, MessageElementFlag::Text,
                                  MessageColor::System);
-    builder
-        .emplace<TextElement>(reconnectPromptText, MessageElementFlag::Text,
-                              linkColor)
-        ->setLink(accountsLink);
+    builder.emplace<LinkElement>(reconnectPromptText, MessageElementFlag::Text,
+                                 linkColor, accountsLink);
 
     return builder.release();
 }
@@ -246,10 +244,8 @@ MessagePtr parseNoticeMessage(Communi::IrcNoticeMessage *message)
         builder.emplace<TimestampElement>();
         builder.emplace<TextElement>(expirationText, MessageElementFlag::Text,
                                      MessageColor::System);
-        builder
-            .emplace<TextElement>(loginPromptText, MessageElementFlag::Text,
-                                  linkColor)
-            ->setLink(accountsLink);
+        builder.emplace<LinkElement>(loginPromptText, MessageElementFlag::Text,
+                                     linkColor, accountsLink);
 
         return builder.release();
     }

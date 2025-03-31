@@ -22,7 +22,7 @@
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "#pajlada"
                     ]
@@ -31,10 +31,6 @@
                     "element": {
                         "color": "System",
                         "flags": "Timestamp",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "TimestampMedium",
                         "tooltip": "",
                         "trailingSpace": true,
@@ -45,10 +41,6 @@
                     },
                     "flags": "Timestamp",
                     "format": "",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "time": "00:08:21",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -56,10 +48,6 @@
                 },
                 {
                     "flags": "ModeratorTools",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "",
                     "trailingSpace": true,
                     "type": "TwitchModerationElement"
@@ -76,10 +64,6 @@
                         "tooltip": "Staff"
                     },
                     "flags": "BadgeGlobalAuthority",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "Staff",
                     "trailingSpace": true,
                     "type": "BadgeElement"
@@ -95,10 +79,6 @@
                         "tooltip": "Turbo"
                     },
                     "flags": "BadgeVanity",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "Turbo",
                     "trailingSpace": true,
                     "type": "BadgeElement"
@@ -113,7 +93,7 @@
                     "style": "ChatMediumBold",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "creativewind:"
                     ]
@@ -121,10 +101,6 @@
                 {
                     "color": "Text",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,

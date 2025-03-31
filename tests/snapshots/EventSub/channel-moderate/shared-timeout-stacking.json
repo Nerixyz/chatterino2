@@ -135,10 +135,6 @@
                     "element": {
                         "color": "System",
                         "flags": "Timestamp",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "TimestampMedium",
                         "tooltip": "",
                         "trailingSpace": true,
@@ -149,10 +145,6 @@
                     },
                     "flags": "Timestamp",
                     "format": "",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "time": "17:54:05",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -168,7 +160,7 @@
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "nerixyz"
                     ]
@@ -176,10 +168,6 @@
                 {
                     "color": "System",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -199,7 +187,7 @@
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "twitchdev"
                     ]
@@ -207,10 +195,6 @@
                 {
                     "color": "System",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -231,7 +215,7 @@
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": false,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "testaccount_420"
                     ]
@@ -239,10 +223,6 @@
                 {
                     "color": "System",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -278,10 +258,6 @@
                     "element": {
                         "color": "System",
                         "flags": "Timestamp",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "TimestampMedium",
                         "tooltip": "",
                         "trailingSpace": true,
@@ -292,10 +268,6 @@
                     },
                     "flags": "Timestamp",
                     "format": "",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "time": "17:54:06",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -311,7 +283,7 @@
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "nerixyz"
                     ]
@@ -319,10 +291,6 @@
                 {
                     "color": "System",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -342,7 +310,7 @@
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "twitchdev"
                     ]
@@ -350,10 +318,6 @@
                 {
                     "color": "System",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -365,10 +329,6 @@
                 {
                     "color": "System",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": false,
@@ -380,10 +340,6 @@
                 {
                     "color": "System",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,

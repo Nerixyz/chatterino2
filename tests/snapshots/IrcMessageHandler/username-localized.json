@@ -22,7 +22,7 @@
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "#pajlada"
                     ]
@@ -31,10 +31,6 @@
                     "element": {
                         "color": "System",
                         "flags": "Timestamp",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "TimestampMedium",
                         "tooltip": "",
                         "trailingSpace": true,
@@ -45,10 +41,6 @@
                     },
                     "flags": "Timestamp",
                     "format": "",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "time": "10:54:17",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -64,7 +56,7 @@
                     "style": "ChatMediumBold",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "display-name=테스트계정420:"
                     ]
@@ -72,10 +64,6 @@
                 {
                     "color": "Text",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,

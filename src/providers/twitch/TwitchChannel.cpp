@@ -667,10 +667,8 @@ void TwitchChannel::showLoginMessage()
     builder.emplace<TimestampElement>();
     builder.emplace<TextElement>(expirationText, MessageElementFlag::Text,
                                  MessageColor::System);
-    builder
-        .emplace<TextElement>(loginPromptText, MessageElementFlag::Text,
-                              linkColor)
-        ->setLink(accountsLink);
+    builder.emplace<LinkElement>(loginPromptText, MessageElementFlag::Text,
+                                 linkColor, accountsLink);
 
     this->addMessage(builder.release(), MessageContext::Original);
 }
@@ -1905,20 +1903,17 @@ void TwitchChannel::createClip()
                                          MessageElementFlag::Text,
                                          MessageColor::System);
             // clip link
-            builder
-                .emplace<TextElement>("Copy link to clipboard",
-                                      MessageElementFlag::Text,
-                                      MessageColor::Link)
-                ->setLink(Link(Link::CopyToClipboard, CLIPS_LINK.arg(clip.id)));
+            builder.emplace<LinkElement>(
+                "Copy link to clipboard", MessageElementFlag::Text,
+                MessageColor::Link,
+                Link(Link::CopyToClipboard, CLIPS_LINK.arg(clip.id)));
             // separator text
             builder.emplace<TextElement>("or", MessageElementFlag::Text,
                                          MessageColor::System);
             // edit link
-            builder
-                .emplace<TextElement>("edit it in browser.",
-                                      MessageElementFlag::Text,
-                                      MessageColor::Link)
-                ->setLink(Link(Link::Url, clip.editUrl));
+            builder.emplace<LinkElement>(
+                "edit it in browser.", MessageElementFlag::Text,
+                MessageColor::Link, Link(Link::Url, clip.editUrl));
 
             this->addMessage(builder.release(), MessageContext::Original);
         },
@@ -1969,11 +1964,9 @@ void TwitchChannel::createClip()
                     builder.emplace<TextElement>(
                         CLIPS_FAILURE_NOT_AUTHENTICATED_TEXT,
                         MessageElementFlag::Text, MessageColor::System);
-                    builder
-                        .emplace<TextElement>(LOGIN_PROMPT_TEXT,
-                                              MessageElementFlag::Text,
-                                              MessageColor::Link)
-                        ->setLink(ACCOUNTS_LINK);
+                    builder.emplace<LinkElement>(
+                        LOGIN_PROMPT_TEXT, MessageElementFlag::Text,
+                        MessageColor::Link, ACCOUNTS_LINK);
                     text = QString("%1 %2").arg(
                         CLIPS_FAILURE_NOT_AUTHENTICATED_TEXT,
                         LOGIN_PROMPT_TEXT);

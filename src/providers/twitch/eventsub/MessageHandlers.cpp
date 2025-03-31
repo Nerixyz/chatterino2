@@ -55,11 +55,12 @@ void handleModerateMessage(
     //      will create those as well. Once everything uses mention elements,
     //      this can use them as well.
 
-    builder.emplaceSystemTextAndUpdate(event.moderatorUserLogin.qt(), text)
-        ->setLink({Link::UserInfo, event.moderatorUserLogin.qt()});
+    builder.emplaceSystemLinkAndUpdate(
+        event.moderatorUserLogin.qt(),
+        {Link::UserInfo, event.moderatorUserLogin.qt()}, text);
     builder.emplaceSystemTextAndUpdate("timed out", text);
-    builder.emplaceSystemTextAndUpdate(action.userLogin.qt(), text)
-        ->setLink({Link::UserInfo, action.userLogin.qt()});
+    builder.emplaceSystemLinkAndUpdate(
+        action.userLogin.qt(), {Link::UserInfo, action.userLogin.qt()}, text);
 
     builder.emplaceSystemTextAndUpdate("for", text);
     builder
@@ -71,9 +72,9 @@ void handleModerateMessage(
     {
         builder.emplaceSystemTextAndUpdate("in", text);
         builder
-            .emplaceSystemTextAndUpdate(event.sourceBroadcasterUserLogin->qt(),
-                                        text)
-            ->setLink({Link::UserInfo, event.sourceBroadcasterUserLogin->qt()})
+            .emplaceSystemLinkAndUpdate(
+                event.sourceBroadcasterUserLogin->qt(),
+                {Link::UserInfo, event.sourceBroadcasterUserLogin->qt()}, text)
             ->setTrailingSpace(false);
         builder->flags.set(MessageFlag::SharedMessage);
         builder->channelName = event.sourceBroadcasterUserLogin->qt();

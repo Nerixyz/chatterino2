@@ -22,7 +22,7 @@
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "#pajlada"
                     ]
@@ -31,10 +31,6 @@
                     "element": {
                         "color": "System",
                         "flags": "Timestamp",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "TimestampMedium",
                         "tooltip": "",
                         "trailingSpace": true,
@@ -45,10 +41,6 @@
                     },
                     "flags": "Timestamp",
                     "format": "",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "time": "15:50:13",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -56,10 +48,6 @@
                 },
                 {
                     "flags": "ModeratorTools",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "",
                     "trailingSpace": true,
                     "type": "TwitchModerationElement"
@@ -74,7 +62,7 @@
                     "style": "ChatMediumBold",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "nerixyz:"
                     ]
@@ -88,17 +76,9 @@
                         "tooltip": ":joy:<br/>Emoji"
                     },
                     "flags": "EmojiImage|EmojiText",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "text": {
                         "color": "Text",
                         "flags": "Misc",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "ChatMedium",
                         "tooltip": "",
                         "trailingSpace": true,
@@ -122,17 +102,9 @@
                         "tooltip": "Kappa<br>Twitch Emote"
                     },
                     "flags": "TwitchEmoteImage|TwitchEmoteText",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "text": {
                         "color": "Text",
                         "flags": "Misc",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "ChatMedium",
                         "tooltip": "",
                         "trailingSpace": true,
@@ -154,17 +126,9 @@
                         "tooltip": ":joy:<br/>Emoji"
                     },
                     "flags": "EmojiImage|EmojiText",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "text": {
                         "color": "Text",
                         "flags": "Misc",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "ChatMedium",
                         "tooltip": "",
                         "trailingSpace": true,
@@ -180,10 +144,6 @@
                 {
                     "color": "Text",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -203,17 +163,9 @@
                         "tooltip": "Kappa<br>Twitch Emote"
                     },
                     "flags": "TwitchEmoteImage|TwitchEmoteText",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "text": {
                         "color": "Text",
                         "flags": "Misc",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "ChatMedium",
                         "tooltip": "",
                         "trailingSpace": true,
@@ -229,10 +181,6 @@
                 {
                     "color": "Text",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,

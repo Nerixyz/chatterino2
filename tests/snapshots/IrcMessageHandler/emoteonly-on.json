@@ -14,10 +14,6 @@
                     "element": {
                         "color": "System",
                         "flags": "Timestamp",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "TimestampMedium",
                         "tooltip": "",
                         "trailingSpace": true,
@@ -28,10 +24,6 @@
                     },
                     "flags": "Timestamp",
                     "format": "",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "time": "20:12:45",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -40,10 +32,6 @@
                 {
                     "color": "System",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,

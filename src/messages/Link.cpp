@@ -1,6 +1,13 @@
 #include "messages/Link.hpp"
 
+#include "util/QMagicEnum.hpp"
+
+#include <QJsonObject>
+
+
 namespace chatterino {
+
+using namespace Qt::StringLiterals;
 
 Link::Link()
     : type(None)
@@ -22,6 +29,14 @@ bool Link::isValid() const
 bool Link::isUrl() const
 {
     return this->type == Url;
+}
+
+QJsonObject Link::toJson() const
+{
+    return {
+        {"type"_L1, qmagicenum::enumNameString(this->type)},
+        {"value"_L1, this->value},
+    };
 }
 
 }  // namespace chatterino

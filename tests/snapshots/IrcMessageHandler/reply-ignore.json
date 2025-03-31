@@ -22,17 +22,13 @@
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "#pajlada"
                     ]
                 },
                 {
                     "flags": "RepliedMessage",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "",
                     "trailingSpace": true,
                     "type": "ReplyCurveElement"
@@ -47,7 +43,7 @@
                     "style": "ChatMediumSmall",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "Replying",
                         "to"
@@ -63,7 +59,7 @@
                     "style": "ChatMediumSmall",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "@nerixyz:"
                     ]
@@ -87,10 +83,6 @@
                     "element": {
                         "color": "System",
                         "flags": "Timestamp",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "TimestampMedium",
                         "tooltip": "",
                         "trailingSpace": true,
@@ -101,10 +93,6 @@
                     },
                     "flags": "Timestamp",
                     "format": "",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "time": "20:48:12",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -112,10 +100,6 @@
                 },
                 {
                     "flags": "ModeratorTools",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "",
                     "trailingSpace": true,
                     "type": "TwitchModerationElement"
@@ -130,7 +114,7 @@
                     "style": "ChatMediumBold",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "nerixyz:"
                     ]
@@ -138,10 +122,6 @@
                 {
                     "color": "Text",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,

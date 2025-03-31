@@ -2,6 +2,8 @@
 
 #include <QString>
 
+class QJsonObject;
+
 namespace chatterino {
 
 struct Link {
@@ -36,6 +38,8 @@ public:
 
     bool isValid() const;
     bool isUrl() const;
+
+    QJsonObject toJson() const;
 };
 
 }  // namespace chatterino

@@ -331,19 +331,19 @@ void makeModerateMessage(
 
     if (action.messageBody.view().length() > 50)
     {
-        builder
-            .emplace<TextElement>(action.messageBody.qt().left(50) + "…",
-                                  MessageElementFlag::Text, MessageColor::Text)
-            ->setLink({Link::JumpToMessage, action.messageID.qt()});
+        builder.emplace<LinkElement>(
+            action.messageBody.qt().left(50) + "…", MessageElementFlag::Text,
+            MessageColor::Text,
+            Link{Link::JumpToMessage, action.messageID.qt()});
 
         text.append(action.messageBody.qt().left(50) + "…");
     }
     else
     {
-        builder
-            .emplace<TextElement>(action.messageBody.qt(),
-                                  MessageElementFlag::Text, MessageColor::Text)
-            ->setLink({Link::JumpToMessage, action.messageID.qt()});
+        builder.emplace<LinkElement>(
+            action.messageBody.qt(), MessageElementFlag::Text,
+            MessageColor::Text,
+            Link{Link::JumpToMessage, action.messageID.qt()});
 
         text.append(action.messageBody.qt());
     }
@@ -620,17 +620,15 @@ MessagePtr makeAutomodHoldMessageHeader(
                                      u". Allow will post it in chat. ",
                                  MessageElementFlag::Text, MessageColor::Text);
     // Allow link button
-    builder
-        .emplace<TextElement>("Allow", MessageElementFlag::Text,
-                              MessageColor(QColor(0, 255, 0)),
-                              FontStyle::ChatMediumBold)
-        ->setLink({Link::AutoModAllow, event.messageID.qt()});
+    builder.emplace<LinkElement>(
+        "Allow", MessageElementFlag::Text, MessageColor(QColor(0, 255, 0)),
+        FontStyle::ChatMediumBold,
+        Link{Link::AutoModAllow, event.messageID.qt()});
     // Deny link button
-    builder
-        .emplace<TextElement>(" Deny", MessageElementFlag::Text,
-                              MessageColor(QColor(255, 0, 0)),
-                              FontStyle::ChatMediumBold)
-        ->setLink({Link::AutoModDeny, event.messageID.qt()});
+    builder.emplace<LinkElement>(" Deny", MessageElementFlag::Text,
+                                 MessageColor(QColor(255, 0, 0)),
+                                 FontStyle::ChatMediumBold,
+                                 Link{Link::AutoModDeny, event.messageID.qt()});
 
     builder.setMessageAndSearchText(
         u"AutoMod: Held a message for reason: " % reason %
@@ -654,11 +652,10 @@ MessagePtr makeAutomodHoldMessageBody(
 
     // Builder for offender's message
     builder->channelName = event.broadcasterUserLogin.qt();
-    builder
-        .emplace<TextElement>(u'#' + event.broadcasterUserLogin.qt(),
-                              MessageElementFlag::ChannelName,
-                              MessageColor::System)
-        ->setLink({Link::JumpToChannel, event.broadcasterUserLogin.qt()});
+    builder.emplace<LinkElement>(
+        u'#' + event.broadcasterUserLogin.qt(), MessageElementFlag::ChannelName,
+        MessageColor::System,
+        Link{Link::JumpToChannel, event.broadcasterUserLogin.qt()});
     builder.emplace<TimestampElement>(time.time());
     builder.emplace<TwitchModerationElement>();
     builder->loginName = event.userLogin.qt();
@@ -763,11 +760,10 @@ MessagePtr makeSuspiciousUserMessageBody(
         builder->flags.set(MessageFlag::MonitoredMessage);
     }
 
-    builder
-        .emplace<TextElement>(u'#' + event.broadcasterUserLogin.qt(),
-                              MessageElementFlag::ChannelName,
-                              MessageColor::System)
-        ->setLink({Link::JumpToChannel, event.broadcasterUserLogin.qt()});
+    builder.emplace<LinkElement>(
+        u'#' + event.broadcasterUserLogin.qt(), MessageElementFlag::ChannelName,
+        MessageColor::System,
+        Link{Link::JumpToChannel, event.broadcasterUserLogin.qt()});
     builder.emplace<TimestampElement>(time.time());
     builder.emplace<TwitchModerationElement>();
     builder->loginName = event.userLogin.qt();

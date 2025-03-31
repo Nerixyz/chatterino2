@@ -23,7 +23,7 @@
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "#pajlada"
                     ]
@@ -32,10 +32,6 @@
                     "element": {
                         "color": "System",
                         "flags": "Timestamp",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "TimestampMedium",
                         "tooltip": "",
                         "trailingSpace": true,
@@ -46,10 +42,6 @@
                     },
                     "flags": "Timestamp",
                     "format": "",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "time": "10:47:16",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -66,10 +58,6 @@
                         "tooltip": "Moderator"
                     },
                     "flags": "BadgeChannelAuthority",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "Moderator",
                     "trailingSpace": true,
                     "type": "BadgeElement"
@@ -84,7 +72,7 @@
                     "style": "ChatMediumBold",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "testaccount_420(테스트계정420):"
                     ]
@@ -92,10 +80,6 @@
                 {
                     "color": "Text",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -115,17 +99,9 @@
                         "tooltip": "Kreygasm<br>Twitch Emote"
                     },
                     "flags": "TwitchEmoteImage|TwitchEmoteText",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "text": {
                         "color": "Text",
                         "flags": "Misc",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "ChatMedium",
                         "tooltip": "",
                         "trailingSpace": true,
@@ -141,10 +117,6 @@
                 {
                     "color": "Text",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -164,17 +136,9 @@
                         "tooltip": "Kreygasm<br>Twitch Emote"
                     },
                     "flags": "TwitchEmoteImage|TwitchEmoteText",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "text": {
                         "color": "Text",
                         "flags": "Misc",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "ChatMedium",
                         "tooltip": "",
                         "trailingSpace": true,

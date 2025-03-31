@@ -23,7 +23,7 @@
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "#pajlada"
                     ]
@@ -32,10 +32,6 @@
                     "element": {
                         "color": "System",
                         "flags": "Timestamp",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "TimestampMedium",
                         "tooltip": "",
                         "trailingSpace": true,
@@ -46,10 +42,6 @@
                     },
                     "flags": "Timestamp",
                     "format": "",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "time": "12:05:21",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -57,10 +49,6 @@
                 },
                 {
                     "flags": "ModeratorTools",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "",
                     "trailingSpace": true,
                     "type": "TwitchModerationElement"
@@ -74,10 +62,6 @@
                         "tooltip": "VIP"
                     },
                     "flags": "BadgeChannelAuthority",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "VIP",
                     "trailingSpace": true,
                     "type": "VipBadgeElement"
@@ -92,7 +76,7 @@
                     "style": "ChatMediumBold",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "nerixyz:"
                     ]
@@ -100,10 +84,6 @@
                 {
                     "color": "Text",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,

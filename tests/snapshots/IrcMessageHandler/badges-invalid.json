@@ -21,7 +21,7 @@
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "#pajlada"
                     ]
@@ -30,10 +30,6 @@
                     "element": {
                         "color": "System",
                         "flags": "Timestamp",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "TimestampMedium",
                         "tooltip": "",
                         "trailingSpace": true,
@@ -44,10 +40,6 @@
                     },
                     "flags": "Timestamp",
                     "format": "",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "time": "16:40:56",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -55,10 +47,6 @@
                 },
                 {
                     "flags": "ModeratorTools",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "",
                     "trailingSpace": true,
                     "type": "TwitchModerationElement"
@@ -72,10 +60,6 @@
                         "tooltip": "Chatterino badge"
                     },
                     "flags": "BadgeChatterino",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "Chatterino badge",
                     "trailingSpace": true,
                     "type": "BadgeElement"
@@ -90,10 +74,6 @@
                         "tooltip": "FFZ1 badge"
                     },
                     "flags": "BadgeFfz",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "FFZ1 badge",
                     "trailingSpace": true,
                     "type": "FfzBadgeElement"
@@ -108,10 +88,6 @@
                         "tooltip": "FFZ2 badge"
                     },
                     "flags": "BadgeFfz",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "FFZ2 badge",
                     "trailingSpace": true,
                     "type": "FfzBadgeElement"
@@ -126,10 +102,6 @@
                         "tooltip": "FFZ2 badge"
                     },
                     "flags": "BadgeFfz",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "FFZ2 badge",
                     "trailingSpace": true,
                     "type": "FfzBadgeElement"
@@ -144,10 +116,6 @@
                         "tooltip": "FFZ2 badge"
                     },
                     "flags": "BadgeFfz",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "FFZ2 badge",
                     "trailingSpace": true,
                     "type": "FfzBadgeElement"
@@ -162,10 +130,6 @@
                         "tooltip": "7TV badge"
                     },
                     "flags": "BadgeSevenTV",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "7TV badge",
                     "trailingSpace": true,
                     "type": "BadgeElement"
@@ -180,7 +144,7 @@
                     "style": "ChatMediumBold",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "badgy:"
                     ]
@@ -188,10 +152,6 @@
                 {
                     "color": "Text",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,

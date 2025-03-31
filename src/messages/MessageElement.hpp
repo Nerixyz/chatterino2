@@ -177,7 +177,6 @@ public:
     MessageElement(MessageElement &&) = delete;
     MessageElement &operator=(MessageElement &&) = delete;
 
-    virtual MessageElement *setLink(const Link &link);
     MessageElement *setTooltip(const QString &tooltip);
 
     MessageElement *setTrailingSpace(bool value);
@@ -186,7 +185,8 @@ public:
     virtual Link getLink() const;
     bool hasTrailingSpace() const;
     MessageElementFlags getFlags() const;
-    void addFlags(MessageElementFlags flags);
+    MessageElement *addFlags(MessageElementFlags flags);
+    MessageElement *removeFlags(MessageElementFlags flags);
 
     virtual void addToContainer(MessageLayoutContainer &container,
                                 const MessageLayoutContext &ctx) = 0;
@@ -198,7 +198,6 @@ protected:
     bool trailingSpace = true;
 
 private:
-    Link link_;
     QString tooltip_;
     MessageElementFlags flags_;
 };
@@ -230,10 +229,14 @@ public:
 
     QJsonObject toJson() const override;
 
+    Link getLink() const override;
+    CircularImageElement *setLink(Link link);
+
 private:
     ImagePtr image_;
     int padding_;
     QColor background_;
+    Link link;
 };
 
 // contains a text, it will split it into words
@@ -277,6 +280,9 @@ public:
 
     QJsonObject toJson() const override;
 
+    Link getLink() const override;
+    SingleLineTextElement *setLink(Link link);
+
 private:
     MessageColor color_;
     FontStyle style_;
@@ -286,6 +292,7 @@ private:
         int width = -1;
     };
     std::vector<Word> words_;
+    Link link;
 };
 
 class WebLinkElement : public TextElement
@@ -358,7 +365,6 @@ public:
     void addToContainer(MessageLayoutContainer &container,
                         const MessageLayoutContext &ctx) override;
 
-    MessageElement *setLink(const Link &link) override;
     Link getLink() const override;
 
     QJsonObject toJson() const override;
@@ -375,6 +381,25 @@ private:
     MessageColor userColor;
 
     QString userLoginName;
+};
+
+class LinkElement : public TextElement
+{
+public:
+    LinkElement(const QString &text, MessageElementFlags flags,
+                const MessageColor &color = MessageColor::Text, Link link = {});
+    LinkElement(const QString &text, MessageElementFlags flags,
+                const MessageColor &color = MessageColor::Text,
+                FontStyle fontStyle = FontStyle::ChatMedium, Link link = {});
+    ~LinkElement() override = default;
+
+    Link getLink() const override;
+    LinkElement *setLink(Link link);
+
+    QJsonObject toJson() const override;
+
+private:
+    Link link;
 };
 
 // contains emote data and will pick the emote based on :
@@ -399,6 +424,20 @@ protected:
 private:
     std::unique_ptr<TextElement> textElement_;
     EmotePtr emote_;
+};
+
+class EmoteLinkElement : public EmoteElement
+{
+public:
+    EmoteLinkElement(const EmotePtr &data, MessageElementFlags flags_,
+                     Link link);
+
+    Link getLink() const override;
+
+    QJsonObject toJson() const override;
+
+private:
+    Link link;
 };
 
 // A LayeredEmoteElement represents multiple Emotes layered on top of each other.

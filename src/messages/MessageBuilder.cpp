@@ -670,9 +670,10 @@ MessageBuilder::MessageBuilder(TimeoutMessageTag, const QString &timeoutUser,
     QString messageText;
 
     this->emplace<TimestampElement>(time.time());
-    this->emplaceSystemTextAndUpdate(usernameText, messageText)
-        ->setLink(
-            {Link::UserInfo, timeoutUserIsFirst ? timeoutUser : sourceUser});
+    this->emplaceSystemLinkAndUpdate(
+        usernameText,
+        {Link::UserInfo, timeoutUserIsFirst ? timeoutUser : sourceUser},
+        messageText);
 
     auto appendUser = [&](const QString &name) {
         auto pos = remainder.indexOf(name);
@@ -682,8 +683,8 @@ MessageBuilder::MessageBuilder(TimeoutMessageTag, const QString &timeoutUser,
             remainder = remainder.mid(pos + name.length());
 
             this->emplaceSystemTextAndUpdate(start, messageText);
-            auto *el = this->emplaceSystemTextAndUpdate(name, messageText)
-                           ->setLink({Link::UserInfo, name});
+            auto *el = this->emplaceSystemLinkAndUpdate(
+                name, {Link::UserInfo, name}, messageText);
             if (remainder.startsWith(' '))
             {
                 removeFirstQS(remainder);
@@ -726,8 +727,8 @@ MessageBuilder::MessageBuilder(TimeoutMessageTag, const QString &username,
     QString text;
 
     this->emplace<TimestampElement>(time.time());
-    this->emplaceSystemTextAndUpdate(username, fullText)
-        ->setLink({Link::UserInfo, username});
+    this->emplaceSystemLinkAndUpdate(username, {Link::UserInfo, username},
+                                     fullText);
 
     if (!durationInSeconds.isEmpty())
     {
@@ -785,8 +786,8 @@ MessageBuilder::MessageBuilder(const BanAction &action, const QDateTime &time,
 
     if (action.target.id == current->getUserId())
     {
-        this->emplaceSystemTextAndUpdate("You", text)
-            ->setLink({Link::UserInfo, current->getUserName()});
+        this->emplaceSystemLinkAndUpdate(
+            "You", {Link::UserInfo, current->getUserName()}, text);
         this->emplaceSystemTextAndUpdate("were", text);
         if (action.isBan())
         {
@@ -802,10 +803,9 @@ MessageBuilder::MessageBuilder(const BanAction &action, const QDateTime &time,
         if (!action.source.login.isEmpty())
         {
             this->appendOrEmplaceSystemTextAndUpdate("by", text);
-            this->emplaceSystemTextAndUpdate(
-                    action.source.login + (action.reason.isEmpty() ? "." : ":"),
-                    text)
-                ->setLink({Link::UserInfo, action.source.login});
+            this->emplaceSystemLinkAndUpdate(
+                action.source.login + (action.reason.isEmpty() ? "." : ":"),
+                {Link::UserInfo, action.source.login}, text);
         }
 
         if (!action.reason.isEmpty())
@@ -818,31 +818,34 @@ MessageBuilder::MessageBuilder(const BanAction &action, const QDateTime &time,
     {
         if (action.isBan())
         {
-            this->emplaceSystemTextAndUpdate(action.source.login, text)
-                ->setLink({Link::UserInfo, action.source.login});
+            this->emplaceSystemLinkAndUpdate(
+                action.source.login, {Link::UserInfo, action.source.login},
+                text);
             this->emplaceSystemTextAndUpdate("banned", text);
             if (action.reason.isEmpty())
             {
-                this->emplaceSystemTextAndUpdate(action.target.login + ".",
-                                                 text)
-                    ->setLink({Link::UserInfo, action.target.login});
+                this->emplaceSystemLinkAndUpdate(
+                    action.target.login + ".",
+                    {Link::UserInfo, action.target.login}, text);
             }
             else
             {
-                this->emplaceSystemTextAndUpdate(action.target.login + ":",
-                                                 text)
-                    ->setLink({Link::UserInfo, action.target.login});
+                this->emplaceSystemLinkAndUpdate(
+                    action.target.login + ":",
+                    {Link::UserInfo, action.target.login}, text);
                 this->emplaceSystemTextAndUpdate(
                     QString("\"%1\".").arg(action.reason), text);
             }
         }
         else
         {
-            this->emplaceSystemTextAndUpdate(action.source.login, text)
-                ->setLink({Link::UserInfo, action.source.login});
+            this->emplaceSystemLinkAndUpdate(
+                action.source.login, {Link::UserInfo, action.source.login},
+                text);
             this->emplaceSystemTextAndUpdate("timed out", text);
-            this->emplaceSystemTextAndUpdate(action.target.login, text)
-                ->setLink({Link::UserInfo, action.target.login});
+            this->emplaceSystemLinkAndUpdate(
+                action.target.login, {Link::UserInfo, action.target.login},
+                text);
             if (action.reason.isEmpty())
             {
                 this->emplaceSystemTextAndUpdate(
@@ -882,12 +885,12 @@ MessageBuilder::MessageBuilder(const UnbanAction &action, const QDateTime &time)
 
     QString text;
 
-    this->emplaceSystemTextAndUpdate(action.source.login, text)
-        ->setLink({Link::UserInfo, action.source.login});
+    this->emplaceSystemLinkAndUpdate(
+        action.source.login, {Link::UserInfo, action.source.login}, text);
     this->emplaceSystemTextAndUpdate(
         action.wasBan() ? "unbanned" : "untimedout", text);
-    this->emplaceSystemTextAndUpdate(action.target.login + ".", text)
-        ->setLink({Link::UserInfo, action.target.login});
+    this->emplaceSystemLinkAndUpdate(
+        action.target.login + ".", {Link::UserInfo, action.target.login}, text);
 
     this->message().messageText = text;
     this->message().searchText = text;
@@ -904,12 +907,12 @@ MessageBuilder::MessageBuilder(const WarnAction &action)
     QString text;
 
     // TODO: Use MentionElement here, once WarnAction includes username/displayname
-    this->emplaceSystemTextAndUpdate("A moderator", text)
-        ->setLink({Link::UserInfo, "id:" + action.source.id});
+    this->emplaceSystemLinkAndUpdate(
+        "A moderator", {Link::UserInfo, "id:" + action.source.id}, text);
     this->emplaceSystemTextAndUpdate("warned", text);
-    this->emplaceSystemTextAndUpdate(
-            action.target.login + (action.reasons.isEmpty() ? "." : ":"), text)
-        ->setLink({Link::UserInfo, action.target.login});
+    this->emplaceSystemLinkAndUpdate(
+        action.target.login + (action.reasons.isEmpty() ? "." : ":"),
+        {Link::UserInfo, action.target.login}, text);
 
     if (!action.reasons.isEmpty())
     {
@@ -928,11 +931,11 @@ MessageBuilder::MessageBuilder(const RaidAction &action)
 
     QString text;
 
-    this->emplaceSystemTextAndUpdate(action.source.login, text)
-        ->setLink({Link::UserInfo, "id:" + action.source.id});
+    this->emplaceSystemLinkAndUpdate(
+        action.source.login, {Link::UserInfo, "id:" + action.source.id}, text);
     this->emplaceSystemTextAndUpdate("initiated a raid to", text);
-    this->emplaceSystemTextAndUpdate(action.target + ".", text)
-        ->setLink({Link::UserInfo, action.target});
+    this->emplaceSystemLinkAndUpdate(action.target + ".",
+                                     {Link::UserInfo, action.target}, text);
 
     this->message().messageText = text;
     this->message().searchText = text;
@@ -946,8 +949,8 @@ MessageBuilder::MessageBuilder(const UnraidAction &action)
 
     QString text;
 
-    this->emplaceSystemTextAndUpdate(action.source.login, text)
-        ->setLink({Link::UserInfo, "id:" + action.source.id});
+    this->emplaceSystemLinkAndUpdate(
+        action.source.login, {Link::UserInfo, "id:" + action.source.id}, text);
     this->emplaceSystemTextAndUpdate("canceled the raid.", text);
 
     this->message().messageText = text;
@@ -1011,9 +1014,9 @@ MessageBuilder::MessageBuilder(LiveUpdatesAddEmoteMessageTag /*unused*/,
     this->emplace<TimestampElement>();
     if (!actor.isEmpty())
     {
-        this->emplace<TextElement>(actor, MessageElementFlag::Username,
-                                   MessageColor::System)
-            ->setLink({Link::UserInfo, actor});
+        this->emplace<LinkElement>(actor, MessageElementFlag::Username,
+                                   MessageColor::System,
+                                   Link{Link::UserInfo, actor});
     }
     this->emplace<TextElement>(text, MessageElementFlag::Text,
                                MessageColor::System);
@@ -1048,9 +1051,10 @@ MessageBuilder::MessageBuilder(LiveUpdatesRemoveEmoteMessageTag /*unused*/,
     this->emplace<TimestampElement>();
     if (!actor.isEmpty())
     {
-        this->emplace<TextElement>(actor, MessageElementFlag::Username,
-                                   MessageColor::System)
-            ->setLink({Link::UserInfo, actor});
+        this->emplace<LinkElement>(actor, MessageElementFlag::Username,
+                                   MessageColor::System,
+                                   Link{Link::UserInfo, actor});
+        ;
     }
     this->emplace<TextElement>(text, MessageElementFlag::Text,
                                MessageColor::System);
@@ -1095,9 +1099,9 @@ MessageBuilder::MessageBuilder(LiveUpdatesUpdateEmoteMessageTag /*unused*/,
     this->emplace<TimestampElement>();
     if (!actor.isEmpty())
     {
-        this->emplace<TextElement>(actor, MessageElementFlag::Username,
-                                   MessageColor::System)
-            ->setLink({Link::UserInfo, actor});
+        this->emplace<LinkElement>(actor, MessageElementFlag::Username,
+                                   MessageColor::System,
+                                   Link{Link::UserInfo, actor});
     }
     this->emplace<TextElement>(text, MessageElementFlag::Text,
                                MessageColor::System);
@@ -1130,9 +1134,9 @@ MessageBuilder::MessageBuilder(LiveUpdatesUpdateEmoteSetMessageTag /*unused*/,
                     .arg(platform, emoteSetName);
 
     this->emplace<TimestampElement>();
-    this->emplace<TextElement>(actor, MessageElementFlag::Username,
-                               MessageColor::System)
-        ->setLink({Link::UserInfo, actor});
+    this->emplace<LinkElement>(actor, MessageElementFlag::Username,
+                               MessageColor::System,
+                               Link{Link::UserInfo, actor});
     this->emplace<TextElement>(text, MessageElementFlag::Text,
                                MessageColor::System);
 
@@ -1159,12 +1163,16 @@ MessageBuilder::MessageBuilder(ImageUploaderResultTag /*unused*/,
     this->emplace<TimestampElement>();
 
     using MEF = MessageElementFlag;
-    auto addText = [this](QString text,
-                          MessageColor color =
-                              MessageColor::System) -> TextElement * {
+    auto addText = [this](const QString &text) {
         this->message().searchText += text;
         this->message().messageText += text;
-        return this->emplace<TextElement>(text, MEF::Text, color);
+        return this->emplace<TextElement>(text, MEF::Text);
+    };
+    auto addLink = [this](const QString &text, Link link) {
+        this->message().searchText += text;
+        this->message().messageText += text;
+        return this->emplace<LinkElement>(text, MEF::Text, MessageColor::Link,
+                                          std::move(link));
     };
 
     addText("Your image has been uploaded to");
@@ -1172,15 +1180,13 @@ MessageBuilder::MessageBuilder(ImageUploaderResultTag /*unused*/,
     // ASSUMPTION: the user gave this uploader configuration to the program
     // therefore they trust that the host is not wrong/malicious. This doesn't obey getSettings()->lowercaseDomains.
     // This also ensures that the LinkResolver doesn't get these links.
-    addText(imageLink, MessageColor::Link)
-        ->setLink({Link::Url, imageLink})
+    addLink(imageLink, {Link::Url, imageLink})
         ->setTrailingSpace(!deletionLink.isEmpty());
 
     if (!deletionLink.isEmpty())
     {
         addText("(Deletion link:");
-        addText(deletionLink, MessageColor::Link)
-            ->setLink({Link::Url, deletionLink})
+        addLink(deletionLink, {Link::Url, deletionLink})
             ->setTrailingSpace(false);
         addText(")")->setTrailingSpace(false);
     }
@@ -1342,10 +1348,10 @@ void MessageBuilder::appendChannelPointRewardMessage(
     QStringList textList;
     if (!reward.isUserInputRequired)
     {
-        this->emplace<TextElement>(
-                reward.user.login, MessageElementFlag::ChannelPointReward,
-                MessageColor::Text, FontStyle::ChatMediumBold)
-            ->setLink({Link::UserInfo, reward.user.login});
+        this->emplace<LinkElement>(
+            reward.user.login, MessageElementFlag::ChannelPointReward,
+            MessageColor::Text, FontStyle::ChatMediumBold,
+            Link{Link::UserInfo, reward.user.login});
         redeemed = "redeemed";
         textList.append(reward.user.login);
     }
@@ -1409,10 +1415,9 @@ MessagePtr MessageBuilder::makeLiveMessage(const QString &channelName,
     MessageBuilder builder;
 
     builder.emplace<TimestampElement>();
-    builder
-        .emplace<TextElement>(channelName, MessageElementFlag::Username,
-                              MessageColor::Text, FontStyle::ChatMediumBold)
-        ->setLink({Link::UserInfo, channelName});
+    builder.emplace<LinkElement>(channelName, MessageElementFlag::Username,
+                                 MessageColor::Text, FontStyle::ChatMediumBold,
+                                 Link{Link::UserInfo, channelName});
     builder.emplace<TextElement>("is live!", MessageElementFlag::Text,
                                  MessageColor::Text);
     auto text = QString("%1 is live!").arg(channelName);
@@ -1435,10 +1440,9 @@ MessagePtr MessageBuilder::makeOfflineSystemMessage(const QString &channelName,
     builder.emplace<TimestampElement>();
     builder.message().flags.set(MessageFlag::System);
     builder.message().flags.set(MessageFlag::DoNotTriggerNotification);
-    builder
-        .emplace<TextElement>(channelName, MessageElementFlag::Username,
-                              MessageColor::System, FontStyle::ChatMediumBold)
-        ->setLink({Link::UserInfo, channelName});
+    builder.emplace<LinkElement>(
+        channelName, MessageElementFlag::Username, MessageColor::System,
+        FontStyle::ChatMediumBold, Link{Link::UserInfo, channelName});
     builder.emplace<TextElement>("is now offline.", MessageElementFlag::Text,
                                  MessageColor::System);
     auto text = QString("%1 is now offline.").arg(channelName);
@@ -1461,20 +1465,17 @@ MessagePtr MessageBuilder::makeHostingSystemMessage(const QString &channelName,
     {
         builder.emplace<TextElement>("Now hosting", MessageElementFlag::Text,
                                      MessageColor::System);
-        builder
-            .emplace<TextElement>(
-                channelName + ".", MessageElementFlag::Username,
-                MessageColor::System, FontStyle::ChatMediumBold)
-            ->setLink({Link::UserInfo, channelName});
+        builder.emplace<LinkElement>(
+            channelName + ".", MessageElementFlag::Username,
+            MessageColor::System, FontStyle::ChatMediumBold,
+            Link{Link::UserInfo, channelName});
         text = QString("Now hosting %1.").arg(channelName);
     }
     else
     {
-        builder
-            .emplace<TextElement>(channelName, MessageElementFlag::Username,
-                                  MessageColor::System,
-                                  FontStyle::ChatMediumBold)
-            ->setLink({Link::UserInfo, channelName});
+        builder.emplace<LinkElement>(
+            channelName, MessageElementFlag::Username, MessageColor::System,
+            FontStyle::ChatMediumBold, Link{Link::UserInfo, channelName});
         builder.emplace<TextElement>("has gone offline. Exiting host mode.",
                                      MessageElementFlag::Text,
                                      MessageColor::System);
@@ -1499,26 +1500,24 @@ MessagePtr MessageBuilder::makeDeletionMessageFromIRC(
     // add a link to the originalMessage
     builder.emplace<TextElement>("A message from", MessageElementFlag::Text,
                                  MessageColor::System);
-    builder
-        .emplace<TextElement>(originalMessage->displayName,
-                              MessageElementFlag::Username,
-                              MessageColor::System, FontStyle::ChatMediumBold)
-        ->setLink({Link::UserInfo, originalMessage->loginName});
+    builder.emplace<LinkElement>(
+        originalMessage->displayName, MessageElementFlag::Username,
+        MessageColor::System, FontStyle::ChatMediumBold,
+        Link{Link::UserInfo, originalMessage->loginName});
     builder.emplace<TextElement>("was deleted:", MessageElementFlag::Text,
                                  MessageColor::System);
     if (originalMessage->messageText.length() > 50)
     {
-        builder
-            .emplace<TextElement>(originalMessage->messageText.left(50) + "…",
-                                  MessageElementFlag::Text, MessageColor::Text)
-            ->setLink({Link::JumpToMessage, originalMessage->id});
+        builder.emplace<LinkElement>(
+            originalMessage->messageText.left(50) + "…",
+            MessageElementFlag::Text, MessageColor::Text,
+            Link{Link::JumpToMessage, originalMessage->id});
     }
     else
     {
-        builder
-            .emplace<TextElement>(originalMessage->messageText,
-                                  MessageElementFlag::Text, MessageColor::Text)
-            ->setLink({Link::JumpToMessage, originalMessage->id});
+        builder.emplace<LinkElement>(
+            originalMessage->messageText, MessageElementFlag::Text,
+            MessageColor::Text, Link{Link::JumpToMessage, originalMessage->id});
     }
     builder.message().timeoutUser = "msg:" + originalMessage->id;
 
@@ -1535,33 +1534,29 @@ MessagePtr MessageBuilder::makeDeletionMessageFromPubSub(
     builder.message().flags.set(MessageFlag::DoNotTriggerNotification);
     builder.message().flags.set(MessageFlag::ModerationAction);
 
-    builder
-        .emplace<TextElement>(action.source.login, MessageElementFlag::Username,
-                              MessageColor::System, FontStyle::ChatMediumBold)
-        ->setLink({Link::UserInfo, action.source.login});
+    builder.emplace<LinkElement>(
+        action.source.login, MessageElementFlag::Username, MessageColor::System,
+        FontStyle::ChatMediumBold, Link{Link::UserInfo, action.source.login});
     // TODO(mm2pl): If or when jumping to a single message gets implemented a link,
     // add a link to the originalMessage
     builder.emplace<TextElement>(
         "deleted message from", MessageElementFlag::Text, MessageColor::System);
-    builder
-        .emplace<TextElement>(action.target.login, MessageElementFlag::Username,
-                              MessageColor::System, FontStyle::ChatMediumBold)
-        ->setLink({Link::UserInfo, action.target.login});
+    builder.emplace<LinkElement>(
+        action.target.login, MessageElementFlag::Username, MessageColor::System,
+        FontStyle::ChatMediumBold, Link{Link::UserInfo, action.target.login});
     builder.emplace<TextElement>("saying:", MessageElementFlag::Text,
                                  MessageColor::System);
     if (action.messageText.length() > 50)
     {
-        builder
-            .emplace<TextElement>(action.messageText.left(50) + "…",
-                                  MessageElementFlag::Text, MessageColor::Text)
-            ->setLink({Link::JumpToMessage, action.messageId});
+        builder.emplace<LinkElement>(
+            action.messageText.left(50) + "…", MessageElementFlag::Text,
+            MessageColor::Text, Link{Link::JumpToMessage, action.messageId});
     }
     else
     {
-        builder
-            .emplace<TextElement>(action.messageText, MessageElementFlag::Text,
-                                  MessageColor::Text)
-            ->setLink({Link::JumpToMessage, action.messageId});
+        builder.emplace<LinkElement>(
+            action.messageText, MessageElementFlag::Text, MessageColor::Text,
+            Link{Link::JumpToMessage, action.messageId});
     }
     builder.message().timeoutUser = "msg:" + action.messageId;
     builder.message().flags.set(MessageFlag::PubSub);
@@ -1756,17 +1751,13 @@ std::pair<MessagePtr, MessagePtr> MessageBuilder::makeAutomodMessage(
          ". Allow will post it in chat. "),
         MessageElementFlag::Text, MessageColor::Text);
     // Allow link button
-    builder
-        .emplace<TextElement>("Allow", MessageElementFlag::Text,
-                              MessageColor(QColor("green")),
-                              FontStyle::ChatMediumBold)
-        ->setLink({Link::AutoModAllow, action.msgID});
+    builder.emplace<LinkElement>(
+        "Allow", MessageElementFlag::Text, MessageColor(QColor("green")),
+        FontStyle::ChatMediumBold, Link{Link::AutoModAllow, action.msgID});
     // Deny link button
-    builder
-        .emplace<TextElement>(" Deny", MessageElementFlag::Text,
-                              MessageColor(QColor("red")),
-                              FontStyle::ChatMediumBold)
-        ->setLink({Link::AutoModDeny, action.msgID});
+    builder.emplace<LinkElement>(
+        " Deny", MessageElementFlag::Text, MessageColor(QColor("red")),
+        FontStyle::ChatMediumBold, Link{Link::AutoModDeny, action.msgID});
     // ID of message caught by AutoMod
     //    builder.emplace<TextElement>(action.msgID, MessageElementFlag::Text,
     //                                 MessageColor::Text);
@@ -1782,11 +1773,9 @@ std::pair<MessagePtr, MessagePtr> MessageBuilder::makeAutomodMessage(
     //
     // Builder for offender's message
     builder2.message().channelName = channelName;
-    builder2
-        .emplace<TextElement>("#" + channelName,
-                              MessageElementFlag::ChannelName,
-                              MessageColor::System)
-        ->setLink({Link::JumpToChannel, channelName});
+    builder2.emplace<LinkElement>(
+        "#" + channelName, MessageElementFlag::ChannelName,
+        MessageColor::System, Link{Link::JumpToChannel, channelName});
     builder2.emplace<TimestampElement>();
     builder2.emplace<TwitchModerationElement>();
     builder2.message().loginName = action.target.login;
@@ -1948,11 +1937,9 @@ std::pair<MessagePtr, MessagePtr> MessageBuilder::makeLowTrustUserMessage(
     //
     // Builder for offender's message
     builder2.message().channelName = channelName;
-    builder2
-        .emplace<TextElement>("#" + channelName,
-                              MessageElementFlag::ChannelName,
-                              MessageColor::System)
-        ->setLink({Link::JumpToChannel, channelName});
+    builder2.emplace<LinkElement>(
+        "#" + channelName, MessageElementFlag::ChannelName,
+        MessageColor::System, Link{Link::JumpToChannel, channelName});
     builder2.emplace<TimestampElement>();
     builder2.emplace<TwitchModerationElement>();
     builder2.message().loginName = action.suspiciousUserLogin;
@@ -2010,11 +1997,10 @@ MessagePtr MessageBuilder::makeLowTrustUpdateMessage(
     builder.message().flags.set(MessageFlag::PubSub);
     builder.message().flags.set(MessageFlag::DoNotTriggerNotification);
 
-    builder
-        .emplace<TextElement>(action.updatedByUserDisplayName,
-                              MessageElementFlag::Username,
-                              MessageColor::System, FontStyle::ChatMediumBold)
-        ->setLink({Link::UserInfo, action.updatedByUserLogin});
+    builder.emplace<LinkElement>(
+        action.updatedByUserDisplayName, MessageElementFlag::Username,
+        MessageColor::System, FontStyle::ChatMediumBold,
+        Link{Link::UserInfo, action.updatedByUserLogin});
 
     QString text;
     assert(action.treatment != PubSubLowTrustUsersMessage::Treatment::INVALID);
@@ -2023,12 +2009,10 @@ MessagePtr MessageBuilder::makeLowTrustUpdateMessage(
         case PubSubLowTrustUsersMessage::Treatment::NoTreatment: {
             builder.emplace<TextElement>("removed", MessageElementFlag::Text,
                                          MessageColor::System);
-            builder
-                .emplace<TextElement>(action.suspiciousUserDisplayName,
-                                      MessageElementFlag::Username,
-                                      MessageColor::System,
-                                      FontStyle::ChatMediumBold)
-                ->setLink({Link::UserInfo, action.suspiciousUserLogin});
+            builder.emplace<LinkElement>(
+                action.suspiciousUserDisplayName, MessageElementFlag::Username,
+                MessageColor::System, FontStyle::ChatMediumBold,
+                Link{Link::UserInfo, action.suspiciousUserLogin});
             builder.emplace<TextElement>("from the suspicious user list.",
                                          MessageElementFlag::Text,
                                          MessageColor::System);
@@ -2041,12 +2025,10 @@ MessagePtr MessageBuilder::makeLowTrustUpdateMessage(
         case PubSubLowTrustUsersMessage::Treatment::ActiveMonitoring: {
             builder.emplace<TextElement>("added", MessageElementFlag::Text,
                                          MessageColor::System);
-            builder
-                .emplace<TextElement>(action.suspiciousUserDisplayName,
-                                      MessageElementFlag::Username,
-                                      MessageColor::System,
-                                      FontStyle::ChatMediumBold)
-                ->setLink({Link::UserInfo, action.suspiciousUserLogin});
+            builder.emplace<LinkElement>(
+                action.suspiciousUserDisplayName, MessageElementFlag::Username,
+                MessageColor::System, FontStyle::ChatMediumBold,
+                Link{Link::UserInfo, action.suspiciousUserLogin});
             builder.emplace<TextElement>("as a monitored suspicious chatter.",
                                          MessageElementFlag::Text,
                                          MessageColor::System);
@@ -2059,12 +2041,10 @@ MessagePtr MessageBuilder::makeLowTrustUpdateMessage(
         case PubSubLowTrustUsersMessage::Treatment::Restricted: {
             builder.emplace<TextElement>("added", MessageElementFlag::Text,
                                          MessageColor::System);
-            builder
-                .emplace<TextElement>(action.suspiciousUserDisplayName,
-                                      MessageElementFlag::Username,
-                                      MessageColor::System,
-                                      FontStyle::ChatMediumBold)
-                ->setLink({Link::UserInfo, action.suspiciousUserLogin});
+            builder.emplace<LinkElement>(
+                action.suspiciousUserDisplayName, MessageElementFlag::Username,
+                MessageColor::System, FontStyle::ChatMediumBold,
+                Link{Link::UserInfo, action.suspiciousUserLogin});
             builder.emplace<TextElement>("as a restricted suspicious chatter.",
                                          MessageElementFlag::Text,
                                          MessageColor::System);
@@ -2103,10 +2083,9 @@ MessagePtrMut MessageBuilder::makeMissingScopesMessage(
     builder.emplace<TimestampElement>();
     builder.emplace<TextElement>(warnText, MessageElementFlag::Text,
                                  MessageColor::System);
-    builder
-        .emplace<TextElement>(linkText, MessageElementFlag::Text,
-                              MessageColor::Link)
-        ->setLink({Link::OpenAccountsPage, {}});
+    builder.emplace<LinkElement>(linkText, MessageElementFlag::Text,
+                                 MessageColor::Link,
+                                 Link{Link::OpenAccountsPage, {}});
 
     return builder.release();
 }
@@ -2490,6 +2469,16 @@ TextElement *MessageBuilder::emplaceSystemTextAndUpdate(const QString &text,
                                       MessageColor::System);
 }
 
+LinkElement *MessageBuilder::emplaceSystemLinkAndUpdate(const QString &text,
+                                                        Link link,
+                                                        QString &toUpdate)
+{
+    toUpdate.append(text);
+    toUpdate.append(' ');
+    return this->emplace<LinkElement>(text, MessageElementFlag::Text,
+                                      MessageColor::System, std::move(link));
+}
+
 void MessageBuilder::parseUsernameColor(const QVariantMap &tags,
                                         const QString &userID)
 {
@@ -2664,17 +2653,17 @@ void MessageBuilder::parseThread(const QString &messageContent,
         this->emplace<ReplyCurveElement>();
 
         // construct reply elements
-        this->emplace<TextElement>(
-                "Replying to", MessageElementFlag::RepliedMessage,
-                MessageColor::System, FontStyle::ChatMediumSmall)
-            ->setLink({Link::ViewThread, thread->rootId()});
+        this->emplace<LinkElement>(
+            "Replying to", MessageElementFlag::RepliedMessage,
+            MessageColor::System, FontStyle::ChatMediumSmall,
+            Link{Link::ViewThread, thread->rootId()});
 
-        this->emplace<TextElement>(
-                "@" + usernameText +
-                    (threadRoot->flags.has(MessageFlag::Action) ? "" : ":"),
-                MessageElementFlag::RepliedMessage, threadRoot->usernameColor,
-                FontStyle::ChatMediumSmall)
-            ->setLink({Link::UserInfo, threadRoot->displayName});
+        this->emplace<LinkElement>(
+            "@" + usernameText +
+                (threadRoot->flags.has(MessageFlag::Action) ? "" : ":"),
+            MessageElementFlag::RepliedMessage, threadRoot->usernameColor,
+            FontStyle::ChatMediumSmall,
+            Link{Link::UserInfo, threadRoot->displayName});
 
         MessageColor color = MessageColor::Text;
         if (threadRoot->flags.has(MessageFlag::Action))
@@ -2717,10 +2706,10 @@ void MessageBuilder::parseThread(const QString &messageContent,
                 auto name = replyDisplayName->toString();
                 body = parseTagString(replyBody->toString());
 
-                this->emplace<TextElement>(
-                        "@" + name + ":", MessageElementFlag::RepliedMessage,
-                        this->textColor_, FontStyle::ChatMediumSmall)
-                    ->setLink({Link::UserInfo, name});
+                this->emplace<LinkElement>(
+                    "@" + name + ":", MessageElementFlag::RepliedMessage,
+                    this->textColor_, FontStyle::ChatMediumSmall,
+                    Link{Link::UserInfo, name});
             }
 
             this->emplace<SingleLineTextElement>(
@@ -2782,9 +2771,8 @@ void MessageBuilder::appendChannelName(const Channel *channel)
     QString channelName("#" + channel->getName());
     Link link(Link::JumpToChannel, channel->getName());
 
-    this->emplace<TextElement>(channelName, MessageElementFlag::ChannelName,
-                               MessageColor::System)
-        ->setLink(link);
+    this->emplace<LinkElement>(channelName, MessageElementFlag::ChannelName,
+                               MessageColor::System, link);
 }
 
 void MessageBuilder::appendUsername(const QVariantMap &tags,
@@ -2827,10 +2815,10 @@ void MessageBuilder::appendUsername(const QVariantMap &tags,
     else if (args.isReceivedWhisper)
     {
         // Sender username
-        this->emplace<TextElement>(usernameText, MessageElementFlag::Username,
-                                   this->usernameColor_,
-                                   FontStyle::ChatMediumBold)
-            ->setLink({Link::UserWhisper, this->message().displayName});
+        this->emplace<LinkElement>(
+            usernameText, MessageElementFlag::Username, this->usernameColor_,
+            FontStyle::ChatMediumBold,
+            Link{Link::UserWhisper, this->message().displayName});
 
         auto currentUser = app->getAccounts()->twitch.getCurrent();
 
@@ -2854,10 +2842,10 @@ void MessageBuilder::appendUsername(const QVariantMap &tags,
             usernameText += ":";
         }
 
-        this->emplace<TextElement>(usernameText, MessageElementFlag::Username,
-                                   this->usernameColor_,
-                                   FontStyle::ChatMediumBold)
-            ->setLink({Link::UserInfo, this->message().displayName});
+        this->emplace<LinkElement>(
+            usernameText, MessageElementFlag::Username, this->usernameColor_,
+            FontStyle::ChatMediumBold,
+            Link{Link::UserInfo, this->message().displayName});
     }
 }
 

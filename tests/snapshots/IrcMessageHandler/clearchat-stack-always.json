@@ -14,10 +14,6 @@
                     "element": {
                         "color": "System",
                         "flags": "Timestamp",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "TimestampMedium",
                         "tooltip": "",
                         "trailingSpace": true,
@@ -28,10 +24,6 @@
                     },
                     "flags": "Timestamp",
                     "format": "",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "time": "10:41:54",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -40,10 +32,6 @@
                 {
                     "color": "System",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -95,7 +83,7 @@
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "#pajlada"
                     ]
@@ -104,10 +92,6 @@
                     "element": {
                         "color": "System",
                         "flags": "Timestamp",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "TimestampMedium",
                         "tooltip": "",
                         "trailingSpace": true,
@@ -118,10 +102,6 @@
                     },
                     "flags": "Timestamp",
                     "format": "",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "time": "10:41:52",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -138,10 +118,6 @@
                         "tooltip": "Broadcaster"
                     },
                     "flags": "BadgeChannelAuthority",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "Broadcaster",
                     "trailingSpace": true,
                     "type": "BadgeElement"
@@ -157,10 +133,6 @@
                         "tooltip": "Subscriber"
                     },
                     "flags": "BadgeSubscription",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "Subscriber (Tier 3, 108 months)",
                     "trailingSpace": true,
                     "type": "BadgeElement"
@@ -177,10 +149,6 @@
                         "tooltip": "Verified"
                     },
                     "flags": "BadgeVanity",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "Verified",
                     "trailingSpace": true,
                     "type": "BadgeElement"
@@ -195,7 +163,7 @@
                     "style": "ChatMediumBold",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "pajlada:"
                     ]
@@ -203,10 +171,6 @@
                 {
                     "color": "Text",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,

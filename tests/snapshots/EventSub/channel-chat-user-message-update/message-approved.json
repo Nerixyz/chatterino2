@@ -40,10 +40,6 @@
                         "tooltip": "AutoMod"
                     },
                     "flags": "BadgeChannelAuthority",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "AutoMod",
                     "trailingSpace": true,
                     "type": "BadgeElement"
@@ -51,10 +47,6 @@
                 {
                     "color": "#ff0000ff",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMediumBold",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -66,10 +58,6 @@
                 {
                     "color": "Text",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,

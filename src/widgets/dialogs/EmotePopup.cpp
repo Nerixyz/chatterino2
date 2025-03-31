@@ -64,11 +64,10 @@ auto makeEmoteMessage(std::vector<EmotePtr> emotes,
     });
     for (const auto &emote : emotes)
     {
-        builder
-            .emplace<EmoteElement>(
-                emote,
-                MessageElementFlags{MessageElementFlag::AlwaysShow, emoteFlag})
-            ->setLink(Link(Link::InsertText, emote->name.string));
+        builder.emplace<EmoteLinkElement>(
+            emote,
+            MessageElementFlags{MessageElementFlag::AlwaysShow, emoteFlag},
+            Link(Link::InsertText, emote->name.string));
     }
 
     return builder.release();
@@ -104,13 +103,11 @@ auto makeEmojiMessage(const std::vector<EmojiPtr> &emojiMap)
 
     for (const auto &value : emojiMap)
     {
-        builder
-            .emplace<EmoteElement>(
-                value->emote,
-                MessageElementFlags{MessageElementFlag::AlwaysShow,
-                                    MessageElementFlag::EmojiAll})
-            ->setLink(
-                Link(Link::Type::InsertText, ":" + value->shortCodes[0] + ":"));
+        builder.emplace<EmoteLinkElement>(
+            value->emote,
+            MessageElementFlags{MessageElementFlag::AlwaysShow,
+                                MessageElementFlag::EmojiAll},
+            Link(Link::Type::InsertText, ":" + value->shortCodes[0] + ":"));
     }
 
     return builder.release();

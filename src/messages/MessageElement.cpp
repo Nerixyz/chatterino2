@@ -53,12 +53,6 @@ MessageElement::~MessageElement()
     DebugCount::decrease("message elements");
 }
 
-MessageElement *MessageElement::setLink(const Link &link)
-{
-    this->link_ = link;
-    return this;
-}
-
 MessageElement *MessageElement::setTooltip(const QString &tooltip)
 {
     this->tooltip_ = tooltip;
@@ -78,7 +72,7 @@ const QString &MessageElement::getTooltip() const
 
 Link MessageElement::getLink() const
 {
-    return this->link_;
+    return {};
 }
 
 bool MessageElement::hasTrailingSpace() const
@@ -91,22 +85,22 @@ MessageElementFlags MessageElement::getFlags() const
     return this->flags_;
 }
 
-void MessageElement::addFlags(MessageElementFlags flags)
+MessageElement *MessageElement::addFlags(MessageElementFlags flags)
 {
     this->flags_.set(flags);
+    return this;
+}
+
+MessageElement *MessageElement::removeFlags(MessageElementFlags flags)
+{
+    this->flags_.unset(flags.value());
+    return this;
 }
 
 QJsonObject MessageElement::toJson() const
 {
     return {
         {"trailingSpace"_L1, this->trailingSpace},
-        {
-            "link"_L1,
-            {{
-                {"type"_L1, qmagicenum::enumNameString(this->link_.type)},
-                {"value"_L1, this->link_.value},
-            }},
-        },
         {"tooltip"_L1, this->tooltip_},
         {"flags"_L1, qmagicenum::enumFlagsName(this->flags_.value())},
     };
@@ -164,6 +158,17 @@ void CircularImageElement::addToContainer(MessageLayoutContainer &container,
     }
 }
 
+Link CircularImageElement::getLink() const
+{
+    return this->link;
+}
+
+CircularImageElement *CircularImageElement::setLink(Link link)
+{
+    this->link = std::move(link);
+    return this;
+}
+
 QJsonObject CircularImageElement::toJson() const
 {
     auto base = MessageElement::toJson();
@@ -171,6 +176,7 @@ QJsonObject CircularImageElement::toJson() const
     base["url"_L1] = this->image_->url().string;
     base["padding"_L1] = this->padding_;
     base["background"_L1] = this->background_.name(QColor::HexArgb);
+    base["link"_L1] = this->link.toJson();
 
     return base;
 }
@@ -241,6 +247,27 @@ QJsonObject EmoteElement::toJson() const
     {
         base["text"_L1] = this->textElement_->toJson();
     }
+
+    return base;
+}
+
+EmoteLinkElement::EmoteLinkElement(const EmotePtr &data,
+                                   MessageElementFlags flags, Link link)
+    : EmoteElement(data, flags)
+    , link(std::move(link))
+{
+}
+
+Link EmoteLinkElement::getLink() const
+{
+    return this->link;
+}
+
+QJsonObject EmoteLinkElement::toJson() const
+{
+    auto base = EmoteElement::toJson();
+    base["type"_L1] = u"EmoteLinkElement"_s;
+    base["link"_L1] = this->link.toJson();
 
     return base;
 }
@@ -856,6 +883,17 @@ void SingleLineTextElement::addToContainer(MessageLayoutContainer &container,
     }
 }
 
+Link SingleLineTextElement::getLink() const
+{
+    return this->link;
+}
+
+SingleLineTextElement *SingleLineTextElement::setLink(Link link)
+{
+    this->link = std::move(link);
+    return this;
+}
+
 QJsonObject SingleLineTextElement::toJson() const
 {
     auto base = MessageElement::toJson();
@@ -868,6 +906,7 @@ QJsonObject SingleLineTextElement::toJson() const
     base["words"_L1] = words;
     base["color"_L1] = this->color_.toString();
     base["style"_L1] = qmagicenum::enumNameString(this->style_);
+    base["link"_L1] = this->link.toJson();
 
     return base;
 }
@@ -958,15 +997,6 @@ void MentionElement::addToContainer(MessageLayoutContainer &container,
     TextElement::addToContainer(container, ctx);
 }
 
-MessageElement *MentionElement::setLink(const Link &link)
-{
-    assert(false && "MentionElement::setLink should not be called. Pass "
-                    "through a valid login name in the constructor and it will "
-                    "automatically be a UserInfo link");
-
-    return TextElement::setLink(link);
-}
-
 Link MentionElement::getLink() const
 {
     if (this->userLoginName.isEmpty())
@@ -985,6 +1015,42 @@ QJsonObject MentionElement::toJson() const
     base["fallbackColor"_L1] = this->fallbackColor.toString();
     base["userColor"_L1] = this->userColor.toString();
     base["userLoginName"_L1] = this->userLoginName;
+
+    return base;
+}
+
+// LINK
+LinkElement::LinkElement(const QString &text, MessageElementFlags flags,
+                         const MessageColor &color, Link link)
+    : TextElement(text, flags, color)
+    , link(std::move(link))
+{
+}
+
+LinkElement::LinkElement(const QString &text, MessageElementFlags flags,
+                         const MessageColor &color, FontStyle fontStyle,
+                         Link link)
+    : TextElement(text, flags, color, fontStyle)
+    , link(std::move(link))
+{
+}
+
+Link LinkElement::getLink() const
+{
+    return this->link;
+}
+
+LinkElement *LinkElement::setLink(Link link)
+{
+    this->link = std::move(link);
+    return this;
+}
+
+QJsonObject LinkElement::toJson() const
+{
+    auto base = TextElement::toJson();
+    base["type"_L1] = u"LinkElement"_s;
+    base["link"_L1] = this->link.toJson();
 
     return base;
 }

@@ -22,7 +22,7 @@
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "#pajlada"
                     ]
@@ -31,10 +31,6 @@
                     "element": {
                         "color": "System",
                         "flags": "Timestamp",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "TimestampMedium",
                         "tooltip": "",
                         "trailingSpace": true,
@@ -45,10 +41,6 @@
                     },
                     "flags": "Timestamp",
                     "format": "",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "time": "05:19:38",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -56,10 +48,6 @@
                 },
                 {
                     "flags": "ModeratorTools",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "",
                     "trailingSpace": true,
                     "type": "TwitchModerationElement"
@@ -74,10 +62,6 @@
                         "tooltip": "Shared Message"
                     },
                     "flags": "BadgeSharedChannel",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "Shared Message",
                     "trailingSpace": true,
                     "type": "BadgeElement"
@@ -94,10 +78,6 @@
                         "tooltip": "Staff"
                     },
                     "flags": "BadgeGlobalAuthority",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "Staff",
                     "trailingSpace": true,
                     "type": "BadgeElement"
@@ -113,10 +93,6 @@
                         "tooltip": "Raging Wolf Helm"
                     },
                     "flags": "BadgeVanity",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "tooltip": "Raging Wolf Helm",
                     "trailingSpace": true,
                     "type": "BadgeElement"
@@ -131,7 +107,7 @@
                     "style": "ChatMediumBold",
                     "tooltip": "",
                     "trailingSpace": true,
-                    "type": "TextElement",
+                    "type": "LinkElement",
                     "words": [
                         "lahoooo:"
                     ]
@@ -139,10 +115,6 @@
                 {
                     "color": "Text",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -196,10 +168,6 @@
                     "element": {
                         "color": "System",
                         "flags": "Timestamp",
-                        "link": {
-                            "type": "None",
-                            "value": ""
-                        },
                         "style": "TimestampMedium",
                         "tooltip": "",
                         "trailingSpace": true,
@@ -210,10 +178,6 @@
                     },
                     "flags": "Timestamp",
                     "format": "",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "time": "05:19:38",
                     "tooltip": "",
                     "trailingSpace": true,
@@ -222,10 +186,6 @@
                 {
                     "color": "System",
                     "flags": "Text",
-                    "link": {
-                        "type": "None",
-                        "value": ""
-                    },
                     "style": "ChatMedium",
                     "tooltip": "",
                     "trailingSpace": true,

@@ -179,6 +179,8 @@ public:
     // Returns the TextElement that was emplaced.
     TextElement *emplaceSystemTextAndUpdate(const QString &text,
                                             QString &toUpdate);
+    LinkElement *emplaceSystemLinkAndUpdate(const QString &text, Link link,
+                                            QString &toUpdate);
 
     static void triggerHighlights(const Channel *channel,
                                   const HighlightAlert &alert);
