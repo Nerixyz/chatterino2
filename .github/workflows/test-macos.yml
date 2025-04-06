@@ -85,3 +85,6 @@ jobs:
           sleep 3
           ctest -R 'WebSocket' -V --repeat until-fail:100 -j1
         working-directory: build-test
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
