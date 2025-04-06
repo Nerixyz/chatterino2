@@ -65,7 +65,7 @@ private:
     void onReadDone(boost::system::error_code ec, size_t bytesRead);
     void onWriteDone(boost::system::error_code ec, size_t bytesWritten);
 
-    void closeOrStop();
+    void forceStop();  // assumes the socket has been closed
 
     friend Derived;
 };
