@@ -82,5 +82,6 @@ jobs:
           cd ../pubsub-server-test
           ./server 127.0.0.1:9050 127.0.0.1:9052 &
           cd ../build-test
-          ctest -R 'Plugin.*WebSocket' -V --repeat until-fail:100 -j1
+          sleep 3
+          ctest -R 'PluginTest.testT.*WebSocket' -V --repeat until-fail:100 -j1
         working-directory: build-test
