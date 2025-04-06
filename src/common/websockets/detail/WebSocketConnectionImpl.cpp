@@ -212,6 +212,7 @@ void WebSocketConnectionHelper<Derived, Inner>::onWsHandshake(
         << *this << "WS handshake done" << this->stream.is_open();
 
     this->trySend();
+    qDebug() << "queue read";
     this->stream.async_read(
         this->readBuffer,
         asio::bind_cancellation_slot(
@@ -224,13 +225,16 @@ template <typename Derived, typename Inner>
 void WebSocketConnectionHelper<Derived, Inner>::onReadDone(
     boost::system::error_code ec, size_t bytesRead)
 {
+    qDebug() << "enter read-done";
     if (!this->listener || this->isClosing)
     {
+        qDebug() << "leave read-done";
         return;
     }
     if (ec)
     {
         this->fail(ec, u"read");
+        qDebug() << "leave read-done";
         return;
     }
 
@@ -250,6 +254,7 @@ void WebSocketConnectionHelper<Derived, Inner>::onReadDone(
         this->listener->onBinaryMessage(std::move(data));
     }
 
+    qDebug() << "queue read";
     this->stream.async_read(
         this->readBuffer,
         asio::bind_cancellation_slot(
@@ -312,11 +317,12 @@ void WebSocketConnectionHelper<Derived, Inner>::closeImpl()
     // cancel all pending operations
     this->resolver.cancel();
     beast::get_lowest_layer(this->stream).cancel();
-    this->readCancellation.emit(asio::cancellation_type::all);
+    this->readCancellation.emit(asio::cancellation_type::terminal);
 
     this->stream.async_close(
         beast::websocket::close_code::normal,
         [this, lifetime{this->shared_from_this()}](auto ec) {
+            qDebug() << "enter close-cb";
             if (ec)
             {
                 qCWarning(chatterinoWebsocket) << *this << "Failed to close"
@@ -329,6 +335,7 @@ void WebSocketConnectionHelper<Derived, Inner>::closeImpl()
                 qCDebug(chatterinoWebsocket) << *this << "Closed";
             }
             this->detach();
+            qDebug() << "leave close-cb";
         });
 }
 
@@ -351,7 +358,7 @@ void WebSocketConnectionHelper<Derived, Inner>::forceStop()
     this->isClosing = true;
     this->resolver.cancel();
     beast::get_lowest_layer(this->stream).cancel();
-    this->readCancellation.emit(asio::cancellation_type::all);
+    this->readCancellation.emit(asio::cancellation_type::terminal);
     this->detach();
 }
 
