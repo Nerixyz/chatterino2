@@ -97,6 +97,14 @@ void WebSocketConnectionHelper<Derived, Inner>::onResolve(
 
     qCDebug(chatterinoWebsocket) << *this << "Resolved host";
 
+    this->stream.control_callback(
+        [](beast::websocket::frame_type ty, auto /* data */) {
+            if (ty == beast::websocket::frame_type::close)
+            {
+                qCDebug(chatterinoWebsocket) << "CLOSE";
+            }
+        });
+
     beast::get_lowest_layer(this->stream)
         .expires_after(std::chrono::seconds{30});
     beast::get_lowest_layer(this->stream)
