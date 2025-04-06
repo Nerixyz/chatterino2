@@ -52,7 +52,8 @@ void WebSocketConnectionHelper<Derived, Inner>::run()
 template <typename Derived, typename Inner>
 void WebSocketConnectionHelper<Derived, Inner>::close()
 {
-    qCDebug(chatterinoWebsocket) << *this << "close request";
+    qCDebug(chatterinoWebsocket)
+        << *this << "close request" << this->stream.is_open();
     this->post([self{this->shared_from_this()}] {
         self->closeImpl();
     });
@@ -237,6 +238,9 @@ void WebSocketConnectionHelper<Derived, Inner>::onReadDone(
         this->listener->onBinaryMessage(std::move(data));
     }
 
+    qCDebug(chatterinoWebsocket)
+        << *this << "Reading" << this->stream.is_message_done()
+        << this->stream.is_open();
     this->stream.async_read(
         this->readBuffer,
         beast::bind_front_handler(&WebSocketConnectionHelper::onReadDone,
@@ -291,12 +295,14 @@ void WebSocketConnectionHelper<Derived, Inner>::closeImpl()
 {
     if (this->isClosing)
     {
-        qCDebug(chatterinoWebsocket) << *this << "isClosing";
+        qCDebug(chatterinoWebsocket)
+            << *this << "isClosing" << this->stream.is_open();
         return;
     }
     this->isClosing = true;
 
-    qCDebug(chatterinoWebsocket) << *this << "Closing...";
+    qCDebug(chatterinoWebsocket)
+        << *this << "Closing..." << this->stream.is_open();
 
     // cancel all pending operations
     this->resolver.cancel();
