@@ -52,8 +52,6 @@ void WebSocketConnectionHelper<Derived, Inner>::run()
 template <typename Derived, typename Inner>
 void WebSocketConnectionHelper<Derived, Inner>::close()
 {
-    qCDebug(chatterinoWebsocket)
-        << *this << "close request" << this->stream.is_open();
     this->post([self{this->shared_from_this()}] {
         self->closeImpl();
     });
@@ -106,8 +104,7 @@ void WebSocketConnectionHelper<Derived, Inner>::onResolve(
                 if (strong && !strong->isClosing)
                 {
                     qCDebug(chatterinoWebsocket)
-                        << *strong << "Received close frame"
-                        << strong->stream.is_open();
+                        << *strong << "Received close frame";
                     strong->forceStop();
                 }
             }
@@ -226,7 +223,6 @@ void WebSocketConnectionHelper<Derived, Inner>::onReadDone(
 {
     if (!this->listener || this->isClosing)
     {
-        qCDebug(chatterinoWebsocket) << *this << "Stopping read.";
         return;
     }
     if (ec)
@@ -234,9 +230,6 @@ void WebSocketConnectionHelper<Derived, Inner>::onReadDone(
         this->fail(ec, u"read");
         return;
     }
-    qCDebug(chatterinoWebsocket)
-        << *this << "Read done." << this->stream.is_message_done()
-        << this->stream.is_open();
 
     // XXX: this copies - we could read directly into a QByteArray
     QByteArray data{
@@ -254,9 +247,6 @@ void WebSocketConnectionHelper<Derived, Inner>::onReadDone(
         this->listener->onBinaryMessage(std::move(data));
     }
 
-    qCDebug(chatterinoWebsocket)
-        << *this << "Reading" << this->stream.is_message_done()
-        << this->stream.is_open();
     this->stream.async_read(
         this->readBuffer,
         beast::bind_front_handler(&WebSocketConnectionHelper::onReadDone,
@@ -267,7 +257,6 @@ template <typename Derived, typename Inner>
 void WebSocketConnectionHelper<Derived, Inner>::onWriteDone(
     boost::system::error_code ec, size_t /*bytesWritten*/)
 {
-    qCDebug(chatterinoWebsocket) << *this << "Sent.";
     if (!this->queuedMessages.empty())
     {
         this->queuedMessages.pop_front();
@@ -293,10 +282,8 @@ void WebSocketConnectionHelper<Derived, Inner>::trySend()
     if (this->queuedMessages.empty() || this->isSending ||
         !this->stream.is_open())
     {
-        qCDebug(chatterinoWebsocket) << *this << "Waiting to send...";
         return;
     }
-    qCDebug(chatterinoWebsocket) << *this << "Sending...";
 
     this->isSending = true;
     this->stream.text(this->queuedMessages.front().first);
@@ -311,14 +298,11 @@ void WebSocketConnectionHelper<Derived, Inner>::closeImpl()
 {
     if (this->isClosing)
     {
-        qCDebug(chatterinoWebsocket)
-            << *this << "isClosing" << this->stream.is_open();
         return;
     }
     this->isClosing = true;
 
-    qCDebug(chatterinoWebsocket)
-        << *this << "Closing..." << this->stream.is_open();
+    qCDebug(chatterinoWebsocket) << *this << "Closing...";
 
     // cancel all pending operations
     this->resolver.cancel();
