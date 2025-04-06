@@ -87,4 +87,5 @@ jobs:
         working-directory: build-test
 
       - name: Setup tmate session
+        if: ${{ failure() }}
         uses: mxschmitt/action-tmate@v3
