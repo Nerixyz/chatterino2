@@ -103,7 +103,7 @@ void WebSocketConnectionHelper<Derived, Inner>::onResolve(
             if (ty == beast::websocket::frame_type::close)
             {
                 auto strong = self.lock();
-                if (strong)
+                if (strong && !strong->isClosing)
                 {
                     qCDebug(chatterinoWebsocket)
                         << *strong << "Received close frame"
