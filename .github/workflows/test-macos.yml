@@ -59,10 +59,10 @@ jobs:
           mkdir build-test
           cd build-test
           cmake \
-              -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+              -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=On \
               -DBUILD_APP=OFF \
-              -DUSE_PRECOMPILED_HEADERS=OFF \
+              -DUSE_PRECOMPILED_HEADERS=On \
               ..
           make -j"$(sysctl -n hw.logicalcpu)"
 
