@@ -98,10 +98,17 @@ void WebSocketConnectionHelper<Derived, Inner>::onResolve(
     qCDebug(chatterinoWebsocket) << *this << "Resolved host";
 
     this->stream.control_callback(
-        [](beast::websocket::frame_type ty, auto /* data */) {
+        [self{this->weak_from_this()}](beast::websocket::frame_type ty,
+                                       auto /* data */) {
             if (ty == beast::websocket::frame_type::close)
             {
-                qCDebug(chatterinoWebsocket) << "CLOSE";
+                auto strong = self.lock();
+                if (strong)
+                {
+                    qCDebug(chatterinoWebsocket)
+                        << *strong << "Received close frame";
+                    strong->closeImpl();
+                }
             }
         });
 
