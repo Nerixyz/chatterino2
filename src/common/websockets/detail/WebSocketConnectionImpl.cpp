@@ -52,6 +52,7 @@ void WebSocketConnectionHelper<Derived, Inner>::run()
 template <typename Derived, typename Inner>
 void WebSocketConnectionHelper<Derived, Inner>::close()
 {
+    qCDebug(chatterinoWebsocket) << *this << "close request";
     this->post([self{this->shared_from_this()}] {
         self->closeImpl();
     });
@@ -216,6 +217,7 @@ void WebSocketConnectionHelper<Derived, Inner>::onReadDone(
         this->fail(ec, u"read");
         return;
     }
+    qCDebug(chatterinoWebsocket) << *this << "Read done.";
 
     // XXX: this copies - we could read directly into a QByteArray
     QByteArray data{
@@ -287,6 +289,7 @@ void WebSocketConnectionHelper<Derived, Inner>::closeImpl()
 {
     if (this->isClosing)
     {
+        qCDebug(chatterinoWebsocket) << *this << "isClosing";
         return;
     }
     this->isClosing = true;

@@ -79,6 +79,7 @@ WebSocketHandle::~WebSocketHandle()
 
 void WebSocketHandle::close()
 {
+    qCDebug(chatterinoWebsocket) << "outer close";
     auto strong = this->conn.lock();
     if (strong)
     {
