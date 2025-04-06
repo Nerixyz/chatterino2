@@ -107,7 +107,7 @@ void WebSocketConnectionHelper<Derived, Inner>::onResolve(
                 {
                     qCDebug(chatterinoWebsocket)
                         << *strong << "Received close frame";
-                    strong->closeImpl();
+                    strong->closeOrStop();
                 }
             }
         });
@@ -331,7 +331,7 @@ void WebSocketConnectionHelper<Derived, Inner>::closeImpl()
                 qCWarning(chatterinoWebsocket) << *this << "Failed to close"
                                                << QUtf8StringView(ec.message());
                 // make sure we cancel all operations
-                beast::get_lowest_layer(this->stream).close();
+                beast::get_lowest_layer(this->stream).cancel();
             }
             else
             {
@@ -352,6 +352,21 @@ void WebSocketConnectionHelper<Derived, Inner>::fail(
         this->closeImpl();
     }
     this->detach();
+}
+
+template <typename Derived, typename Inner>
+void WebSocketConnectionHelper<Derived, Inner>::closeOrStop()
+{
+    if (this->stream.is_open())
+    {
+        this->closeImpl();
+    }
+    else
+    {
+        this->resolver.cancel();
+        beast::get_lowest_layer(this->stream).cancel();
+        this->detach();
+    }
 }
 
 // MARK: TlsWebSocketConnection

@@ -38,6 +38,7 @@ QDebug operator<<(QDebug dbg, const WebSocketConnection &conn)
 
 void WebSocketConnection::detach()
 {
+    bool anyWork = this->listener != nullptr || this->pool != nullptr;
     if (this->listener)
     {
         this->listener->onClose(std::move(this->listener));
@@ -47,7 +48,11 @@ void WebSocketConnection::detach()
         this->pool->removeConnection(this);
         this->pool = nullptr;
     }
-    qCDebug(chatterinoWebsocket) << *this << "Detached";
+
+    if (anyWork)
+    {
+        qCDebug(chatterinoWebsocket) << *this << "Detached";
+    }
 }
 
 }  // namespace chatterino::ws::detail
