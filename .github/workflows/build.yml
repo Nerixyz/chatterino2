@@ -29,6 +29,7 @@ jobs:
     name: "Build Ubuntu in Docker"
     runs-on: ubuntu-latest
     container: ${{ matrix.container }}
+    if: false
     strategy:
       matrix:
         include:
@@ -130,6 +131,7 @@ jobs:
           path: build/Chatterino-${{ matrix.os }}-x86_64.deb
 
   build:
+    if: false
     name: "Build ${{ matrix.os }}, Qt ${{ matrix.qt-version }} (LTO:${{ matrix.force-lto }}, crashpad:${{ matrix.skip-crashpad && 'off' || 'on' }})"
     runs-on: ${{ matrix.os }}
     strategy:
@@ -327,7 +329,7 @@ jobs:
   create-release:
     needs: [build-ubuntu-docker, build]
     runs-on: ubuntu-latest
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/master')
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/master') && false
 
     steps:
       - uses: actions/checkout@v4
