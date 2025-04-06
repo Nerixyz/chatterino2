@@ -358,6 +358,7 @@ void WebSocketConnectionHelper<Derived, Inner>::fail(
 template <typename Derived, typename Inner>
 void WebSocketConnectionHelper<Derived, Inner>::forceStop()
 {
+    this->isClosing = true;
     this->resolver.cancel();
     beast::get_lowest_layer(this->stream).cancel();
     this->detach();
