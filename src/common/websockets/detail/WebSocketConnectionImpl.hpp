@@ -67,6 +67,8 @@ private:
 
     void forceStop();  // assumes the socket has been closed
 
+    boost::asio::cancellation_signal readCancellation;
+
     friend Derived;
 };
 

@@ -3,6 +3,7 @@
 #include "common/QLogging.hpp"
 #include "common/Version.hpp"
 
+#include <boost/asio/bind_cancellation_slot.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/beast/core/bind_handler.hpp>
 #include <boost/beast/websocket/ssl.hpp>
@@ -213,8 +214,10 @@ void WebSocketConnectionHelper<Derived, Inner>::onWsHandshake(
     this->trySend();
     this->stream.async_read(
         this->readBuffer,
-        beast::bind_front_handler(&WebSocketConnectionHelper::onReadDone,
-                                  this->shared_from_this()));
+        asio::bind_cancellation_slot(
+            this->readCancellation.slot(),
+            beast::bind_front_handler(&WebSocketConnectionHelper::onReadDone,
+                                      this->shared_from_this())));
 }
 
 template <typename Derived, typename Inner>
@@ -249,8 +252,10 @@ void WebSocketConnectionHelper<Derived, Inner>::onReadDone(
 
     this->stream.async_read(
         this->readBuffer,
-        beast::bind_front_handler(&WebSocketConnectionHelper::onReadDone,
-                                  this->shared_from_this()));
+        asio::bind_cancellation_slot(
+            this->readCancellation.slot(),
+            beast::bind_front_handler(&WebSocketConnectionHelper::onReadDone,
+                                      this->shared_from_this())));
 }
 
 template <typename Derived, typename Inner>
@@ -307,6 +312,7 @@ void WebSocketConnectionHelper<Derived, Inner>::closeImpl()
     // cancel all pending operations
     this->resolver.cancel();
     beast::get_lowest_layer(this->stream).cancel();
+    this->readCancellation.emit(asio::cancellation_type::all);
 
     this->stream.async_close(
         beast::websocket::close_code::normal,
@@ -345,6 +351,7 @@ void WebSocketConnectionHelper<Derived, Inner>::forceStop()
     this->isClosing = true;
     this->resolver.cancel();
     beast::get_lowest_layer(this->stream).cancel();
+    this->readCancellation.emit(asio::cancellation_type::all);
     this->detach();
 }
 
