@@ -217,7 +217,9 @@ void WebSocketConnectionHelper<Derived, Inner>::onReadDone(
         this->fail(ec, u"read");
         return;
     }
-    qCDebug(chatterinoWebsocket) << *this << "Read done.";
+    qCDebug(chatterinoWebsocket)
+        << *this << "Read done." << this->stream.is_message_done()
+        << this->stream.is_open();
 
     // XXX: this copies - we could read directly into a QByteArray
     QByteArray data{
