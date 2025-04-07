@@ -2,11 +2,25 @@
 
 ## Unversioned
 
+- Minor: Add an option for the reduced opacity of message history. (#6121)
+- Minor: Make paused chat indicator more visible, and fix its zoom behavior. (#6123)
+- Bugfix: Don't create native messaging manifest file if browser directory doesn't exist. (#6116)
+- Bugfix: Fixed scrolling now working on inputs in the settings. (#6128)
+- Bugfix: Make reply-cancel button less coarse-grained. (#6106)
+- Bugfix: Fixed missing BetterTTV live updates of emotes. (#6132)
+- Bugfix: Handle <kbd>CMD</kbd> + <kbd>BACKSPACE</kbd> behavior explicitly in main chat dialog input for macOS. (#6111)
+- Bugfix: Fixed a small typo in the settings page. (#6134)
+- Dev: Conan will no longer generate a `CMakeUserPresets.json` file. (#6117)
+- Dev: Pass `--force-openssl` when installing from CMake in Qt 6.8+. (#6129)
+
+## 2.5.3
+
 - Minor: Shared chat messages now use the source channel's profile picture to denote it's a shared chat message. (#5760)
 - Minor: Moved the "Delete message" menu option into a "Moderate" sub-menu. (#6100)
 - Bugfix: Fixed the channel name input not being focused when opening the select-channel dialog. (#6096)
 - Bugfix: Fixed inputs in dialogs not having a border around and padding in them. (#6098)
 - Bugfix: Don't set default binding for "Toggle local R9K" on macOS. Was <kbd>CTRL</kbd> + <kdb>H</kdb> before, which clashes with a system binding. (#5764)
+- Bugfix: Don't add moderation buttons to your own Usercard. (#6107)
 - Dev: Temporarily disable precompiled header support for macOS. (#6104)
 
 ## 2.5.3-beta.1
