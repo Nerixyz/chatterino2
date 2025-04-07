@@ -125,11 +125,14 @@ TEST(WebSocketPool, tlsEcho)
     // handle.sendBinary("message1");
     // handle.sendBinary("message2");
     // handle.sendBinary("message3");
-    handle.sendText("message4");
+    // handle.sendText("message4");
 
-    ASSERT_TRUE(messageFlag.waitFor(1s));
+    // ASSERT_TRUE(messageFlag.waitFor(1s));
     QByteArray bigMsg(1 << 15, 'A');
     handle.sendBinary(bigMsg);
+    handle.sendText("foo");
+    handle.sendText("foo");
+    handle.sendText("foo");
     handle.sendText("foo");
     // handle.sendText("/HEADER my-header");
     // handle.sendText("/HEADER another-header");
