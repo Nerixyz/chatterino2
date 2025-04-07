@@ -63,15 +63,15 @@ TEST(WebSocketPool, tcpEcho)
                 },
         },
         std::make_unique<Listener>(messages, messageFlag, closeFlag));
-    handle.sendBinary("message1");
+    // handle.sendBinary("message1");
     // handle.sendBinary("message2");
     // handle.sendBinary("message3");
-    // handle.sendText("message4");
+    handle.sendText("message4");
 
     ASSERT_TRUE(messageFlag.waitFor(1s));
     QByteArray bigMsg(1 << 15, 'A');
     handle.sendBinary(bigMsg);
-    // handle.sendText("foo");
+    handle.sendText("foo");
     // handle.sendText("/HEADER my-header");
     // handle.sendText("/HEADER another-header");
     // handle.sendText("/HEADER cookie");
@@ -122,15 +122,15 @@ TEST(WebSocketPool, tlsEcho)
             },
         },
         std::make_unique<Listener>(messages, messageFlag, closeFlag));
-    handle.sendBinary("message1");
-    handle.sendBinary("message2");
-    handle.sendBinary("message3");
+    // handle.sendBinary("message1");
+    // handle.sendBinary("message2");
+    // handle.sendBinary("message3");
     handle.sendText("message4");
 
     ASSERT_TRUE(messageFlag.waitFor(1s));
     QByteArray bigMsg(1 << 15, 'A');
     handle.sendBinary(bigMsg);
-    // handle.sendText("foo");
+    handle.sendText("foo");
     // handle.sendText("/HEADER my-header");
     // handle.sendText("/HEADER another-header");
     // handle.sendText("/HEADER cookie");
