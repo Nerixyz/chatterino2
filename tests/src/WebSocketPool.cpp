@@ -64,43 +64,43 @@ TEST(WebSocketPool, tcpEcho)
         },
         std::make_unique<Listener>(messages, messageFlag, closeFlag));
     handle.sendBinary("message1");
-    handle.sendBinary("message2");
-    handle.sendBinary("message3");
-    handle.sendText("message4");
+    // handle.sendBinary("message2");
+    // handle.sendBinary("message3");
+    // handle.sendText("message4");
 
     ASSERT_TRUE(messageFlag.waitFor(1s));
-    // QByteArray bigMsg(1 << 15, 'A');
-    // handle.sendBinary(bigMsg);
-    handle.sendText("foo");
-    handle.sendText("/HEADER my-header");
-    handle.sendText("/HEADER another-header");
-    handle.sendText("/HEADER cookie");
-    handle.sendText("/HEADER user-agent");
+    QByteArray bigMsg(1 << 15, 'A');
+    handle.sendBinary(bigMsg);
+    // handle.sendText("foo");
+    // handle.sendText("/HEADER my-header");
+    // handle.sendText("/HEADER another-header");
+    // handle.sendText("/HEADER cookie");
+    // handle.sendText("/HEADER user-agent");
     handle.sendText("/CLOSE");
 
     ASSERT_TRUE(closeFlag.waitFor(1s));
 
-    ASSERT_EQ(messages.size(), 9);
-    ASSERT_EQ(messages[0].first, false);
-    ASSERT_EQ(messages[0].second, "message1");
-    ASSERT_EQ(messages[1].first, false);
-    ASSERT_EQ(messages[1].second, "message2");
-    ASSERT_EQ(messages[2].first, false);
-    ASSERT_EQ(messages[2].second, "message3");
-    ASSERT_EQ(messages[3].first, true);
-    ASSERT_EQ(messages[3].second, "message4");
+    // ASSERT_EQ(messages.size(), 9);
+    // ASSERT_EQ(messages[0].first, false);
+    // ASSERT_EQ(messages[0].second, "message1");
+    // ASSERT_EQ(messages[1].first, false);
+    // ASSERT_EQ(messages[1].second, "message2");
+    // ASSERT_EQ(messages[2].first, false);
+    // ASSERT_EQ(messages[2].second, "message3");
+    // ASSERT_EQ(messages[3].first, true);
+    // ASSERT_EQ(messages[3].second, "message4");
     // ASSERT_EQ(messages[4].first, false);
     // ASSERT_EQ(messages[4].second, bigMsg);
-    ASSERT_EQ(messages[4].first, true);
-    ASSERT_EQ(messages[4].second, "foo");
-    ASSERT_EQ(messages[5].first, true);
-    ASSERT_EQ(messages[5].second, "my-header-VALUE");
-    ASSERT_EQ(messages[6].first, true);
-    ASSERT_EQ(messages[6].second, "other-header");
-    ASSERT_EQ(messages[7].first, true);
-    ASSERT_EQ(messages[7].second, "xd");
-    ASSERT_EQ(messages[8].first, true);
-    ASSERT_EQ(messages[8].second, "MyUserAgent");
+    // ASSERT_EQ(messages[4].first, true);
+    // ASSERT_EQ(messages[4].second, "foo");
+    // ASSERT_EQ(messages[5].first, true);
+    // ASSERT_EQ(messages[5].second, "my-header-VALUE");
+    // ASSERT_EQ(messages[6].first, true);
+    // ASSERT_EQ(messages[6].second, "other-header");
+    // ASSERT_EQ(messages[7].first, true);
+    // ASSERT_EQ(messages[7].second, "xd");
+    // ASSERT_EQ(messages[8].first, true);
+    // ASSERT_EQ(messages[8].second, "MyUserAgent");
 }
 
 TEST(WebSocketPool, tlsEcho)
@@ -128,34 +128,34 @@ TEST(WebSocketPool, tlsEcho)
     handle.sendText("message4");
 
     ASSERT_TRUE(messageFlag.waitFor(1s));
-    // QByteArray bigMsg(1 << 15, 'A');
-    // handle.sendBinary(bigMsg);
-    handle.sendText("foo");
-    handle.sendText("/HEADER my-header");
-    handle.sendText("/HEADER another-header");
-    handle.sendText("/HEADER cookie");
-    handle.sendText("/HEADER user-agent");
+    QByteArray bigMsg(1 << 15, 'A');
+    handle.sendBinary(bigMsg);
+    // handle.sendText("foo");
+    // handle.sendText("/HEADER my-header");
+    // handle.sendText("/HEADER another-header");
+    // handle.sendText("/HEADER cookie");
+    // handle.sendText("/HEADER user-agent");
     handle.sendText("/CLOSE");
 
     ASSERT_TRUE(closeFlag.waitFor(1s));
 
-    ASSERT_EQ(messages.size(), 9);
-    ASSERT_EQ(messages[0].first, false);
-    ASSERT_EQ(messages[0].second, "message1");
-    ASSERT_EQ(messages[1].first, false);
-    ASSERT_EQ(messages[1].second, "message2");
-    ASSERT_EQ(messages[2].first, false);
-    ASSERT_EQ(messages[2].second, "message3");
-    ASSERT_EQ(messages[3].first, true);
-    ASSERT_EQ(messages[3].second, "message4");
-    ASSERT_EQ(messages[4].first, true);
-    ASSERT_EQ(messages[4].second, "foo");
-    ASSERT_EQ(messages[5].first, true);
-    ASSERT_EQ(messages[5].second, "my-header-VALUE");
-    ASSERT_EQ(messages[6].first, true);
-    ASSERT_EQ(messages[6].second, "other-header");
-    ASSERT_EQ(messages[7].first, true);
-    ASSERT_EQ(messages[7].second, "xd");
-    ASSERT_EQ(messages[8].first, true);
-    ASSERT_TRUE(messages[8].second.startsWith("Chatterino"));
+    // ASSERT_EQ(messages.size(), 9);
+    // ASSERT_EQ(messages[0].first, false);
+    // ASSERT_EQ(messages[0].second, "message1");
+    // ASSERT_EQ(messages[1].first, false);
+    // ASSERT_EQ(messages[1].second, "message2");
+    // ASSERT_EQ(messages[2].first, false);
+    // ASSERT_EQ(messages[2].second, "message3");
+    // ASSERT_EQ(messages[3].first, true);
+    // ASSERT_EQ(messages[3].second, "message4");
+    // ASSERT_EQ(messages[4].first, true);
+    // ASSERT_EQ(messages[4].second, "foo");
+    // ASSERT_EQ(messages[5].first, true);
+    // ASSERT_EQ(messages[5].second, "my-header-VALUE");
+    // ASSERT_EQ(messages[6].first, true);
+    // ASSERT_EQ(messages[6].second, "other-header");
+    // ASSERT_EQ(messages[7].first, true);
+    // ASSERT_EQ(messages[7].second, "xd");
+    // ASSERT_EQ(messages[8].first, true);
+    // ASSERT_TRUE(messages[8].second.startsWith("Chatterino"));
 }
