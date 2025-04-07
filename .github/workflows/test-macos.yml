@@ -83,7 +83,7 @@ jobs:
           ./server 127.0.0.1:9050 127.0.0.1:9052 &
           cd ../build-test
           sleep 3
-          ctest -R 'WebSocket' -V --repeat until-fail:100 -j1
+          ctest -R 'WebSocketPool' -V --repeat until-fail:100 -j1
         working-directory: build-test
 
       - name: Setup tmate session
