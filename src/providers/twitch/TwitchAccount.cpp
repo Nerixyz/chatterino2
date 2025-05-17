@@ -2,33 +2,27 @@
 
 #include "Application.hpp"
 #include "common/Channel.hpp"
-#include "common/Env.hpp"
-#include "common/Literals.hpp"
-#include "common/network/NetworkResult.hpp"
+#include "common/network/NetworkResult.hpp"  // IWYU pragma: keep
 #include "common/QLogging.hpp"
 #include "controllers/accounts/AccountController.hpp"
 #include "debug/AssertInGuiThread.hpp"
 #include "messages/Emote.hpp"
-#include "messages/Message.hpp"
 #include "messages/MessageBuilder.hpp"
-#include "providers/IvrApi.hpp"
 #include "providers/seventv/SeventvAPI.hpp"
 #include "providers/twitch/api/Helix.hpp"
 #include "providers/twitch/TwitchCommon.hpp"
 #include "providers/twitch/TwitchUsers.hpp"
 #include "singletons/Emotes.hpp"
 #include "util/CancellationToken.hpp"
-#include "util/Helpers.hpp"
-#include "util/QStringHash.hpp"
-#include "util/RapidjsonHelpers.hpp"
+#include "util/QStringHash.hpp"  // IWYU pragma: keep
 
 #include <boost/unordered/unordered_flat_map.hpp>
 #include <QStringBuilder>
 #include <QThread>
 
-namespace chatterino {
+using namespace Qt::Literals::StringLiterals;
 
-using namespace literals;
+namespace chatterino {
 
 std::optional<TwitchAccountData> TwitchAccountData::loadRaw(
     const std::string &key)
@@ -201,6 +195,7 @@ void TwitchAccount::loadBlocks()
     this->blockToken_ = token;
     this->ignores_.clear();
     this->ignoresUserIds_.clear();
+    this->ignoresUserLogins_.clear();
 
     getHelix()->loadBlocks(
         getApp()->getAccounts()->twitch.getCurrent()->userId_,
@@ -213,6 +208,7 @@ void TwitchAccount::loadBlocks()
                 blockedUser.fromHelixBlock(block);
                 this->ignores_.insert(blockedUser);
                 this->ignoresUserIds_.insert(blockedUser.id);
+                this->ignoresUserLogins_.insert(blockedUser.name);
             }
         },
         [](auto error) {
@@ -222,51 +218,60 @@ void TwitchAccount::loadBlocks()
         std::move(token));
 }
 
-void TwitchAccount::blockUser(const QString &userId, const QObject *caller,
+void TwitchAccount::blockUser(const QString &userId, const QString &userLogin,
+                              const QObject *caller,
                               std::function<void()> onSuccess,
                               std::function<void()> onFailure)
 {
     getHelix()->blockUser(
         userId, caller,
-        [this, userId, onSuccess = std::move(onSuccess)] {
+        [this, userId, userLogin, onSuccess = std::move(onSuccess)] {
             assertInGuiThread();
 
             TwitchUser blockedUser;
             blockedUser.id = userId;
+            blockedUser.name = userLogin;
             this->ignores_.insert(blockedUser);
             this->ignoresUserIds_.insert(blockedUser.id);
+            this->ignoresUserLogins_.insert(blockedUser.name);
             onSuccess();
         },
         std::move(onFailure));
 }
 
-void TwitchAccount::unblockUser(const QString &userId, const QObject *caller,
+void TwitchAccount::unblockUser(const QString &userId, const QString &userLogin,
+                                const QObject *caller,
                                 std::function<void()> onSuccess,
                                 std::function<void()> onFailure)
 {
     getHelix()->unblockUser(
         userId, caller,
-        [this, userId, onSuccess = std::move(onSuccess)] {
+        [this, userId, userLogin, onSuccess = std::move(onSuccess)] {
             assertInGuiThread();
 
             TwitchUser ignoredUser;
             ignoredUser.id = userId;
+            ignoredUser.name = userLogin;
             this->ignores_.erase(ignoredUser);
             this->ignoresUserIds_.erase(ignoredUser.id);
+            this->ignoresUserLogins_.erase(ignoredUser.name);
             onSuccess();
         },
         std::move(onFailure));
 }
 
-void TwitchAccount::blockUserLocally(const QString &userID)
+void TwitchAccount::blockUserLocally(const QString &userID,
+                                     const QString &userLogin)
 {
     assertInGuiThread();
     assert(getApp()->isTest());
 
     TwitchUser blockedUser;
     blockedUser.id = userID;
+    blockedUser.name = userLogin;
     this->ignores_.insert(blockedUser);
     this->ignoresUserIds_.insert(blockedUser.id);
+    this->ignoresUserLogins_.insert(blockedUser.name);
 }
 
 const std::unordered_set<TwitchUser> &TwitchAccount::blocks() const
@@ -281,8 +286,14 @@ const std::unordered_set<QString> &TwitchAccount::blockedUserIds() const
     return this->ignoresUserIds_;
 }
 
+const std::unordered_set<QString> &TwitchAccount::blockedUserLogins() const
+{
+    assertInGuiThread();
+    return this->ignoresUserLogins_;
+}
+
 // AutoModActions
-void TwitchAccount::autoModAllow(const QString msgID, ChannelPtr channel)
+void TwitchAccount::autoModAllow(const QString &msgID, ChannelPtr channel) const
 {
     getHelix()->manageAutoModMessages(
         this->getUserId(), msgID, "ALLOW",
@@ -319,7 +330,7 @@ void TwitchAccount::autoModAllow(const QString msgID, ChannelPtr channel)
                 // This would most likely happen if the service is down, or if the JSON payload returned has changed format
                 case HelixAutoModMessageError::Unknown:
                 default: {
-                    errorMessage += "an unknown error occured.";
+                    errorMessage += "an unknown error occurred.";
                 }
                 break;
             }
@@ -328,7 +339,7 @@ void TwitchAccount::autoModAllow(const QString msgID, ChannelPtr channel)
         });
 }
 
-void TwitchAccount::autoModDeny(const QString msgID, ChannelPtr channel)
+void TwitchAccount::autoModDeny(const QString &msgID, ChannelPtr channel) const
 {
     getHelix()->manageAutoModMessages(
         this->getUserId(), msgID, "DENY",
@@ -365,7 +376,7 @@ void TwitchAccount::autoModDeny(const QString msgID, ChannelPtr channel)
                 // This would most likely happen if the service is down, or if the JSON payload returned has changed format
                 case HelixAutoModMessageError::Unknown:
                 default: {
-                    errorMessage += "an unknown error occured.";
+                    errorMessage += "an unknown error occurred.";
                 }
                 break;
             }
