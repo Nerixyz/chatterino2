@@ -95,7 +95,6 @@ jobs:
             -DCHATTERINO_STATIC_QT_BUILD=On \
             -DFORCE_JSON_GENERATION=${{matrix.os == 'ubuntu-24.04' && 'On' || 'Off'}} \
             -DSKIP_LUA_DEFINITIONS_GENERATION=${{matrix.os == 'ubuntu-20.04' && 'On' || 'Off'}} \
-            -DFORCE_LUA_DEFINITIONS_GENERATION=${{matrix.os != 'ubuntu-20.04' && 'On' || 'Off'}} \
             ..
           make -j"$(nproc)"
 

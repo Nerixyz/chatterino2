@@ -800,22 +800,13 @@ else()
     message(STATUS "Doing lua definition generation")
     find_package(Python3 COMPONENTS Interpreter)
 
-    # HACK(Mm2PL): Trick make into running our script
-    if (FORCE_LUA_DEFINITIONS_GENERATION)
-        set(outputs "${CMAKE_SOURCE_DIR}/docs/plugin-meta.lua" _fake_output)
-    else()
-        set(outputs "${CMAKE_SOURCE_DIR}/docs/plugin-meta.lua")
-    endif()
-
-    # If additional build performance is needed: consider having the script
-    # generate a proper listing of files containing lua meta directives or at
-    # least use only headers here. This command takes only ~25ms for me on
-    # Linux.
+    set(_depfile "${CMAKE_CURRENT_BINARY_DIR}/luals-meta.d")
     add_custom_command(
         COMMENT "Generating Lua definitions"
-        DEPENDS "${CMAKE_SOURCE_DIR}/scripts/make_luals_meta.py" ${SOURCE_FILES}
-        COMMAND "${Python3_EXECUTABLE}" "scripts/make_luals_meta.py"
-        OUTPUT ${outputs}
+        DEPENDS "${CMAKE_SOURCE_DIR}/scripts/make_luals_meta.py"
+        COMMAND "${Python3_EXECUTABLE}" "scripts/make_luals_meta.py" --depfile "${_depfile}" --log=WARN
+        DEPFILE "${_depfile}"
+        OUTPUT "${CMAKE_SOURCE_DIR}/docs/plugin-meta.lua"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         VERBATIM
     )

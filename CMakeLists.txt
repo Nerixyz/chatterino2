@@ -4,6 +4,9 @@ cmake_policy(SET CMP0091 NEW) # select MSVC runtime library through `CMAKE_MSVC_
 if (POLICY CMP0167)
     cmake_policy(SET CMP0167 NEW) # find Boost's own CMake config file
 endif ()
+if (POLICY CMP0116)
+    cmake_policy(SET CMP0116 NEW) # Ninja generators transform DEPFILEs from add_custom_command()
+endif ()
 include(FeatureSummary)
 
 list(APPEND CMAKE_MODULE_PATH
@@ -31,7 +34,6 @@ option(CHATTERINO_LTO "Enable LTO for all targets" OFF)
 option(CHATTERINO_PLUGINS "Enable ALPHA plugin support in Chatterino" ON)
 option(CHATTERINO_USE_GDI_FONTENGINE "Use the legacy GDI fontengine instead of the new DirectWrite one on Windows (Qt 6.8.0 and later)" ON)
 
-option(FORCE_LUA_DEFINITIONS_GENERATION "Make sure docs/plugins-meta.lua is generated at build time" OFF)
 option(SKIP_LUA_DEFINITIONS_GENERATION "Skip docs/plugin-meta.lua generation" OFF)
 
 option(CHATTERINO_UPDATER "Enable update checks" ON)
