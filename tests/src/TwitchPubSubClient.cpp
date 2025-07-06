@@ -8,6 +8,7 @@
 
 #include <chrono>
 #include <mutex>
+#include <utility>
 
 using namespace chatterino;
 using namespace std::chrono_literals;
