@@ -11,6 +11,8 @@ export QT_ROOT_DIR=$qtpath
 export QT_PLUGIN_PATH="$qtpath/plugins"
 export PATH="$PATH:$(realpath "$qtpath/bin")"
 export Qt6_DIR="$(realpath "$qtpath")"
+export CLAZY_CHECKS='level0,level1,level2,no-qstring-allocations'
+export CLAZY_HEADER_FILTER='.*/src/.*'
 
 cmake -S. -Bbuild-clang-tidy \
     -DCMAKE_BUILD_TYPE=Debug \
