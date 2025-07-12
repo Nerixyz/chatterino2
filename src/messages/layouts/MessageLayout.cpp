@@ -445,13 +445,13 @@ void MessageLayout::updateBuffer(QPixmap *buffer,
         }
         else
         {
-            backgroundColor = QColor("#404040");
+            backgroundColor = QColor("#404040");  // test
         }
     }
     else if (this->message_->flags.has(MessageFlag::Debug))
-    {
-        backgroundColor = QColor("#4A273D");
-    }
+    {                                         // o
+        backgroundColor = QColor("#4A273D");  // xd
+    }  // a
 
     painter.fillRect(buffer->rect(), backgroundColor);
 
