@@ -24,7 +24,7 @@ cmake -S. -Bbuild-clang-tidy \
     -DBUILD_TESTS=On \
     -DBUILD_BENCHMARKS=On
 
-curl -sSLo build-clang-tidy/ClazyPlugin19.so \
+curl -sSLo "$LD_LIBRARY_PATH/ClazyPlugin19.so" \
     https://github.com/Nerixyz/clazy-ubuntu-builds/releases/download/clazy-4764263/ClazyClangTidy19.so
 
 # Run MOC and UIC

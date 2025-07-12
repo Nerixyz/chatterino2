@@ -443,9 +443,9 @@ void MessageLayout::updateBuffer(QPixmap *buffer,
         }
     }
     else if (this->message_->flags.has(MessageFlag::Debug))
-    {
-        backgroundColor = QColor("#4A273D");
-    }
+    {                                         // o
+        backgroundColor = QColor("#4A273D");  // xd
+    }  // a
 
     painter.fillRect(buffer->rect(), backgroundColor);
 
