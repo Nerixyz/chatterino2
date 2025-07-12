@@ -11,8 +11,6 @@ export QT_ROOT_DIR=$qtpath
 export QT_PLUGIN_PATH="$qtpath/plugins"
 export PATH="$PATH:$(realpath "$qtpath/bin")"
 export Qt6_DIR="$(realpath "$qtpath")"
-export CLAZY_CHECKS='level0,level1,level2,no-qstring-allocations'
-export CLAZY_HEADER_FILTER='.*/src/.*'
 
 cmake -S. -Bbuild-clang-tidy \
     -DCMAKE_BUILD_TYPE=Debug \
@@ -24,7 +22,7 @@ cmake -S. -Bbuild-clang-tidy \
     -DBUILD_TESTS=On \
     -DBUILD_BENCHMARKS=On
 
-curl -sSLo "$LD_LIBRARY_PATH/ClazyPlugin19.so" \
+curl -sSLo "build-clang-tidy/ClazyPlugin19.so" \
     https://github.com/Nerixyz/clazy-ubuntu-builds/releases/download/clazy-4764263/ClazyClangTidy19.so
 
 # Run MOC and UIC
