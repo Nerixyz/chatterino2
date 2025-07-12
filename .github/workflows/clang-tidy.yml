@@ -41,12 +41,13 @@ jobs:
 
       - name: clang-tidy review
         timeout-minutes: 20
-        uses: ZedThree/clang-tidy-review@v0.21.0
+        uses: Nerixyz/clang-tidy-review@e19598322d5a367997bd9df70ac53161e882a4f1
         with:
           build_dir: build-clang-tidy
           config_file: ".clang-tidy"
           split_workflow: true
           exclude: "lib/*,tools/crash-handler/*,mocks/*"
+          extra_arguments: "-load=build-clang-tidy/ClazyPlugin19.so"
           cmake_command: >-
             ./.CI/setup-clang-tidy.sh
           apt_packages: >-
