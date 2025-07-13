@@ -48,6 +48,7 @@ jobs:
           split_workflow: true
           exclude: "lib/*,tools/crash-handler/*,mocks/*"
           extra_arguments: "-load=ClazyClangTidy19.so"
+          clang_tidy_version: 19
           cmake_command: >-
             ./.CI/setup-clang-tidy.sh
           apt_packages: >-
