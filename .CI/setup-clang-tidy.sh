@@ -22,6 +22,10 @@ cmake -S. -Bbuild-clang-tidy \
     -DBUILD_TESTS=On \
     -DBUILD_BENCHMARKS=On
 
+curl -sSLo build-clang-tidy/clazy19.zip \
+    https://github.com/Nerixyz/clazy-ubuntu-builds/releases/download/clazy-4764263/clazy19.zip
+unzip build-clang-tidy/clazy19.zip -d /usr/lib
+
 # Run MOC and UIC
 # This will compile the dependencies
 # Get the targets using `ninja -t targets | grep autogen`
