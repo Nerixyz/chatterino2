@@ -25,10 +25,10 @@ cmake -S. -Bbuild-clang-tidy \
 curl -sSLo build-clang-tidy/clazy19.zip \
     https://github.com/Nerixyz/clazy-ubuntu-builds/releases/download/clazy-4764263/clazy19.zip
 unzip build-clang-tidy/clazy19.zip
-cp ClazyClangTidy19.so "$(realpath "$qtpath/bin")"
-cp ClazyClangTidy19.so "$LD_LIBRARY_PATH"
-cp ClazyPlugin.so "$(realpath "$qtpath/bin")"
-cp ClazyPlugin.so "$LD_LIBRARY_PATH"
+cp ClazyClangTidy19.so /usr/bin
+cp ClazyClangTidy19.so /usr/lib
+cp ClazyPlugin.so /usr/bin
+cp ClazyPlugin.so /usr/lib
 ldd -r ClazyClangTidy19.so
 
 # Run MOC and UIC
