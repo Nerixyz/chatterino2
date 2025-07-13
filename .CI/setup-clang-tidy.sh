@@ -24,8 +24,8 @@ cmake -S. -Bbuild-clang-tidy \
 
 curl -sSLo build-clang-tidy/clazy19.zip \
     https://github.com/Nerixyz/clazy-ubuntu-builds/releases/download/clazy-4764263/clazy19.zip
-unzip build-clang-tidy/clazy19.zip -d build-clang-tidy
-cp build-clang-tidy/ClazyPlugin.so "$(realpath "$qtpath/bin")"
+unzip build-clang-tidy/clazy19.zip
+ldd ClazyPlugin.so
 
 # Run MOC and UIC
 # This will compile the dependencies
