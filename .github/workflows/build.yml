@@ -133,6 +133,12 @@ jobs:
             force-lto: false
             skip-artifact: false
             skip-crashpad: false
+          # Windows on ARM
+          - os: windows-11-arm
+            qt-version: 6.9.1
+            force-lto: false
+            skip-artifact: false
+            skip-crashpad: false
           # macOS (ARM)
           - os: macos-latest
             qt-version: 6.9.1
@@ -144,6 +150,7 @@ jobs:
     env:
       C2_ENABLE_LTO: ${{ matrix.force-lto }}
       C2_ENABLE_CRASHPAD: ${{ matrix.skip-crashpad == false }}
+      C2_ARCH: ${{ (endsWith(matrix.os, '-arm') || startsWith(matrix.os, 'macos')) && 'arm' || 'x86-64' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -217,7 +224,7 @@ jobs:
         run: |
           cd build
           cmake `
-              -G"NMake Makefiles" `
+              -G Ninja `
               -DCMAKE_BUILD_TYPE=RelWithDebInfo `
               -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake" `
               -DUSE_PRECOMPILED_HEADERS=ON `
@@ -225,16 +232,14 @@ jobs:
               -DCHATTERINO_LTO="$Env:C2_ENABLE_LTO" `
               -DFORCE_JSON_GENERATION=On `
               ..
-          set cl=/MP
-          nmake /S /NOLOGO
+          ninja
 
       - name: Build crashpad (Windows)
         if: startsWith(matrix.os, 'windows') && !matrix.skip-crashpad
         shell: pwsh
         run: |
           cd build
-          set cl=/MP
-          nmake /S /NOLOGO chatterino-crash-handler
+          ninja chatterino-crash-handler
           mkdir Chatterino2/crashpad
           cp bin/crashpad/crashpad-handler.exe Chatterino2/crashpad/crashpad-handler.exe
           7z a bin/chatterino-Qt-${{ matrix.qt-version }}.pdb.7z bin/chatterino.pdb
@@ -252,21 +257,21 @@ jobs:
         if: startsWith(matrix.os, 'windows')
         working-directory: build
         run: |
-          7z a chatterino-windows-x86-64-Qt-${{ matrix.qt-version }}.zip Chatterino2/
+          7z a chatterino-windows-${{ env.C2_ARCH }}-Qt-${{ matrix.qt-version }}.zip Chatterino2/
 
       - name: Upload artifact (Windows - binary)
         if: startsWith(matrix.os, 'windows') && !matrix.skip-artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chatterino-windows-x86-64-Qt-${{ matrix.qt-version }}.zip
-          path: build/chatterino-windows-x86-64-Qt-${{ matrix.qt-version }}.zip
+          name: chatterino-windows-${{ env.C2_ARCH }}-Qt-${{ matrix.qt-version }}.zip
+          path: build/chatterino-windows-${{ env.C2_ARCH }}-Qt-${{ matrix.qt-version }}.zip
 
       - name: Upload artifact (Windows - symbols)
         if: startsWith(matrix.os, 'windows') && !matrix.skip-artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chatterino-windows-x86-64-Qt-${{ matrix.qt-version }}-symbols.pdb.7z
-          path: build/bin/chatterino-Qt-${{ matrix.qt-version }}.pdb.7z
+          name: chatterino-windows-${{ env.C2_ARCH }}-Qt-${{ matrix.qt-version }}-symbols.pdb.7z
+          path: build/bin/chatterino-${{ env.C2_ARCH }}-Qt-${{ matrix.qt-version }}.pdb.7z
 
       - name: Clean Conan cache
         if: startsWith(matrix.os, 'windows')
@@ -381,6 +386,19 @@ jobs:
         name: Windows Qt6.9.1 symbols
         with:
           name: chatterino-windows-x86-64-Qt-6.9.1-symbols.pdb.7z
+          path: release-artifacts/
+
+      # Windows (ARM)
+      - uses: actions/download-artifact@v4
+        name: Windows Qt6.9.1
+        with:
+          name: chatterino-windows-arm-Qt-6.9.1.zip
+          path: release-artifacts/
+
+      - uses: actions/download-artifact@v4
+        name: Windows Qt6.9.1 symbols
+        with:
+          name: chatterino-windows-arm-Qt-6.9.1-symbols.pdb.7z
           path: release-artifacts/
 
       # Linux
