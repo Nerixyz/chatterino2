@@ -77,7 +77,8 @@ private:
     std::vector<EmojiPtr> emojis;
 
     /// Emojis
-    QRegularExpression findShortCodesRegex_{":([-+\\w]+):"};
+    QRegularExpression findShortCodesRegex_{
+        R"((?<=^|\s|:):(?:[-+\w]+):(?=$|\s|:))"};
 
     // shortCodeToEmoji maps strings like "sunglasses" to its emoji
     QMap<QString, std::shared_ptr<EmojiData>> emojiShortCodeToEmoji_;
