@@ -970,6 +970,30 @@ TEST_F(PluginTest, ChannelAddMessage)
     ASSERT_EQ(added[5].first, logged[2]);
 }
 
+TEST_F(PluginTest, Sanity)
+{
+    configure();
+    struct MyType {
+        int value = 10;
+    };
+
+    struct MyOtherType {
+        int value = 10;
+    };
+
+    (*lua)["mty"] = std::make_shared<MyType>();
+    (*lua)["other_ty"] = std::make_shared<MyOtherType>();
+
+    (*lua)["foo"] = [](sol::object obj) {
+        if (obj.is<std::shared_ptr<MyType>>())
+        {
+            std::terminate();
+        }
+    };
+
+    lua->script("foo(other_ty)");
+}
+
 class PluginMessageConstructionTest
     : public PluginTest,
       public ::testing::WithParamInterface<QString>
