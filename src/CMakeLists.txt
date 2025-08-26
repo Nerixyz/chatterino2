@@ -250,6 +250,8 @@ set(SOURCE_FILES
         controllers/plugins/api/HTTPResponse.hpp
         controllers/plugins/api/IOWrapper.cpp
         controllers/plugins/api/IOWrapper.hpp
+        controllers/plugins/api/Message.cpp
+        controllers/plugins/api/Message.hpp
         controllers/plugins/api/WebSocket.cpp
         controllers/plugins/api/WebSocket.hpp
         controllers/plugins/LuaAPI.cpp
@@ -526,6 +528,8 @@ set(SOURCE_FILES
         util/FuzzyConvert.hpp
         util/Helpers.cpp
         util/Helpers.hpp
+        util/ImageUploader.cpp
+        util/ImageUploader.hpp
         util/IncognitoBrowser.cpp
         util/IncognitoBrowser.hpp
         util/IpcQueue.cpp
@@ -586,6 +590,8 @@ set(SOURCE_FILES
         widgets/BaseWidget.hpp
         widgets/BaseWindow.cpp
         widgets/BaseWindow.hpp
+        widgets/ChatterListWidget.cpp
+        widgets/ChatterListWidget.hpp
         widgets/DraggablePopup.cpp
         widgets/DraggablePopup.hpp
         widgets/FramelessEmbedWindow.cpp
@@ -611,12 +617,12 @@ set(SOURCE_FILES
         widgets/buttons/Button.hpp
         widgets/buttons/DimButton.cpp
         widgets/buttons/DimButton.hpp
+        widgets/buttons/DrawnButton.cpp
+        widgets/buttons/DrawnButton.hpp
         widgets/buttons/InitUpdateButton.cpp
         widgets/buttons/InitUpdateButton.hpp
         widgets/buttons/LabelButton.cpp
         widgets/buttons/LabelButton.hpp
-        widgets/buttons/NotebookButton.cpp
-        widgets/buttons/NotebookButton.hpp
         widgets/buttons/PixmapButton.cpp
         widgets/buttons/PixmapButton.hpp
         widgets/buttons/SignalLabel.cpp
@@ -708,12 +714,16 @@ set(SOURCE_FILES
         widgets/helper/RegExpItemDelegate.hpp
         widgets/helper/ResizingTextEdit.cpp
         widgets/helper/ResizingTextEdit.hpp
+        widgets/helper/ScalingSpacerItem.cpp
+        widgets/helper/ScalingSpacerItem.hpp
         widgets/helper/ScrollbarHighlight.cpp
         widgets/helper/ScrollbarHighlight.hpp
         widgets/helper/SearchPopup.cpp
         widgets/helper/SearchPopup.hpp
         widgets/helper/SettingsDialogTab.cpp
         widgets/helper/SettingsDialogTab.hpp
+        widgets/helper/LiveIndicator.cpp
+        widgets/helper/LiveIndicator.hpp
         widgets/helper/TableStyles.cpp
         widgets/helper/TableStyles.hpp
         widgets/helper/TrimRegExpValidator.cpp
@@ -737,6 +747,7 @@ set(SOURCE_FILES
         widgets/settingspages/AccountsPage.hpp
         widgets/settingspages/CommandPage.cpp
         widgets/settingspages/CommandPage.hpp
+        widgets/settingspages/CustomWidgets.hpp
         widgets/settingspages/ExternalToolsPage.cpp
         widgets/settingspages/ExternalToolsPage.hpp
         widgets/settingspages/FiltersPage.cpp
@@ -868,6 +879,12 @@ target_link_libraries(${LIBRARY_PROJECT}
         )
 if (CHATTERINO_PLUGINS)
     target_link_libraries(${LIBRARY_PROJECT} PUBLIC lua sol2::sol2)
+endif()
+
+if (CHATTERINO_ALLOW_PRIVATE_QT_API)
+    target_link_libraries(${LIBRARY_PROJECT} PUBLIC Qt${MAJOR_QT_VERSION}::GuiPrivate)
+    target_compile_definitions(${LIBRARY_PROJECT} PUBLIC 
+        CHATTERINO_WITH_PRIVATE_QT_API)
 endif()
 
 if (BUILD_WITH_QTKEYCHAIN)

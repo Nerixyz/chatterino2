@@ -183,34 +183,6 @@ ComboBox *GeneralPageView::addDropdown(const QString &text,
     return combo;
 }
 
-ComboBox *GeneralPageView::addDropdown(
-    const QString &text, const QStringList &items,
-    pajlada::Settings::Setting<QString> &setting, bool editable,
-    QString toolTipText)
-{
-    auto *combo = this->addDropdown(text, items, toolTipText);
-
-    if (editable)
-    {
-        combo->setEditable(true);
-    }
-
-    // update when setting changes
-    setting.connect(
-        [combo](const QString &value, auto) {
-            combo->setCurrentText(value);
-        },
-        this->managedConnections_);
-
-    QObject::connect(combo, &QComboBox::currentTextChanged,
-                     [&setting](const QString &newValue) {
-                         setting = newValue;
-                         getApp()->getWindows()->forceLayoutChannelViews();
-                     });
-
-    return combo;
-}
-
 void GeneralPageView::addNavigationSpacing()
 {
     assert(this->navigationLayout_ != nullptr &&
@@ -308,6 +280,12 @@ bool GeneralPageView::filterElements(const QString &query)
                         currentSubtitleSearched = true;
                     }
                     continue;
+                }
+
+                if (auto *x = dynamic_cast<Line *>(widget.element))
+                {
+                    // Hide lines in search when not searching for full categories
+                    x->hide();
                 }
 
                 for (auto &&keyword : widget.keywords)

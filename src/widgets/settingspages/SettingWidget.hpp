@@ -16,8 +16,11 @@
 
 #include <functional>
 #include <optional>
+#include <utility>
+#include <vector>
 
 class QFormLayout;
+class QLayout;
 
 namespace chatterino {
 
@@ -66,13 +69,24 @@ public:
         intInput(const QString &label, IntSetting &setting,
                  IntInputParams params);
 
+    /// Create a dropdown backed by an enum
+    ///
+    /// The setting itself expects the enum name (i.e. "Foo")
     template <typename T>
     [[nodiscard("Must use created setting widget")]] static SettingWidget *
         dropdown(const QString &label, EnumStringSetting<T> &setting);
 
+    /// Create a dropdown backed by an enum
+    ///
+    /// The setting itself expects the enum value (i.e. 3)
     template <typename T>
     [[nodiscard("Must use created setting widget")]] static SettingWidget *
         dropdown(const QString &label, EnumSetting<T> &setting);
+
+    /// Create a dropdown for a String setting that is not backed by an enum
+    [[nodiscard("Must use created setting widget")]] static SettingWidget *
+        dropdown(const QString &label, QStringSetting &setting,
+                 const std::vector<std::pair<QString, QVariant>> &items);
 
     [[nodiscard("Must use created setting widget")]] static SettingWidget *
         colorButton(const QString &label, QStringSetting &setting);
@@ -96,13 +110,25 @@ public:
     [[nodiscard("Must use created setting widget")]] SettingWidget *addKeywords(
         const QStringList &newKeywords);
 
+    /// Conditionally enable the widget if the given bool setting is true
     [[nodiscard("Must use created setting widget")]] SettingWidget *
         conditionallyEnabledBy(BoolSetting &setting);
+
+    /// Conditionally enable the widget if the given string setting is equal to expectedValue
+    [[nodiscard("Must use created setting widget")]] SettingWidget *
+        conditionallyEnabledBy(QStringSetting &setting,
+                               const QString &expectedValue);
 
     void addTo(GeneralPageView &view);
     void addTo(GeneralPageView &view, QFormLayout *formLayout);
 
+    /// For settings pages without a page view
+    void addToLayout(QLayout *layout);
+
 private:
+    /// Registers this widget & its optional label to the given page view
+    void registerWidget(GeneralPageView &view);
+
     QWidget *label = nullptr;
     QWidget *actionWidget = nullptr;
 
