@@ -20,6 +20,12 @@ NetworkRequest::NetworkRequest(const std::string &url,
     this->data->request.setUrl(QUrl(QString::fromStdString(url)));
     this->data->requestType = requestType;
 
+    if (qEnvironmentVariableIsSet("CHATTERINO7_NO_HTTP2"))
+    {
+        this->data->request.setAttribute(QNetworkRequest::Http2AllowedAttribute,
+                                         false);
+    }
+
     this->initializeDefaultValues();
 }
 
