@@ -171,6 +171,8 @@ jobs:
       - name: Enable Developer Command Prompt (Windows)
         if: startsWith(matrix.os, 'windows')
         uses: ilammy/msvc-dev-cmd@v1.13.0
+        with:
+          arch: ${{env.C2_ARCH == 'arm' && 'arm64' || 'x64' }}
 
       - name: Setup sccache (Windows)
         # sccache v0.7.4
@@ -184,12 +186,13 @@ jobs:
           restore-keys: |
             sccache-build-${{ matrix.os }}-${{ matrix.qt-version }}
 
-      - name: Cache conan packages (Windows)
+      - name: Restore conan package cache (Windows)
+        id: cache-conan-restore
         if: startsWith(matrix.os, 'windows')
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           key: ${{ runner.os }}-conan-user-${{ hashFiles('**/conanfile.py') }}-QT6
-          path: ~/.conan2/
+          path: ~/.conan2/ # sync with save below
 
       - name: Setup Python (Windows)
         uses: actions/setup-python@v6
@@ -216,7 +219,15 @@ jobs:
               -b missing \
               --output-folder=. \
               -o with_openssl3=True
+          conan cache clean --source --build --download "*"
         shell: bash
+
+      - name: Save conan cache (Windows)
+        if: startsWith(matrix.os, 'windows') && always() && steps.cache-conan-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          key: ${{ steps.cache-conan-restore.outputs.cache-primary-key }}
+          path: ~/.conan2/ # sync with restore above
 
       - name: Build (Windows)
         if: startsWith(matrix.os, 'windows')
@@ -273,11 +284,6 @@ jobs:
         with:
           name: chatterino-windows-${{ env.C2_ARCH }}-Qt-${{ matrix.qt-version }}-symbols.pdb.7z
           path: build/bin/chatterino-${{ env.C2_ARCH }}-Qt-${{ matrix.qt-version }}.pdb.7z
-
-      - name: Clean Conan cache
-        if: startsWith(matrix.os, 'windows')
-        run: conan cache clean --source --build --download "*"
-        shell: bash
 
       # MACOS
       - name: Install dependencies (MacOS)
