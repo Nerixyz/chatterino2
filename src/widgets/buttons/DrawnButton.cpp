@@ -35,10 +35,28 @@ void DrawnButton::themeChangedEvent()
     switch (this->symbol)
     {
         case Symbol::Plus: {
-            o.padding = 3;
+            o.padding = 4;
             o.thickness = 1;
 
             o.foreground = this->theme->messages.textColors.system;
+            o.foregroundHover = this->theme->messages.textColors.regular;
+        }
+        break;
+
+        case Symbol::Kebab: {
+            o.padding = 2;
+            o.thickness = 2;
+
+            if (this->theme->isLightTheme())
+            {
+                // TODO: This should use its own theme color (e.g. theme->button->regular)
+                o.foreground = QColor("#424242");
+            }
+            else
+            {
+                // TODO: This should use its own theme color (e.g. theme->button->regular)
+                o.foreground = QColor("#c0c0c0");
+            }
             o.foregroundHover = this->theme->messages.textColors.regular;
         }
         break;
@@ -89,6 +107,21 @@ void DrawnButton::paintContent(QPainter &painter)
             QRect inner;
             inner.setSize(innerSize);
             inner.moveCenter(this->rect().center());
+            inner = inner.marginsRemoved({padding, padding, padding, padding});
+
+            // make sure that the inner size is always odd:
+            // (width): [====outer====][|inner|][====outer====]
+            // -> 2 * outer_w + inner_w
+            // -> 2 * outer_w + 1dp
+            // -> odd
+            if ((inner.width() % 2) == 0)
+            {
+                inner.setRight(inner.right() + 1);
+            }
+            if ((inner.height() % 2) == 0)
+            {
+                inner.setTop(inner.top() - 1);
+            }
 
             auto top = inner.top();
             auto bottom = inner.bottom();
@@ -96,12 +129,32 @@ void DrawnButton::paintContent(QPainter &painter)
             auto left = inner.left();
             auto right = inner.right();
 
-            QLine vertical(center.x(), top + padding, center.x(),
-                           bottom - padding);
+            QLine vertical(center.x(), top, center.x(), bottom);
             painter.drawLine(vertical);
-            QLine horizontal(left + padding, center.y(), right - padding,
-                             center.y());
+            QLine horizontal(left, center.y(), right, center.y());
             painter.drawLine(horizontal);
+        }
+        break;
+
+        case Symbol::Kebab: {
+            QPen pen;
+            pen.setColor(fg);
+            pen.setWidth(thickness);
+            painter.setPen(pen);
+
+            QRect centerBox;
+            centerBox.setSize({thickness, thickness});
+            centerBox.moveCenter(rect().center());
+
+            painter.fillRect(centerBox, fg);
+
+            // NOTE: Technically a misuse of padding
+            auto bottomBox = centerBox.translated(0, thickness + padding);
+            painter.fillRect(bottomBox, fg);
+
+            // NOTE: Technically a misuse of padding
+            auto topBox = centerBox.translated(0, -(thickness + padding));
+            painter.fillRect(topBox, fg);
         }
         break;
     }

@@ -290,6 +290,11 @@ public:
         false,
     };
 
+    BoolSetting pulseTextInputOnSelfMessage = {
+        "/appearance/pulseTextInputOnSelfMessage",
+        false,
+    };
+
     /// Behaviour
     BoolSetting allowDuplicateMessages = {"/behaviour/allowDuplicateMessages",
                                           true};
@@ -586,6 +591,10 @@ public:
         "/logging/logTimestampFormat",
         "hh:mm:ss",
     };
+    BoolSetting tryUseTwitchTimestamps = {
+        "/logging/tryUseTwitchTimestamps",
+        false,
+    };
     QStringSetting logPath = {"/logging/path", ""};
 
     QStringSetting pathHighlightSound = {"/highlighting/highlightSoundPath",
@@ -750,6 +759,8 @@ public:
     };
 
     QStringSetting additionalExtensionIDs{"/misc/additionalExtensionIDs", ""};
+
+    BoolSetting xChatterino7NoHttp2{"/x-chatterino7/no-http2", false};
 
 private:
     ChatterinoSetting<std::vector<HighlightPhrase>> highlightedMessagesSetting =

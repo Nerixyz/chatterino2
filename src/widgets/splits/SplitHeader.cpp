@@ -13,7 +13,6 @@
 #include "providers/twitch/TwitchAccount.hpp"
 #include "providers/twitch/TwitchChannel.hpp"
 #include "providers/twitch/TwitchIrcServer.hpp"
-#include "singletons/Resources.hpp"
 #include "singletons/Settings.hpp"
 #include "singletons/StreamerMode.hpp"
 #include "singletons/Theme.hpp"
@@ -22,7 +21,7 @@
 #include "util/LayoutHelper.hpp"
 #include "widgets/buttons/DrawnButton.hpp"
 #include "widgets/buttons/LabelButton.hpp"
-#include "widgets/buttons/PixmapButton.hpp"
+#include "widgets/buttons/SvgButton.hpp"
 #include "widgets/dialogs/SettingsDialog.hpp"
 #include "widgets/helper/CommonTexts.hpp"
 #include "widgets/Label.hpp"
@@ -289,12 +288,35 @@ void SplitHeader::initializeLayout()
 {
     assert(this->layout() == nullptr);
 
+    this->moderationButton_ = new SvgButton(
+        {
+            .dark = ":/buttons/moderationDisabled-darkMode.svg",
+            .light = ":/buttons/moderationDisabled-lightMode.svg",
+        },
+        this, {5, 5});
+
+    this->chattersButton_ = new SvgButton(
+        {
+            .dark = ":/buttons/chatters-darkMode.svg",
+            .light = ":/buttons/chatters-lightMode.svg",
+        },
+        this, {4, 4});
+
     this->addButton_ = new DrawnButton(DrawnButton::Symbol::Plus,
                                        {
                                            .padding = 3,
                                            .thickness = 1,
                                        },
                                        this);
+
+    this->dropdownButton_ =
+        new DrawnButton(DrawnButton::Symbol::Kebab, {}, this);
+
+    /// XXX: this never gets disconnected
+    QObject::connect(this->dropdownButton_, &Button::leftMousePress, this,
+                     [this] {
+                         this->dropdownButton_->setMenu(this->createMainMenu());
+                     });
 
     auto *layout = makeLayout<QHBoxLayout>({
         // space
@@ -306,7 +328,7 @@ void SplitHeader::initializeLayout()
             w->setSizePolicy(QSizePolicy::MinimumExpanding,
                              QSizePolicy::Preferred);
             w->setCentered(true);
-            w->setHasPadding(false);
+            w->setPadding(QMargins{});
         }),
         // space
         makeWidget<BaseWidget>([](auto w) {
@@ -319,58 +341,50 @@ void SplitHeader::initializeLayout()
             w->setMenu(this->createChatModeMenu());
         }),
         // moderator
-        this->moderationButton_ = makeWidget<PixmapButton>([&](auto w) {
-            QObject::connect(
-                w, &Button::clicked, this,
-                [this, w](Qt::MouseButton button) mutable {
-                    switch (button)
-                    {
-                        case Qt::LeftButton:
-                            if (getSettings()->moderationActions.empty())
-                            {
-                                getApp()->getWindows()->showSettingsDialog(
-                                    this, SettingsDialogPreference::
-                                              ModerationActions);
-                                this->split_->setModerationMode(true);
-                            }
-                            else
-                            {
-                                auto moderationMode =
-                                    this->split_->getModerationMode();
-
-                                this->split_->setModerationMode(
-                                    !moderationMode);
-                                w->setDim(moderationMode
-                                              ? DimButton::Dim::Some
-                                              : DimButton::Dim::None);
-                            }
-                            break;
-
-                        case Qt::RightButton:
-                        case Qt::MiddleButton:
-                            getApp()->getWindows()->showSettingsDialog(
-                                this,
-                                SettingsDialogPreference::ModerationActions);
-                            break;
-                    }
-                });
-        }),
+        this->moderationButton_,
         // chatter list
-        this->chattersButton_ = makeWidget<PixmapButton>([&](auto w) {
-            QObject::connect(w, &Button::leftClicked, this, [this]() {
-                this->split_->showChatterList();
-            });
-        }),
+        this->chattersButton_,
         // dropdown
-        this->dropdownButton_ = makeWidget<PixmapButton>([&](auto w) {
-            /// XXX: this never gets disconnected
-            QObject::connect(w, &Button::leftMousePress, this, [this] {
-                this->dropdownButton_->setMenu(this->createMainMenu());
-            });
-        }),
+        this->dropdownButton_,
         // add split
         this->addButton_,
     });
+
+    QObject::connect(
+        this->moderationButton_, &Button::clicked, this,
+        [this](Qt::MouseButton button) mutable {
+            auto *w = this->moderationButton_;
+            switch (button)
+            {
+                case Qt::LeftButton:
+                    if (getSettings()->moderationActions.empty())
+                    {
+                        getApp()->getWindows()->showSettingsDialog(
+                            this, SettingsDialogPreference::ModerationActions);
+                        this->split_->setModerationMode(true);
+                    }
+                    else
+                    {
+                        auto moderationMode = this->split_->getModerationMode();
+
+                        this->split_->setModerationMode(!moderationMode);
+                        // w->setDim(moderationMode ? DimButton::Dim::Some
+                        //                          : DimButton::Dim::None);
+                    }
+                    break;
+
+                case Qt::RightButton:
+                case Qt::MiddleButton:
+                    getApp()->getWindows()->showSettingsDialog(
+                        this, SettingsDialogPreference::ModerationActions);
+                    break;
+            }
+        });
+
+    QObject::connect(this->chattersButton_, &Button::leftClicked, this,
+                     [this]() {
+                         this->split_->openChatterList();
+                     });
 
     QObject::connect(this->addButton_, &Button::leftClicked, this, [this]() {
         this->split_->addSibling();
@@ -556,7 +570,7 @@ std::unique_ptr<QMenu> SplitHeader::createMainMenu()
             moreMenu->addAction(
                 "Show chatter list",
                 h->getDisplaySequence(HotkeyCategory::Split, "openViewerList"),
-                this->split_, &Split::showChatterList);
+                this->split_, &Split::openChatterList);
         }
 
         moreMenu->addAction("Subscribe",
@@ -910,9 +924,20 @@ void SplitHeader::updateIcons()
         auto moderationMode = this->split_->getModerationMode() &&
                               !getSettings()->moderationActions.empty();
 
-        this->moderationButton_->setPixmap(
-            moderationMode ? getResources().buttons.modModeEnabled
-                           : getResources().buttons.modModeDisabled);
+        if (moderationMode)
+        {
+            this->moderationButton_->setSource({
+                .dark = ":/buttons/moderationEnabled-darkMode.svg",
+                .light = ":/buttons/moderationEnabled-lightMode.svg",
+            });
+        }
+        else
+        {
+            this->moderationButton_->setSource({
+                .dark = ":/buttons/moderationDisabled-darkMode.svg",
+                .light = ":/buttons/moderationDisabled-lightMode.svg",
+            });
+        }
 
         if (twitchChannel->hasModRights() || moderationMode)
         {
@@ -1076,22 +1101,11 @@ void SplitHeader::themeChangedEvent()
     }
     this->titleLabel_->setPalette(palette);
 
+    auto bg = this->theme->splits.header.background;
     this->addButton_->setOptions({
-        .background = this->theme->messages.backgrounds.regular,
-        .backgroundHover = this->theme->messages.backgrounds.regular,
+        .background = bg,
+        .backgroundHover = bg,
     });
-
-    // --
-    if (this->theme->isLightTheme())
-    {
-        this->chattersButton_->setPixmap(getResources().buttons.chattersDark);
-        this->dropdownButton_->setPixmap(getResources().buttons.menuDark);
-    }
-    else
-    {
-        this->chattersButton_->setPixmap(getResources().buttons.chattersLight);
-        this->dropdownButton_->setPixmap(getResources().buttons.menuLight);
-    }
 
     this->update();
 }

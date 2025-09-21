@@ -53,7 +53,7 @@ jobs:
       C2_ENABLE_CRASHPAD: ${{ matrix.skip-crashpad == false }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
           fetch-depth: 0 # allows for tags access
@@ -153,7 +153,7 @@ jobs:
       C2_ARCH: ${{ (endsWith(matrix.os, '-arm') || startsWith(matrix.os, 'macos')) && 'arm' || 'x86-64' }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
           fetch-depth: 0 # allows for tags access
@@ -192,7 +192,7 @@ jobs:
           path: ~/.conan2/
 
       - name: Setup Python (Windows)
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         if: startsWith(matrix.os, 'windows')
         with:
           python-version: "3.13"
@@ -248,7 +248,7 @@ jobs:
         if: startsWith(matrix.os, 'windows')
         working-directory: build
         run: |
-          windeployqt bin/chatterino.exe --release --no-compiler-runtime --no-translations --no-opengl-sw --dir Chatterino2/
+          windeployqt bin/chatterino.exe --release --no-compiler-runtime --no-translations --no-opengl-sw --dir Chatterino2/ --force-openssl
           cp bin/chatterino.exe Chatterino2/
           ..\.CI\deploy-crt.ps1 Chatterino2
           echo nightly > Chatterino2/modes
@@ -283,9 +283,9 @@ jobs:
         if: startsWith(matrix.os, 'macos')
         run: |
           # binary dependencies
-          ./.CI/SetupHomebrewDeps.sh boost openssl@3
+          ./.CI/SetupHomebrewDeps.sh boost openssl
           # build and header-only dependencies
-          brew install rapidjson p7zip create-dmg cmake tree
+          brew install rapidjson p7zip create-dmg tree
         shell: bash
 
       - name: Build (MacOS)
@@ -371,18 +371,18 @@ jobs:
     if: (github.event_name == 'push' && github.ref == 'refs/heads/chatterino7')
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0 # allows for tags access
 
       # Windows
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         name: Windows Qt6.9.1
         with:
           name: chatterino-windows-x86-64-Qt-6.9.1.zip
           path: release-artifacts/
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         name: Windows Qt6.9.1 symbols
         with:
           name: chatterino-windows-x86-64-Qt-6.9.1-symbols.pdb.7z
@@ -402,26 +402,26 @@ jobs:
           path: release-artifacts/
 
       # Linux
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         name: Linux AppImage
         with:
           name: Chatterino-x86_64-Qt-6.7.2.AppImage
           path: release-artifacts/
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         name: Ubuntu 22.04 deb
         with:
           name: Chatterino-ubuntu-22.04-Qt-6.7.2.deb
           path: release-artifacts/
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         name: Ubuntu 24.04 deb
         with:
           name: Chatterino-ubuntu-24.04-Qt-6.7.2.deb
           path: release-artifacts/
 
       # macOS
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         name: macOS Qt6.9.1 dmg
         with:
           name: chatterino-macos-Qt-6.9.1-universal.dmg
@@ -436,7 +436,7 @@ jobs:
         shell: bash
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 

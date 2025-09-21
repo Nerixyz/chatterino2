@@ -496,6 +496,14 @@ void GeneralPage::initLayout(GeneralPageView &layout)
         ->addKeywords({"scroll bar"})
         ->addTo(layout);
 
+    SettingWidget::checkbox(
+        "Pulse text input when one of your messages is successfully sent",
+        s.pulseTextInputOnSelfMessage)
+        ->setTooltip(
+            "Pulses the text input in a green color whenever a message of "
+            "yours is successfully sent in the matching channel.")
+        ->addTo(layout);
+
     layout.addTitle("Messages");
 
     SettingWidget::checkbox("Separate with lines", s.separateMessages)
@@ -577,8 +585,12 @@ void GeneralPage::initLayout(GeneralPageView &layout)
             "cvMask and 7TV's RainTime, will appear as normal emotes.")
         ->addTo(layout);
 
-    SettingWidget::checkbox("Enable emote auto-completion by typing :",
+    SettingWidget::checkbox("Enable emote completion by typing :",
                             s.emoteCompletionWithColon)
+        ->setTooltip(
+            "With this setting enabled, typing the colon character opens the "
+            "colon-completion popup which gives you an updating list of emotes "
+            "matching the text after the colon.")
         ->addTo(layout);
 
     SettingWidget::checkbox("Use experimental smarter emote completion.",
@@ -900,7 +912,7 @@ void GeneralPage::initLayout(GeneralPageView &layout)
         ->addTo(layout);
 
     {
-        auto *note = new QLabel(
+        auto *note = layout.addDescription(
             "A semicolon-separated list of Chrome or Firefox extension IDs "
             "allowed to interact with Chatterino's browser integration "
             "(requires restart).\n"

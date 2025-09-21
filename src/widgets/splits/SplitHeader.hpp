@@ -16,8 +16,8 @@
 
 namespace chatterino {
 
+class SvgButton;
 class DrawnButton;
-class PixmapButton;
 class LabelButton;
 class Label;
 class Split;
@@ -76,7 +76,7 @@ private:
     std::chrono::steady_clock::time_point lastReloadedSubEmotes_;
 
     // ui
-    PixmapButton *dropdownButton_{};
+    DrawnButton *dropdownButton_{};
     Label *titleLabel_{};
 
     LabelButton *modeButton_{};
@@ -86,8 +86,8 @@ private:
     QAction *modeActionSetR9k{};
     QAction *modeActionSetFollowers{};
 
-    PixmapButton *moderationButton_{};
-    PixmapButton *chattersButton_{};
+    SvgButton *moderationButton_{};
+    SvgButton *chattersButton_{};
     DrawnButton *addButton_{};
 
     // states

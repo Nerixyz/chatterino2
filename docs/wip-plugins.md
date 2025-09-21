@@ -350,6 +350,24 @@ Example:
 pajladas:add_system_message("Hello, world!")
 ```
 
+#### `Channel:add_message(message[, context[, override_flags]])`
+
+Add a rich message to a channel. The message can be created with [`Message.new`](#messagenewdata).
+
+Example:
+
+```lua
+channel:add_message(c2.Message.new({
+    id = "myplugin-1234",
+    elements = {
+        {
+            type = "text",
+            text = "Hello, World!",
+        }
+    }
+}))
+```
+
 ##### `Channel:is_twitch_channel()`
 
 Returns `true` if the channel is a Twitch channel, that is its type name has
@@ -502,6 +520,94 @@ request:execute()
 -- nil
 -- ConnectionRefusedError
 ```
+
+#### `WebSocket`
+
+This API allows you to connect to WebSocket servers. For example, you can do the following:
+
+```lua
+local ws = c2.WebSocket.new("wss://echo.websocket.org",
+  -- this object is optional
+  {
+    on_open = function()
+      print("Connection established")
+    end,
+    on_close = function()
+      print("Connection closed")
+    end
+  }
+)
+-- handlers can be passed in the constructor or set here
+ws.on_text = function(data)
+  print("Got text: " .. data)
+end
+
+ws:send_text("Hello, World!")
+```
+
+##### `WebSocket.new(url[, options])`
+
+Create and connect to a WebSocket server specified by `url`.
+
+`options`, if specified, has to be a table with the following members (all optional):
+
+| Key         | Type                    | Description                                                                                                                             |
+| ----------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `headers`   | `table<string, string>` | Additional headers to set when connecting to the server. Any headers specified here will overwrite the ones Chatterino sets by default. |
+| `on_open`   | `fun()`                 | Called when the WebSocket handshake completed.                                                                                          |
+| `on_text`   | `fun(data: string)`     | Handler for text messages.                                                                                                              |
+| `on_binary` | `fun(data: string)`     | Handler for binary messages. Here, the data might not be valid UTF-8.                                                                   |
+| `on_close`  | `fun()`                 | Handler for a close event. This handler is also called if the connection failed.                                                        |
+
+The returned object has writable properties for the `on_close`, `on_text`, `on_binary`, and `on_open` handlers.
+
+##### `WebSocket:send_text(data)`
+
+Sends a text messsage to the server. If the socket is not yet connected, this message is queued and sent once a connection is established.
+
+##### `WebSocket:send_binary(data)`
+
+Sends a binary message to the server. If the socket is not yet connected, this message is queued and sent once a connection is established.
+
+##### `WebSocket:close()`
+
+Closes the WebSocket connection.
+
+#### `Message`
+
+Allows creation of rich chat messages. This is currently limited but is expected to be expanded soon.
+
+##### `Message.new(data)`
+
+Creates a new message from a table. The message can be added to a channel using
+[`Channel:add_message`](#channeladd_messagemessage-context-override_flags):
+
+```lua
+c2.register_command("/testing", function(ctx)
+    ctx.channel:add_message(c2.Message.new({
+        id = "myplugin-1234",
+        highlight_color = "#80ff0000",
+        flags = c2.MessageFlag.Highlighted,
+        elements = {
+            {
+                type = "text",
+                color = "link",
+                text = "Hover me!",
+                tooltip = "<h1>This is text from my plugin</h1>"
+            },
+            {
+                type = "mention",
+                display_name = "@User",
+                login_name = "twitchdev",
+                fallback_color = "text",
+                user_color = "blue",
+            }
+        }
+    }))
+end)
+```
+
+The full range of options can be found in the typing files ([LuaLS](./plugin-meta.lua), [TypeScript](./chatterino.d.ts)).
 
 ### Input/Output API
 

@@ -56,9 +56,9 @@ QGradientStops parsePaintStops(const QJsonArray &stops)
         // Setting a different color at the same position twice just overwrites
         // the previous color. So we have to shift the second point slightly
         // ahead, simulating an actual hard edge
-        if (position == lastStop)
+        if (position <= lastStop)
         {
-            position += 0.0000001;
+            position = lastStop + 0.0000001;
         }
 
         lastStop = position;
@@ -208,8 +208,11 @@ void SeventvPaints::clearPaintFromUser(const QString &paintID,
     const auto it = this->paintMap_.find(userName.string);
     if (it != this->paintMap_.end() && it->second->id == paintID)
     {
-        this->paintMap_.erase(userName.string);
+        this->paintMap_.erase(it);
         DebugCount::decrease(u"7TV Paint Assignments"_s);
+        postToThread([] {
+            getApp()->getWindows()->invalidateChannelViewBuffers();
+        });
     }
 }
 

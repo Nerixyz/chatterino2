@@ -7,6 +7,7 @@
 #    include "controllers/plugins/SolTypes.hpp"
 #    include "providers/twitch/TwitchChannel.hpp"
 #    include "providers/twitch/TwitchIrcServer.hpp"
+#    include "util/WeakPtrHelpers.hpp"
 
 #    include <sol/sol.hpp>
 
@@ -88,6 +89,32 @@ void ChannelRef::add_system_message(QString text)
     this->strong()->addSystemMessage(text);
 }
 
+void ChannelRef::add_message(std::shared_ptr<Message> &message,
+                             sol::variadic_args va)
+{
+    MessageContext ctx = [&] {
+        if (va.size() >= 1)
+        {
+            return va.get<MessageContext>();
+        }
+        return MessageContext::Original;
+    }();
+    auto overrideFlags = [&]() -> std::optional<MessageFlags> {
+        if (va.size() >= 2)
+        {
+            auto flags = va.get<std::optional<MessageFlag>>(1);
+            if (flags)
+            {
+                return MessageFlags{*flags};
+            }
+            return {};
+        }
+        return {};
+    }();
+
+    this->strong()->addMessage(message, ctx, overrideFlags);
+}
+
 bool ChannelRef::is_twitch_channel()
 {
     return this->strong()->isTwitchChannel();
@@ -133,6 +160,11 @@ QString ChannelRef::to_string()
     return QStringView(u"<c2.Channel %1>").arg(chan->getName());
 }
 
+bool ChannelRef::operator==(const ChannelRef &other) const noexcept
+{
+    return weakOwnerEquals(this->weak, other.weak);
+}
+
 std::optional<ChannelRef> ChannelRef::get_by_name(const QString &name)
 {
     auto chan = getApp()->getTwitch()->getChannelOrEmpty(name);
@@ -168,6 +200,7 @@ void ChannelRef::createUserType(sol::table &c2)
         "get_display_name", &ChannelRef::get_display_name,
         "send_message", &ChannelRef::send_message,
         "add_system_message", &ChannelRef::add_system_message,
+        "add_message", &ChannelRef::add_message,
         "is_twitch_channel", &ChannelRef::is_twitch_channel,
 
         // TwitchChannel
