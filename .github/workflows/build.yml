@@ -230,7 +230,8 @@ jobs:
               -DUSE_PRECOMPILED_HEADERS=ON `
               -DBUILD_WITH_CRASHPAD="$Env:C2_ENABLE_CRASHPAD" `
               -DCHATTERINO_LTO="$Env:C2_ENABLE_LTO" `
-              -DFORCE_JSON_GENERATION=${{ env.C2_ARCH == 'arm' && 'On' || 'Off' }} `
+              -DFORCE_JSON_GENERATION=${{ env.C2_ARCH == 'arm' && 'Off' || 'On' }} `
+              -DSKIP_JSON_GENERATION=${{ env.C2_ARCH == 'arm' && 'On' || 'Off' }} `
               ..
           ninja
 
