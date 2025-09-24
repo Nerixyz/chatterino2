@@ -10,6 +10,9 @@ namespace chatterino {
 
 enum class SoundBackend {
     Miniaudio,
+#ifdef CHATTERINO_WITH_QT_MULTIMEDIA
+    QtMultimedia,
+#endif
     Null,
 };
 

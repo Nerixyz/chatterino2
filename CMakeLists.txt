@@ -41,6 +41,7 @@ option(CHATTERINO_USE_GDI_FONTENGINE "Use the legacy GDI fontengine instead of t
 option(CHATTERINO_ALLOW_PRIVATE_QT_API "Allow uses of Qt's private API - when enabling this, Chatterino must use the EXACT Qt version it was compiled against" OFF)
 option(CHATTERINO_SPELLCHECK "Enable spellchecking in Chatterino (requires Hunspell)" OFF)
 option(CHATTERINO_NIGHTLY_BUILD "Specifies whether this is a nightly build." OFF)
+option(CHATTERINO_QT_MULTIMEDIA "Enable the Qt Multimedia sound backend" OFF)
 
 option(CHATTERINO_SANITIZER_SUPPORT "Attempt to enable Sanitizer support on the test and app targets. Actual sanitizers can then be enabled with the SANITIZE_* options." OFF)
 mark_as_advanced(CHATTERINO_SANITIZER_SUPPORT)
@@ -153,6 +154,10 @@ find_package(Qt${MAJOR_QT_VERSION} REQUIRED
 if(CHATTERINO_ALLOW_PRIVATE_QT_API)
     # Only exists since 6.10 and prints a warning regarding private headers
     find_package(Qt${MAJOR_QT_VERSION} COMPONENTS GuiPrivate)
+endif()
+
+if (CHATTERINO_QT_MULTIMEDIA)
+    find_package(Qt${MAJOR_QT_VERSION} REQUIRED COMPONENTS Multimedia)
 endif()
 
 message(STATUS "Qt version: ${Qt${MAJOR_QT_VERSION}_VERSION}")

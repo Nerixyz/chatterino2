@@ -16,6 +16,9 @@
 #include "controllers/notifications/NotificationController.hpp"
 #include "controllers/sound/ISoundController.hpp"
 #include "controllers/spellcheck/SpellChecker.hpp"
+#ifdef CHATTERINO_WITH_QT_MULTIMEDIA
+#    include "controllers/sound/QtMultimediaBackend.hpp"
+#endif
 #include "providers/bttv/BttvBadges.hpp"
 #include "providers/bttv/BttvEmotes.hpp"
 #include "providers/ffz/FfzEmotes.hpp"
@@ -89,6 +92,13 @@ ISoundController *makeSoundController(Settings &settings)
             return new MiniaudioBackend(settings.soundMiniaudioKeepEngineAlive);
         }
         break;
+
+#ifdef CHATTERINO_WITH_QT_MULTIMEDIA
+        case SoundBackend::QtMultimedia: {
+            return new QtMultimediaBackend();
+        }
+        break;
+#endif
 
         case SoundBackend::Null: {
             return new NullBackend();
