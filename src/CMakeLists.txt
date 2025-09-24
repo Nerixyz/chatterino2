@@ -272,6 +272,8 @@ set(SOURCE_FILES
         controllers/sound/MiniaudioBackend.hpp
         controllers/sound/NullBackend.cpp
         controllers/sound/NullBackend.hpp
+        controllers/sound/QtMultimediaBackend.cpp
+        controllers/sound/QtMultimediaBackend.hpp
 
         controllers/twitch/LiveController.cpp
         controllers/twitch/LiveController.hpp
@@ -887,6 +889,12 @@ if (CHATTERINO_ALLOW_PRIVATE_QT_API)
         CHATTERINO_WITH_PRIVATE_QT_API)
 endif()
 
+if (CHATTERINO_QT_MULTIMEDIA)
+    target_link_libraries(${LIBRARY_PROJECT} PUBLIC Qt${MAJOR_QT_VERSION}::Multimedia)
+    target_compile_definitions(${LIBRARY_PROJECT} PUBLIC 
+        CHATTERINO_WITH_QT_MULTIMEDIA)
+endif()
+
 if (BUILD_WITH_QTKEYCHAIN)
     target_link_libraries(${LIBRARY_PROJECT}
             PUBLIC
@@ -974,6 +982,10 @@ if (BUILD_APP)
             --no-translations
             --no-opengl-sw
         )
+        if (CHATTERINO_QT_MULTIMEDIA)
+            # we only need the default windows media plugin
+            list(APPEND WINDEPLOYQT_COMMAND_ARGV --exclude-plugins ffmpegmediaplugin)
+        endif()
         if (Qt6_VERSION VERSION_GREATER_EQUAL "6.8.0")
             # windeployqt expects to find openssl in '/bin' but we deploy it in '/'.
             list(APPEND WINDEPLOYQT_COMMAND_ARGV --force-openssl)
