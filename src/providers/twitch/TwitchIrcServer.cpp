@@ -12,7 +12,6 @@
 #include "providers/bttv/BttvEmotes.hpp"
 #include "providers/bttv/BttvLiveUpdates.hpp"
 #include "providers/bttv/liveupdates/BttvLiveUpdateMessages.hpp"  // IWYU pragma: keep
-#include "providers/ffz/FfzEmotes.hpp"
 #include "providers/irc/IrcConnection2.hpp"
 #include "providers/seventv/eventapi/Dispatch.hpp"  // IWYU pragma: keep
 #include "providers/seventv/SeventvEmotes.hpp"
@@ -943,16 +942,6 @@ void TwitchIrcServer::reloadAllBTTVChannelEmotes()
         if (auto *channel = dynamic_cast<TwitchChannel *>(chan.get()))
         {
             channel->refreshBTTVChannelEmotes(false);
-        }
-    });
-}
-
-void TwitchIrcServer::reloadAllFFZChannelEmotes()
-{
-    this->forEachChannel([](const auto &chan) {
-        if (auto *channel = dynamic_cast<TwitchChannel *>(chan.get()))
-        {
-            channel->refreshFFZChannelEmotes(false);
         }
     });
 }

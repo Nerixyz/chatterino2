@@ -8,7 +8,6 @@
 #include "controllers/emotes/EmoteProvider.hpp"
 #include "providers/bttv/BttvEmotes.hpp"
 #include "providers/emoji/Emojis.hpp"
-#include "providers/ffz/FfzEmotes.hpp"
 #include "providers/seventv/SeventvEmotes.hpp"
 #include "providers/twitch/TwitchAccount.hpp"
 #include "providers/twitch/TwitchChannel.hpp"
@@ -128,10 +127,6 @@ void EmoteSource::initializeFromChannel(const Channel *channel)
             {
                 addEmotes(emotes, *bttv, "Channel BetterTTV");
             }
-            if (auto ffz = tc->ffzEmotes())
-            {
-                addEmotes(emotes, *ffz, "Channel FrankerFaceZ");
-            }
             if (auto seventv = tc->seventvEmotes())
             {
                 addEmotes(emotes, *seventv, "Channel 7TV");
@@ -147,10 +142,6 @@ void EmoteSource::initializeFromChannel(const Channel *channel)
         if (auto bttvG = app->getBttvEmotes()->emotes())
         {
             addEmotes(emotes, *bttvG, "Global BetterTTV");
-        }
-        if (auto ffzG = app->getFfzEmotes()->emotes())
-        {
-            addEmotes(emotes, *ffzG, "Global FrankerFaceZ");
         }
         if (auto seventvG = app->getSeventvEmotes()->globalEmotes())
         {

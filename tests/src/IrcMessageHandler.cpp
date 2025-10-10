@@ -119,11 +119,6 @@ public:
         return &this->bttvEmotes;
     }
 
-    FfzEmotes *getFfzEmotes() override
-    {
-        return &this->ffzEmotes;
-    }
-
     SeventvEmotes *getSeventvEmotes() override
     {
         return &this->seventvEmotes;
@@ -159,7 +154,6 @@ public:
     SeventvBadges seventvBadges;
     HighlightController highlights;
     BttvEmotes bttvEmotes;
-    FfzEmotes ffzEmotes;
     SeventvEmotes seventvEmotes;
     TwitchBadges twitchBadges;
     mock::EmptyLinkResolver linkResolver;
