@@ -224,13 +224,6 @@ public:
         return nullptr;
     }
 
-    FfzEmotes *getFfzEmotes() override
-    {
-        assert(false && "EmptyApplication::getFfzEmotes was called without "
-                        "being initialized");
-        return nullptr;
-    }
-
     SeventvEmotes *getSeventvEmotes() override
     {
         assert(false && "EmptyApplication::getSeventvEmotes was called without "

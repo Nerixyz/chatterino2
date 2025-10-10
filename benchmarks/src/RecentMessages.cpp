@@ -12,7 +12,6 @@
 #include "providers/bttv/BttvEmotes.hpp"
 #include "providers/chatterino/ChatterinoBadges.hpp"
 #include "providers/ffz/FfzBadges.hpp"
-#include "providers/ffz/FfzEmotes.hpp"
 #include "providers/recentmessages/Impl.hpp"
 #include "providers/seventv/SeventvBadges.hpp"
 #include "providers/seventv/SeventvEmotes.hpp"
@@ -91,11 +90,6 @@ public:
         return &this->bttvEmotes;
     }
 
-    FfzEmotes *getFfzEmotes() override
-    {
-        return &this->ffzEmotes;
-    }
-
     SeventvEmotes *getSeventvEmotes() override
     {
         return &this->seventvEmotes;
@@ -128,7 +122,6 @@ public:
     HighlightController highlights;
     TwitchBadges twitchBadges;
     BttvEmotes bttvEmotes;
-    FfzEmotes ffzEmotes;
     SeventvEmotes seventvEmotes;
     DisabledStreamerMode streamerMode;
 };
@@ -172,8 +165,6 @@ public:
             tryReadJsonFile(u":/bench/seventvemotes-%1.json"_s.arg(this->name));
         const auto bttvEmotes =
             tryReadJsonFile(u":/bench/bttvemotes-%1.json"_s.arg(this->name));
-        const auto ffzEmotes =
-            tryReadJsonFile(u":/bench/ffzemotes-%1.json"_s.arg(this->name));
 
         if (seventvEmotes)
         {
@@ -190,12 +181,6 @@ public:
             this->chan.setBttvEmotes(std::make_shared<const EmoteMap>(
                 bttv::detail::parseChannelEmotes(bttvEmotes->object(),
                                                  this->name)));
-        }
-
-        if (ffzEmotes)
-        {
-            this->chan.setFfzEmotes(std::make_shared<const EmoteMap>(
-                ffz::detail::parseChannelEmotes(ffzEmotes->object())));
         }
 
         this->messages =

@@ -10,7 +10,6 @@
 #include "messages/MessageElement.hpp"
 #include "providers/bttv/BttvEmotes.hpp"
 #include "providers/emoji/Emojis.hpp"
-#include "providers/ffz/FfzEmotes.hpp"
 #include "providers/twitch/api/Helix.hpp"
 #include "providers/twitch/TwitchAccount.hpp"
 #include "providers/twitch/TwitchIrcServer.hpp"
@@ -108,7 +107,6 @@ bool appendWhisperMessageWordsLocally(const QStringList &words)
     const auto &acc = app->getAccounts()->twitch.getCurrent();
     const auto &accemotes = *acc->accessEmotes();
     const auto *bttvemotes = app->getBttvEmotes();
-    const auto *ffzemotes = app->getFfzEmotes();
     const auto *emoteController = app->getEmotes();
     auto emote = std::optional<EmotePtr>{};
     for (int i = 2; i < words.length(); i++)
@@ -122,19 +120,15 @@ bool appendWhisperMessageWordsLocally(const QStringList &words)
             }
         }  // Twitch emote
 
-        {  // bttv/ffz emote
+        {  // bttv emote
             emote = bttvemotes->emote({words[i]});
-            if (!emote)
-            {
-                emote = ffzemotes->emote({words[i]});
-            }
             // TODO: Load 7tv global emotes
             if (emote)
             {
                 b.emplace<EmoteElement>(*emote, MessageElementFlag::Emote);
                 continue;
             }
-        }  // bttv/ffz emote
+        }  // bttv emote
         {  // third party emotes
             emote = emoteController->resolveGlobal(EmoteName{words[i]});
             if (emote)
