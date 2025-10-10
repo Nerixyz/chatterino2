@@ -102,7 +102,6 @@ public:
     std::shared_ptr<Channel> getChannelOrEmptyByID(
         const QString &channelID) override;
 
-    void reloadAllBTTVChannelEmotes();
     void reloadAllSevenTVChannelEmotes();
 
     /** Calls `func` with all twitch channels that have `emoteSetId` added. */

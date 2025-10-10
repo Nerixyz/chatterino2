@@ -354,8 +354,8 @@ set(SOURCE_FILES
         providers/NetworkConfigurationProvider.cpp
         providers/NetworkConfigurationProvider.hpp
 
-        providers/bttv/BttvEmotes.cpp
-        providers/bttv/BttvEmotes.hpp
+        providers/bttv/BttvEmoteProvider.cpp
+        providers/bttv/BttvEmoteProvider.hpp
         providers/bttv/BttvLiveUpdates.cpp
         providers/bttv/BttvLiveUpdates.hpp
 

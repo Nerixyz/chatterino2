@@ -18,7 +18,6 @@
 #include "messages/MessageColor.hpp"
 #include "messages/MessageElement.hpp"
 #include "messages/MessageThread.hpp"
-#include "providers/bttv/BttvEmotes.hpp"
 #include "providers/chatterino/ChatterinoBadges.hpp"
 #include "providers/colors/ColorProvider.hpp"
 #include "providers/emoji/Emojis.hpp"
@@ -422,10 +421,8 @@ EmotePtr parseEmote(TwitchChannel *twitchChannel, const EmoteName &name)
 {
     // Emote order:
     //  - Channel emotes
-    //  - BetterTTV Channel
     //  - 7TV Channel
     //  - Global emotes
-    //  - BetterTTV Global
     //  - 7TV Global
 
     if (auto *holder = twitchChannel->emotes())
@@ -437,7 +434,6 @@ EmotePtr parseEmote(TwitchChannel *twitchChannel, const EmoteName &name)
         }
     }
 
-    const auto *globalBttvEmotes = getApp()->getBttvEmotes();
     const auto *globalSeventvEmotes = getApp()->getSeventvEmotes();
 
     std::optional<EmotePtr> emote{};
@@ -445,12 +441,6 @@ EmotePtr parseEmote(TwitchChannel *twitchChannel, const EmoteName &name)
     if (twitchChannel != nullptr)
     {
         // Check for channel emotes
-
-        emote = twitchChannel->bttvEmote(name);
-        if (emote)
-        {
-            return *emote;
-        }
 
         emote = twitchChannel->seventvEmote(name);
         if (emote)
@@ -464,12 +454,6 @@ EmotePtr parseEmote(TwitchChannel *twitchChannel, const EmoteName &name)
     if (global)
     {
         return global;
-    }
-
-    emote = globalBttvEmotes->emote(name);
-    if (emote)
-    {
-        return *emote;
     }
 
     emote = globalSeventvEmotes->globalEmote(name);

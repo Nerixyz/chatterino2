@@ -50,6 +50,38 @@ protected:
 
     virtual QString channelEmotesUrl(const TwitchChannel &twitch) const = 0;
 
+    // convenience functions for live updates
+
+    /// Add an emote to a channel
+    ///
+    /// This will copy the underlying emote map and update the one in `holder`.
+    ///
+    /// @returns True if an update took place
+    bool addChannelEmote(EmoteHolder &holder, EmotePtr emote);
+
+    /// Update an emote by its ID (with an optional hint)
+    ///
+    /// @param holder The channel emotes
+    /// @param id The ID of the emote to update
+    /// @param nameHint A hint of the previous emote name (used to speed up
+    ///                 lookup). Unused if empty.
+    /// @param createUpdatedEmote A callback to create the new emote. This is
+    ///                           only called if the emote is found. This can
+    ///                           return an empty emote pointer if nothing
+    ///                           changed.
+    /// @returns `(old emote, new emote)` if the emote was found. Otherwise,
+    ///          `std::nullopt`.
+    std::optional<std::pair<EmotePtr, EmotePtr>> updateChannelEmote(
+        EmoteHolder &holder, const QString &id, const QString &nameHint,
+        FunctionRef<EmotePtr(const EmotePtr &)> createUpdatedEmote);
+
+    /// Remove an emote by its ID (with an optional hint)
+    ///
+    /// @returns The removed emote if it existed. Otherwise, an empty shared
+    ///          pointer.
+    EmotePtr removeChannelEmote(EmoteHolder &holder, const QString &id,
+                                const QString &nameHint);
+
 private:
     BoolSetting *globalSetting;
     QString globalUrl;

@@ -9,7 +9,6 @@
 #include "mocks/Logging.hpp"
 #include "mocks/TwitchIrcServer.hpp"
 #include "mocks/UserData.hpp"
-#include "providers/bttv/BttvEmotes.hpp"
 #include "providers/chatterino/ChatterinoBadges.hpp"
 #include "providers/ffz/FfzBadges.hpp"
 #include "providers/recentmessages/Impl.hpp"
@@ -85,11 +84,6 @@ public:
         return &this->twitchBadges;
     }
 
-    BttvEmotes *getBttvEmotes() override
-    {
-        return &this->bttvEmotes;
-    }
-
     SeventvEmotes *getSeventvEmotes() override
     {
         return &this->seventvEmotes;
@@ -116,12 +110,12 @@ public:
     mock::UserDataController userData;
     mock::MockTwitchIrcServer twitch;
     mock::EmptyLinkResolver linkResolver;
+    mock::EmoteController emoteController;
     ChatterinoBadges chatterinoBadges;
     FfzBadges ffzBadges;
     SeventvBadges seventvBadges;
     HighlightController highlights;
     TwitchBadges twitchBadges;
-    BttvEmotes bttvEmotes;
     SeventvEmotes seventvEmotes;
     DisabledStreamerMode streamerMode;
 };
@@ -163,8 +157,6 @@ public:
     {
         const auto seventvEmotes =
             tryReadJsonFile(u":/bench/seventvemotes-%1.json"_s.arg(this->name));
-        const auto bttvEmotes =
-            tryReadJsonFile(u":/bench/bttvemotes-%1.json"_s.arg(this->name));
 
         if (seventvEmotes)
         {
@@ -174,13 +166,6 @@ public:
                         .toObject()["emotes"_L1]
                         .toArray(),
                     false)));
-        }
-
-        if (bttvEmotes)
-        {
-            this->chan.setBttvEmotes(std::make_shared<const EmoteMap>(
-                bttv::detail::parseChannelEmotes(bttvEmotes->object(),
-                                                 this->name)));
         }
 
         this->messages =

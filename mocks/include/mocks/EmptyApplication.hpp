@@ -211,13 +211,6 @@ public:
     }
 #endif
 
-    BttvEmotes *getBttvEmotes() override
-    {
-        assert(false && "EmptyApplication::getBttvEmotes was called without "
-                        "being initialized");
-        return nullptr;
-    }
-
     BttvLiveUpdates *getBttvLiveUpdates() override
     {
         assert(false && "EmptyApplication::getBttvLiveUpdates was called "
