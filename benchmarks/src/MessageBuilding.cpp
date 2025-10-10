@@ -59,8 +59,6 @@ MessageBenchmark::MessageBenchmark(QString name)
         tryReadJsonFile(u":/bench/seventvemotes-%1.json"_s.arg(this->name));
     const auto bttvEmotes =
         tryReadJsonFile(u":/bench/bttvemotes-%1.json"_s.arg(this->name));
-    const auto ffzEmotes =
-        tryReadJsonFile(u":/bench/ffzemotes-%1.json"_s.arg(this->name));
 
     if (seventvEmotes)
     {
@@ -76,12 +74,6 @@ MessageBenchmark::MessageBenchmark(QString name)
         this->chan->setBttvEmotes(
             std::make_shared<const EmoteMap>(bttv::detail::parseChannelEmotes(
                 bttvEmotes->object(), this->name)));
-    }
-
-    if (ffzEmotes)
-    {
-        this->chan->setFfzEmotes(std::make_shared<const EmoteMap>(
-            ffz::detail::parseChannelEmotes(ffzEmotes->object())));
     }
 
     this->messages =

@@ -165,6 +165,8 @@ set(SOURCE_FILES
         controllers/completion/TabCompletionModel.cpp
         controllers/completion/TabCompletionModel.hpp
 
+        controllers/emotes/BuiltinEmoteProvider.cpp
+        controllers/emotes/BuiltinEmoteProvider.hpp
         controllers/emotes/EmoteController.cpp
         controllers/emotes/EmoteController.hpp
         controllers/emotes/ChannelEmotes.cpp
@@ -406,8 +408,8 @@ set(SOURCE_FILES
 
         providers/ffz/FfzBadges.cpp
         providers/ffz/FfzBadges.hpp
-        providers/ffz/FfzEmotes.cpp
-        providers/ffz/FfzEmotes.hpp
+        providers/ffz/FfzEmoteProvider.cpp
+        providers/ffz/FfzEmoteProvider.hpp
         providers/ffz/FfzUtil.cpp
         providers/ffz/FfzUtil.hpp
 

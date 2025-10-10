@@ -31,7 +31,7 @@ bool isEmote(TwitchChannel *twitch, const QString &word)
     if (twitch)
     {
         if (twitch->channelEmotes().resolve(name) || twitch->bttvEmote(name) ||
-            twitch->ffzEmote(name) || twitch->seventvEmote(name))
+            twitch->seventvEmote(name))
         {
             return true;
         }
@@ -43,7 +43,6 @@ bool isEmote(TwitchChannel *twitch, const QString &word)
     }
     if (getApp()->getEmotes()->resolveGlobal(name) ||
         getApp()->getBttvEmotes()->emote(name) ||
-        getApp()->getFfzEmotes()->emote(name) ||
         getApp()->getSeventvEmotes()->globalEmote(name))
     {
         return true;

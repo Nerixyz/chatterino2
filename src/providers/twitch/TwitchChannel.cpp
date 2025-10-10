@@ -28,7 +28,7 @@
 #include "providers/bttv/liveupdates/BttvLiveUpdateMessages.hpp"
 #include "providers/emoji/Emojis.hpp"
 #include "providers/ffz/FfzBadges.hpp"
-#include "providers/ffz/FfzEmotes.hpp"
+#include "providers/ffz/FfzEmoteProvider.hpp"
 #include "providers/recentmessages/Api.hpp"
 #include "providers/seventv/eventapi/Dispatch.hpp"
 #include "providers/seventv/SeventvAPI.hpp"
@@ -124,7 +124,6 @@ TwitchChannel::TwitchChannel(const QString &name)
     , popoutPlayerUrl_(TWITCH_PLAYER_URL.arg(name))
     , localTwitchEmotes_(std::make_shared<EmoteMap>())
     , bttvEmotes_(std::make_shared<EmoteMap>())
-    , ffzEmotes_(std::make_shared<EmoteMap>())
     , seventvEmotes_(std::make_shared<EmoteMap>())
     , channelEmotes_(this)
 {
@@ -392,7 +391,7 @@ void TwitchChannel::refreshBTTVChannelEmotes(bool manualRefresh)
             if (auto shared = weak.lock())
             {
                 auto emoteMap = bttv::detail::parseChannelEmotes(
-                    jsonDoc.object(), this->getLocalizedName());
+                    jsonDoc.toObject(), this->getLocalizedName());
                 this->setBttvEmotes(std::make_shared<const EmoteMap>(emoteMap));
             }
         });
@@ -408,53 +407,6 @@ void TwitchChannel::refreshBTTVChannelEmotes(bool manualRefresh)
         manualRefresh, cacheHit);
 }
 
-void TwitchChannel::refreshFFZChannelEmotes(bool manualRefresh)
-{
-    if (!Settings::instance().enableFFZChannelEmotes)
-    {
-        this->ffzEmotes_.set(EMPTY_EMOTE_MAP);
-        return;
-    }
-
-    bool cacheHit = readProviderEmotesCache(
-        this->roomId(), "frankerfacez", [this](const auto &jsonDoc) {
-            auto emoteMap = ffz::detail::parseChannelEmotes(jsonDoc.object());
-            this->setFfzEmotes(std::make_shared<const EmoteMap>(emoteMap));
-        });
-
-    FfzEmotes::loadChannel(
-        weakOf<Channel>(this), this->roomId(),
-        [this, weak = weakOf<Channel>(this)](auto &&emoteMap) {
-            if (auto shared = weak.lock())
-            {
-                this->setFfzEmotes(std::make_shared<const EmoteMap>(emoteMap));
-            }
-        },
-        [this, weak = weakOf<Channel>(this)](auto &&modBadge) {
-            if (auto shared = weak.lock())
-            {
-                this->ffzCustomModBadge_.set(
-                    std::forward<decltype(modBadge)>(modBadge));
-            }
-        },
-        [this, weak = weakOf<Channel>(this)](auto &&vipBadge) {
-            if (auto shared = weak.lock())
-            {
-                this->ffzCustomVipBadge_.set(
-                    std::forward<decltype(vipBadge)>(vipBadge));
-            }
-        },
-        [this, weak = weakOf<Channel>(this)](auto &&channelBadges) {
-            if (auto shared = weak.lock())
-            {
-                this->tgFfzChannelBadges_.guard();
-                this->ffzChannelBadges_ =
-                    std::forward<decltype(channelBadges)>(channelBadges);
-            }
-        },
-        manualRefresh, cacheHit);
-}
-
 void TwitchChannel::refreshSevenTVChannelEmotes(bool manualRefresh)
 {
     if (!Settings::instance().enableSevenTVChannelEmotes)
@@ -465,7 +417,7 @@ void TwitchChannel::refreshSevenTVChannelEmotes(bool manualRefresh)
 
     bool cacheHit = readProviderEmotesCache(
         this->roomId(), "seventv", [this](auto jsonDoc) {
-            const auto json = jsonDoc.object();
+            const auto json = jsonDoc.toObject();
             const auto emoteSet = json["emote_set"].toObject();
             const auto parsedEmotes = emoteSet["emotes"].toArray();
             auto emoteMap = seventv::detail::parseEmotes(parsedEmotes, false);
@@ -492,11 +444,6 @@ void TwitchChannel::refreshSevenTVChannelEmotes(bool manualRefresh)
 void TwitchChannel::setBttvEmotes(std::shared_ptr<const EmoteMap> &&map)
 {
     this->bttvEmotes_.set(std::move(map));
-}
-
-void TwitchChannel::setFfzEmotes(std::shared_ptr<const EmoteMap> &&map)
-{
-    this->ffzEmotes_.set(std::move(map));
 }
 
 void TwitchChannel::setSeventvEmotes(std::shared_ptr<const EmoteMap> &&map)
@@ -771,7 +718,6 @@ void TwitchChannel::roomIdChanged()
     this->refreshBadges();
     this->refreshCheerEmotes();
     this->refreshTwitchChannelEmotes(false);
-    this->refreshFFZChannelEmotes(false);
     this->refreshBTTVChannelEmotes(false);
     this->refreshSevenTVChannelEmotes(false);
     this->channelEmotes_.refresh(false);
@@ -1079,18 +1025,6 @@ std::optional<EmotePtr> TwitchChannel::bttvEmote(const EmoteName &name) const
     return it->second;
 }
 
-std::optional<EmotePtr> TwitchChannel::ffzEmote(const EmoteName &name) const
-{
-    auto emotes = this->ffzEmotes_.get();
-    auto it = emotes->find(name);
-
-    if (it == emotes->end())
-    {
-        return std::nullopt;
-    }
-    return it->second;
-}
-
 std::optional<EmotePtr> TwitchChannel::seventvEmote(const EmoteName &name) const
 {
     auto emotes = this->seventvEmotes_.get();
@@ -1111,11 +1045,6 @@ std::shared_ptr<const EmoteMap> TwitchChannel::localTwitchEmotes() const
 std::shared_ptr<const EmoteMap> TwitchChannel::bttvEmotes() const
 {
     return this->bttvEmotes_.get();
-}
-
-std::shared_ptr<const EmoteMap> TwitchChannel::ffzEmotes() const
-{
-    return this->ffzEmotes_.get();
 }
 
 std::shared_ptr<const EmoteMap> TwitchChannel::seventvEmotes() const

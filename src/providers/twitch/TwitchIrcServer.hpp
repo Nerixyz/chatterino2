@@ -107,7 +107,6 @@ public:
         const QString &channelID) override;
 
     void reloadAllBTTVChannelEmotes();
-    void reloadAllFFZChannelEmotes();
     void reloadAllSevenTVChannelEmotes();
 
     /** Calls `func` with all twitch channels that have `emoteSetId` added. */

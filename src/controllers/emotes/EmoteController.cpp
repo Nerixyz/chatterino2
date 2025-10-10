@@ -6,6 +6,7 @@
 
 #include "controllers/emotes/EmoteProvider.hpp"
 #include "providers/emoji/Emojis.hpp"
+#include "providers/ffz/FfzEmoteProvider.hpp"
 #include "providers/twitch/TwitchEmotes.hpp"
 #include "singletons/helper/GifTimer.hpp"
 
@@ -24,6 +25,7 @@ void EmoteController::initialize()
     this->emojis_->load();
     this->gifTimer_->initialize();
 
+    this->providers_.emplace_back(std::make_shared<FfzEmoteProvider>());
     this->sort();
 
     for (const auto &provider : this->providers_)

@@ -2,7 +2,6 @@
 
 #include "mocks/Channel.hpp"
 #include "providers/bttv/BttvEmotes.hpp"
-#include "providers/ffz/FfzEmotes.hpp"
 #include "providers/seventv/eventapi/Client.hpp"
 #include "providers/seventv/eventapi/Dispatch.hpp"
 #include "providers/seventv/eventapi/Message.hpp"

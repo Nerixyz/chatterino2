@@ -29,7 +29,6 @@
 #include "providers/colors/ColorProvider.hpp"
 #include "providers/emoji/Emojis.hpp"
 #include "providers/ffz/FfzBadges.hpp"
-#include "providers/ffz/FfzEmotes.hpp"
 #include "providers/links/LinkResolver.hpp"
 #include "providers/seventv/SeventvBadges.hpp"
 #include "providers/seventv/SeventvEmotes.hpp"
@@ -462,15 +461,12 @@ EmotePtr parseEmote(TwitchChannel *twitchChannel, const EmoteName &name)
 {
     // Emote order:
     //  - Channel emotes
-    //  - FrankerFaceZ Channel
     //  - BetterTTV Channel
     //  - 7TV Channel
     //  - Global emotes
-    //  - FrankerFaceZ Global
     //  - BetterTTV Global
     //  - 7TV Global
 
-    const auto *globalFfzEmotes = getApp()->getFfzEmotes();
     const auto *globalBttvEmotes = getApp()->getBttvEmotes();
     const auto *globalSeventvEmotes = getApp()->getSeventvEmotes();
 
@@ -483,12 +479,6 @@ EmotePtr parseEmote(TwitchChannel *twitchChannel, const EmoteName &name)
         if (channelEmote)
         {
             return channelEmote;
-        }
-
-        emote = twitchChannel->ffzEmote(name);
-        if (emote)
-        {
-            return *emote;
         }
 
         emote = twitchChannel->bttvEmote(name);
@@ -509,12 +499,6 @@ EmotePtr parseEmote(TwitchChannel *twitchChannel, const EmoteName &name)
     if (global)
     {
         return global;
-    }
-
-    emote = globalFfzEmotes->emote(name);
-    if (emote)
-    {
-        return *emote;
     }
 
     emote = globalBttvEmotes->emote(name);

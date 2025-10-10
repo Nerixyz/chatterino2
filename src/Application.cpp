@@ -18,7 +18,6 @@
 #include "controllers/spellcheck/SpellChecker.hpp"
 #include "providers/bttv/BttvBadges.hpp"
 #include "providers/bttv/BttvEmotes.hpp"
-#include "providers/ffz/FfzEmotes.hpp"
 #include "providers/links/LinkResolver.hpp"
 #include "providers/pronouns/Pronouns.hpp"
 #include "providers/seventv/SeventvAPI.hpp"
@@ -182,9 +181,7 @@ Application::Application(Settings &_settings, const Paths &paths,
     , twitchPubSub(new PubSub(TWITCH_PUBSUB_URL))
     , twitchBadges(new TwitchBadges)
     , chatterinoBadges(new ChatterinoBadges)
-    , bttvEmotes(new BttvEmotes)
     , bttvLiveUpdates(makeBttvLiveUpdates(_settings))
-    , ffzEmotes(new FfzEmotes)
     , seventvEmotes(new SeventvEmotes)
     , seventvEventAPI(makeSeventvEventAPI(_settings))
     , linkResolver(new LinkResolver)
@@ -230,6 +227,7 @@ void Application::initialize(Settings &settings, const Paths &paths)
     {
         getSettings()->currentVersion.setValue(CHATTERINO_VERSION);
     }
+    // Load global emotes
     this->emotes->initialize();
 
     this->accounts->load();
@@ -240,7 +238,6 @@ void Application::initialize(Settings &settings, const Paths &paths)
 
     // Load global emotes
     this->bttvEmotes->loadEmotes();
-    this->ffzEmotes->loadEmotes();
     this->seventvEmotes->loadGlobalEmotes();
 
     this->twitch->initialize();
@@ -308,11 +305,6 @@ int Application::run()
     getSettings()->enableBTTVChannelEmotes.connect(
         [this] {
             this->twitch->reloadAllBTTVChannelEmotes();
-        },
-        false);
-    getSettings()->enableFFZChannelEmotes.connect(
-        [this] {
-            this->twitch->reloadAllFFZChannelEmotes();
         },
         false);
     getSettings()->enableSevenTVChannelEmotes.connect(
@@ -563,14 +555,6 @@ BttvLiveUpdates *Application::getBttvLiveUpdates()
     return this->bttvLiveUpdates.get();
 }
 
-FfzEmotes *Application::getFfzEmotes()
-{
-    assertInGuiThread();
-    assert(this->ffzEmotes);
-
-    return this->ffzEmotes.get();
-}
-
 SeventvEmotes *Application::getSeventvEmotes()
 {
     assertInGuiThread();
@@ -635,7 +619,6 @@ void Application::stop()
     this->linkResolver.reset();
     this->seventvEventAPI.reset();
     this->seventvEmotes.reset();
-    this->ffzEmotes.reset();
     this->bttvLiveUpdates.reset();
     this->bttvEmotes.reset();
     this->chatterinoBadges.reset();
