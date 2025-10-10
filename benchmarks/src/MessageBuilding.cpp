@@ -5,7 +5,9 @@
 #include "MessageBuilding.hpp"
 
 #include "messages/Emote.hpp"
+#include "providers/seventv/SeventvEmoteProvider.hpp"
 
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 
@@ -57,16 +59,23 @@ MessageBenchmark::MessageBenchmark(QString name)
 {
     const auto seventvEmotes =
         tryReadJsonFile(u":/bench/seventvemotes-%1.json"_s.arg(this->name));
-    const auto bttvEmotes =
-        tryReadJsonFile(u":/bench/bttvemotes-%1.json"_s.arg(this->name));
 
     if (seventvEmotes)
     {
-        this->chan->setSeventvEmotes(std::make_shared<const EmoteMap>(
-            seventv::detail::parseEmotes(seventvEmotes->object()["emote_set"_L1]
-                                             .toObject()["emotes"_L1]
-                                             .toArray(),
-                                         false)));
+        auto map = std::make_shared<EmoteMap>();
+        for (const auto el : seventvEmotes->object()["emote_set"_L1]
+                                 .toObject()["emotes"_L1]
+                                 .toArray())
+        {
+            auto emote = seventv::detail::parseEmote(el.toObject(), false);
+            if (!emote)
+            {
+                continue;
+            }
+            auto name = emote->name;
+            auto ptr = std::make_shared<const Emote>(*std::move(emote));
+            (*map)[name] = std::move(ptr);
+        }
     }
 
     this->messages =

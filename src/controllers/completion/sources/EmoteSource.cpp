@@ -11,7 +11,6 @@
 #include "controllers/emotes/EmoteController.hpp"
 #include "controllers/emotes/EmoteProvider.hpp"
 #include "providers/emoji/Emojis.hpp"
-#include "providers/seventv/SeventvEmotes.hpp"
 #include "providers/twitch/TwitchAccount.hpp"
 #include "providers/twitch/TwitchChannel.hpp"
 #include "providers/twitch/TwitchIrcServer.hpp"
@@ -121,22 +120,12 @@ void EmoteSource::initializeFromChannel(const Channel *channel)
                 }
                 addEmotes(emotes, *data.emotes, u"Channel " % provider->name());
             }
-
-            if (auto seventv = tc->seventvEmotes())
-            {
-                addEmotes(emotes, *seventv, "Channel 7TV");
-            }
         }
 
         for (const auto &provider : app->getEmotes()->getProviders())
         {
             addEmotes(emotes, *provider->globalEmotes(),
                       u"Global " % provider->name());
-        }
-
-        if (auto seventvG = app->getSeventvEmotes()->globalEmotes())
-        {
-            addEmotes(emotes, *seventvG, "Global 7TV");
         }
     }
 

@@ -6,7 +6,7 @@
 
 #include "messages/Emote.hpp"
 #include "messages/Image.hpp"  // IWYU pragma: keep
-#include "providers/seventv/SeventvEmotes.hpp"
+#include "providers/seventv/SeventvEmoteProvider.hpp"
 
 namespace chatterino {
 
@@ -22,7 +22,7 @@ EmotePtr SeventvBadges::createBadge(const QString &id,
         // We utilize the "emote" "name" for filtering badges, and expect
         // the format to be "7tv:badge name" (e.g. "7tv:NNYS 2024")
         .name = EmoteName{u"7tv:" % badgeJson["name"].toString()},
-        .images = SeventvEmotes::createImageSet(badgeJson, true),
+        .images = SeventvEmoteProvider::createImageSet(badgeJson, true),
         .tooltip = Tooltip{badgeJson["tooltip"].toString()},
         .homePage = Url{},
         .id = EmoteId{id},

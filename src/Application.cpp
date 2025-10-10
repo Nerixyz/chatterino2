@@ -20,7 +20,6 @@
 #include "providers/links/LinkResolver.hpp"
 #include "providers/pronouns/Pronouns.hpp"
 #include "providers/seventv/SeventvAPI.hpp"
-#include "providers/seventv/SeventvEmotes.hpp"
 #include "providers/twitch/eventsub/Controller.hpp"
 #include "providers/twitch/TwitchBadges.hpp"
 #include "singletons/ImageUploader.hpp"
@@ -181,7 +180,6 @@ Application::Application(Settings &_settings, const Paths &paths,
     , twitchBadges(new TwitchBadges)
     , chatterinoBadges(new ChatterinoBadges)
     , bttvLiveUpdates(makeBttvLiveUpdates(_settings))
-    , seventvEmotes(new SeventvEmotes)
     , seventvEventAPI(makeSeventvEventAPI(_settings))
     , linkResolver(new LinkResolver)
     , streamerMode(new StreamerMode)
@@ -234,9 +232,6 @@ void Application::initialize(Settings &settings, const Paths &paths)
     this->windows->initialize();
 
     this->ffzBadges->load();
-
-    // Load global emotes
-    this->seventvEmotes->loadGlobalEmotes();
 
     this->twitch->initialize();
 
@@ -299,12 +294,6 @@ int Application::run()
     {
         this->windows->getMainWindow().show();
     }
-
-    getSettings()->enableSevenTVChannelEmotes.connect(
-        [this] {
-            this->twitch->reloadAllSevenTVChannelEmotes();
-        },
-        false);
 
     return QApplication::exec();
 }
@@ -469,7 +458,6 @@ ImageUploader *Application::getImageUploader()
 
 SeventvAPI *Application::getSeventvAPI()
 {
-    assertInGuiThread();
     assert(this->seventvAPI);
 
     return this->seventvAPI.get();
@@ -540,14 +528,6 @@ BttvLiveUpdates *Application::getBttvLiveUpdates()
     return this->bttvLiveUpdates.get();
 }
 
-SeventvEmotes *Application::getSeventvEmotes()
-{
-    assertInGuiThread();
-    assert(this->seventvEmotes);
-
-    return this->seventvEmotes.get();
-}
-
 SeventvEventAPI *Application::getSeventvEventAPI()
 {
     assertInGuiThread();
@@ -603,7 +583,6 @@ void Application::stop()
     this->streamerMode.reset();
     this->linkResolver.reset();
     this->seventvEventAPI.reset();
-    this->seventvEmotes.reset();
     this->bttvLiveUpdates.reset();
     this->chatterinoBadges.reset();
     this->twitchBadges.reset();

@@ -76,11 +76,6 @@ public:
         return &this->twitchBadges;
     }
 
-    SeventvEmotes *getSeventvEmotes() override
-    {
-        return &this->seventvEmotes;
-    }
-
     IStreamerMode *getStreamerMode() override
     {
         return &this->streamerMode;
@@ -108,7 +103,6 @@ public:
     SeventvBadges seventvBadges;
     HighlightController highlights;
     TwitchBadges twitchBadges;
-    SeventvEmotes seventvEmotes;
     DisabledStreamerMode streamerMode;
 };
 

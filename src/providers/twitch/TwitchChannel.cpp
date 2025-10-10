@@ -32,7 +32,7 @@
 #include "providers/recentmessages/Api.hpp"
 #include "providers/seventv/eventapi/Dispatch.hpp"
 #include "providers/seventv/SeventvAPI.hpp"
-#include "providers/seventv/SeventvEmotes.hpp"
+#include "providers/seventv/SeventvEmoteProvider.hpp"
 #include "providers/seventv/SeventvEventAPI.hpp"
 #include "providers/twitch/api/Helix.hpp"
 #include "providers/twitch/ChannelPointReward.hpp"
@@ -123,7 +123,6 @@ TwitchChannel::TwitchChannel(const QString &name)
     , channelUrl_("https://www.twitch.tv/" + name)
     , popoutPlayerUrl_(TWITCH_PLAYER_URL.arg(name))
     , localTwitchEmotes_(std::make_shared<EmoteMap>())
-    , seventvEmotes_(std::make_shared<EmoteMap>())
     , channelEmotes_(this)
 {
     qCDebug(chatterinoTwitch) << "[TwitchChannel" << name << "] Opened";
@@ -270,6 +269,16 @@ std::shared_ptr<TwitchChannel> TwitchChannel::sharedTwitchChannel()
     return std::static_pointer_cast<TwitchChannel>(this->shared_from_this());
 }
 
+std::weak_ptr<const TwitchChannel> TwitchChannel::weakTwitchChannel() const
+{
+    return this->sharedTwitchChannel();
+}
+
+std::weak_ptr<TwitchChannel> TwitchChannel::weakTwitchChannel()
+{
+    return this->sharedTwitchChannel();
+}
+
 bool TwitchChannel::isEmpty() const
 {
     return this->getName().isEmpty();
@@ -374,45 +383,6 @@ void TwitchChannel::refreshTwitchChannelEmotes(bool manualRefresh)
             qCWarning(chatterinoTwitch)
                 << "Failed to get following status:" << error;
         });
-}
-
-void TwitchChannel::refreshSevenTVChannelEmotes(bool manualRefresh)
-{
-    if (!Settings::instance().enableSevenTVChannelEmotes)
-    {
-        this->seventvEmotes_.set(EMPTY_EMOTE_MAP);
-        return;
-    }
-
-    bool cacheHit = readProviderEmotesCache(
-        this->roomId(), "seventv", [this](auto jsonDoc) {
-            const auto json = jsonDoc.toObject();
-            const auto emoteSet = json["emote_set"].toObject();
-            const auto parsedEmotes = emoteSet["emotes"].toArray();
-            auto emoteMap = seventv::detail::parseEmotes(parsedEmotes, false);
-            this->setSeventvEmotes(std::make_shared<const EmoteMap>(emoteMap));
-        });
-
-    SeventvEmotes::loadChannelEmotes(
-        weakOf<Channel>(this), this->roomId(),
-        [this, weak = weakOf<Channel>(this)](auto &&emoteMap,
-                                             auto channelInfo) {
-            if (auto shared = weak.lock())
-            {
-                this->setSeventvEmotes(
-                    std::make_shared<const EmoteMap>(emoteMap));
-                this->updateSeventvData(channelInfo.userID,
-                                        channelInfo.emoteSetID);
-                this->seventvUserTwitchConnectionIndex_ =
-                    channelInfo.twitchConnectionIndex;
-            }
-        },
-        manualRefresh, cacheHit);
-}
-
-void TwitchChannel::setSeventvEmotes(std::shared_ptr<const EmoteMap> &&map)
-{
-    this->seventvEmotes_.set(std::move(map));
 }
 
 void TwitchChannel::addQueuedRedemption(const QString &rewardId,
@@ -682,7 +652,6 @@ void TwitchChannel::roomIdChanged()
     this->refreshBadges();
     this->refreshCheerEmotes();
     this->refreshTwitchChannelEmotes(false);
-    this->refreshSevenTVChannelEmotes(false);
     this->channelEmotes_.refresh(false);
     this->joinBttvChannel();
     this->listenSevenTVCosmetics();
@@ -976,26 +945,9 @@ std::optional<EmotePtr> TwitchChannel::twitchEmote(const EmoteName &name) const
     return it->second;
 }
 
-std::optional<EmotePtr> TwitchChannel::seventvEmote(const EmoteName &name) const
-{
-    auto emotes = this->seventvEmotes_.get();
-    auto it = emotes->find(name);
-
-    if (it == emotes->end())
-    {
-        return std::nullopt;
-    }
-    return it->second;
-}
-
 std::shared_ptr<const EmoteMap> TwitchChannel::localTwitchEmotes() const
 {
     return this->localTwitchEmotes_.get();
-}
-
-std::shared_ptr<const EmoteMap> TwitchChannel::seventvEmotes() const
-{
-    return this->seventvEmotes_.get();
 }
 
 const QString &TwitchChannel::seventvUserID() const
@@ -1087,7 +1039,12 @@ void TwitchChannel::removeBttvEmote(
 void TwitchChannel::addSeventvEmote(
     const seventv::eventapi::EmoteAddDispatch &dispatch)
 {
-    if (!SeventvEmotes::addEmote(this->seventvEmotes_, dispatch))
+    auto seventv = SeventvEmoteProvider::instance();
+    if (!seventv)
+    {
+        return;
+    }
+    if (!seventv->addEmote(this, dispatch))
     {
         return;
     }
@@ -1099,7 +1056,12 @@ void TwitchChannel::addSeventvEmote(
 void TwitchChannel::updateSeventvEmote(
     const seventv::eventapi::EmoteUpdateDispatch &dispatch)
 {
-    if (!SeventvEmotes::updateEmote(this->seventvEmotes_, dispatch))
+    auto seventv = SeventvEmoteProvider::instance();
+    if (!seventv)
+    {
+        return;
+    }
+    if (!seventv->updateEmote(this, dispatch))
     {
         return;
     }
@@ -1113,14 +1075,19 @@ void TwitchChannel::updateSeventvEmote(
 void TwitchChannel::removeSeventvEmote(
     const seventv::eventapi::EmoteRemoveDispatch &dispatch)
 {
-    auto removed = SeventvEmotes::removeEmote(this->seventvEmotes_, dispatch);
+    auto seventv = SeventvEmoteProvider::instance();
+    if (!seventv)
+    {
+        return;
+    }
+    auto removed = seventv->removeEmote(this, dispatch);
     if (!removed)
     {
         return;
     }
 
     this->addOrReplaceLiveUpdatesAddRemove(false, "7TV", dispatch.actorName,
-                                           (*removed)->name.string);
+                                           removed->name.string);
 }
 
 void TwitchChannel::updateSeventvUser(
@@ -1132,40 +1099,42 @@ void TwitchChannel::updateSeventvUser(
         return;
     }
 
-    this->updateSeventvData(this->seventvUserID_, dispatch.emoteSetID);
-    SeventvEmotes::getEmoteSet(
-        dispatch.emoteSetID,
-        [this, weak = weakOf<Channel>(this), dispatch](auto &&emotes,
-                                                       const auto &name) {
-            postToThread([this, weak, dispatch, emotes, name]() {
-                if (auto shared = weak.lock())
-                {
-                    this->seventvEmotes_.set(
-                        std::make_shared<EmoteMap>(emotes));
-                    auto builder =
-                        MessageBuilder(liveUpdatesUpdateEmoteSetMessage, "7TV",
-                                       dispatch.actorName, name);
-                    this->addMessage(builder.release(),
-                                     MessageContext::Original);
-                }
-            });
-        },
-        [this, weak = weakOf<Channel>(this)](const auto &reason) {
-            postToThread([this, weak, reason]() {
-                if (auto shared = weak.lock())
-                {
-                    this->seventvEmotes_.set(EMPTY_EMOTE_MAP);
-                    this->addSystemMessage(
-                        QString("Failed updating 7TV emote set (%1).")
-                            .arg(reason));
-                }
-            });
+    this->updateSeventvData(this->seventvUserID_, dispatch.emoteSetID,
+                            this->seventvUserTwitchConnectionIndex_);
+    auto seventv = SeventvEmoteProvider::instance();
+    if (!seventv)
+    {
+        return;
+    }
+    seventv->applyEmoteSet(
+        this, dispatch.emoteSetID,
+        [dispatch,
+         chanWP = std::weak_ptr(this->sharedTwitchChannel())](const auto &res) {
+            auto chan = chanWP.lock();
+            if (!chan)
+            {
+                return;
+            }
+            if (res)
+            {
+                auto builder =
+                    MessageBuilder(liveUpdatesUpdateEmoteSetMessage, "7TV",
+                                   dispatch.actorName, res->name);
+                chan->addMessage(builder.release(), MessageContext::Original);
+            }
+            else
+            {
+                chan->addSystemMessage(u"Failed to update 7TV emote set: " %
+                                       res.error());
+            }
         });
 }
 
 void TwitchChannel::updateSeventvData(const QString &newUserID,
-                                      const QString &newEmoteSetID)
+                                      const QString &newEmoteSetID,
+                                      size_t userConnectionIndex)
 {
+    this->seventvUserTwitchConnectionIndex_ = userConnectionIndex;
     if (this->seventvUserID_ == newUserID &&
         this->seventvEmoteSetID_ == newEmoteSetID)
     {
