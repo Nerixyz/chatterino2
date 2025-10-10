@@ -217,13 +217,6 @@ public:
         return nullptr;
     }
 
-    SeventvEmotes *getSeventvEmotes() override
-    {
-        assert(false && "EmptyApplication::getSeventvEmotes was called without "
-                        "being initialized");
-        return nullptr;
-    }
-
     SeventvEventAPI *getSeventvEventAPI() override
     {
         assert(false && "EmptyApplication::getSeventvEventAPI was called "

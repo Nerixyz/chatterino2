@@ -4,6 +4,7 @@
 #include "providers/bttv/BttvEmoteProvider.hpp"
 #include "providers/emoji/Emojis.hpp"
 #include "providers/ffz/FfzEmoteProvider.hpp"
+#include "providers/seventv/SeventvEmoteProvider.hpp"
 #include "providers/twitch/TwitchEmotes.hpp"
 #include "singletons/helper/GifTimer.hpp"
 
@@ -24,6 +25,7 @@ void EmoteController::initialize()
 
     this->providers_.emplace_back(std::make_shared<BttvEmoteProvider>());
     this->providers_.emplace_back(std::make_shared<FfzEmoteProvider>());
+    this->providers_.emplace_back(std::make_shared<SeventvEmoteProvider>());
     this->sort();
 
     for (const auto &provider : this->providers_)

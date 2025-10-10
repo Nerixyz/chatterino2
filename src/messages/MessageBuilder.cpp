@@ -24,7 +24,6 @@
 #include "providers/ffz/FfzBadges.hpp"
 #include "providers/links/LinkResolver.hpp"
 #include "providers/seventv/SeventvBadges.hpp"
-#include "providers/seventv/SeventvEmotes.hpp"
 #include "providers/twitch/api/Helix.hpp"
 #include "providers/twitch/ChannelPointReward.hpp"
 #include "providers/twitch/TwitchAccount.hpp"
@@ -421,9 +420,7 @@ EmotePtr parseEmote(TwitchChannel *twitchChannel, const EmoteName &name)
 {
     // Emote order:
     //  - Channel emotes
-    //  - 7TV Channel
     //  - Global emotes
-    //  - 7TV Global
 
     if (auto *holder = twitchChannel->emotes())
     {
@@ -434,35 +431,13 @@ EmotePtr parseEmote(TwitchChannel *twitchChannel, const EmoteName &name)
         }
     }
 
-    const auto *globalSeventvEmotes = getApp()->getSeventvEmotes();
-
-    std::optional<EmotePtr> emote{};
-
-    if (twitchChannel != nullptr)
-    {
-        // Check for channel emotes
-
-        emote = twitchChannel->seventvEmote(name);
-        if (emote)
-        {
-            return *emote;
-        }
-    }
-
-    // Check for global emotes
     auto global = getApp()->getEmotes()->resolveGlobal(name);
     if (global)
     {
         return global;
     }
 
-    emote = globalSeventvEmotes->globalEmote(name);
-    if (emote)
-    {
-        return *emote;
-    }
-
-    return {};
+    return nullptr;
 }
 
 }  // namespace

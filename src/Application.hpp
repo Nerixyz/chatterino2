@@ -44,7 +44,6 @@ class ImageUploader;
 class SeventvAPI;
 class CrashHandler;
 class BttvLiveUpdates;
-class SeventvEmotes;
 class SeventvEventAPI;
 class ILinkResolver;
 class IStreamerMode;
@@ -100,7 +99,6 @@ public:
 #endif
     virtual Updates &getUpdates() = 0;
     virtual BttvLiveUpdates *getBttvLiveUpdates() = 0;
-    virtual SeventvEmotes *getSeventvEmotes() = 0;
     virtual SeventvEventAPI *getSeventvEventAPI() = 0;
     virtual ILinkResolver *getLinkResolver() = 0;
     virtual IStreamerMode *getStreamerMode() = 0;
@@ -166,7 +164,6 @@ private:
     std::unique_ptr<TwitchBadges> twitchBadges;
     std::unique_ptr<ChatterinoBadges> chatterinoBadges;
     std::unique_ptr<BttvLiveUpdates> bttvLiveUpdates;
-    std::unique_ptr<SeventvEmotes> seventvEmotes;
     std::unique_ptr<SeventvEventAPI> seventvEventAPI;
     std::unique_ptr<ILinkResolver> linkResolver;
     std::unique_ptr<IStreamerMode> streamerMode;
@@ -214,7 +211,6 @@ public:
     Updates &getUpdates() override;
 
     BttvLiveUpdates *getBttvLiveUpdates() override;
-    SeventvEmotes *getSeventvEmotes() override;
     SeventvEventAPI *getSeventvEventAPI() override;
     pronouns::Pronouns *getPronouns() override;
     eventsub::IController *getEventSub() override;

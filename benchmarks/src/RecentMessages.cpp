@@ -13,7 +13,7 @@
 #include "providers/ffz/FfzBadges.hpp"
 #include "providers/recentmessages/Impl.hpp"
 #include "providers/seventv/SeventvBadges.hpp"
-#include "providers/seventv/SeventvEmotes.hpp"
+#include "providers/seventv/SeventvEmoteProvider.hpp"
 #include "providers/twitch/TwitchBadges.hpp"
 #include "providers/twitch/TwitchChannel.hpp"
 #include "singletons/Resources.hpp"
@@ -84,11 +84,6 @@ public:
         return &this->twitchBadges;
     }
 
-    SeventvEmotes *getSeventvEmotes() override
-    {
-        return &this->seventvEmotes;
-    }
-
     IStreamerMode *getStreamerMode() override
     {
         return &this->streamerMode;
@@ -116,7 +111,6 @@ public:
     SeventvBadges seventvBadges;
     HighlightController highlights;
     TwitchBadges twitchBadges;
-    SeventvEmotes seventvEmotes;
     DisabledStreamerMode streamerMode;
 };
 
@@ -160,12 +154,20 @@ public:
 
         if (seventvEmotes)
         {
-            this->chan.setSeventvEmotes(
-                std::make_shared<const EmoteMap>(seventv::detail::parseEmotes(
-                    seventvEmotes->object()["emote_set"_L1]
-                        .toObject()["emotes"_L1]
-                        .toArray(),
-                    false)));
+            auto map = std::make_shared<EmoteMap>();
+            for (const auto el : seventvEmotes->object()["emote_set"_L1]
+                                     .toObject()["emotes"_L1]
+                                     .toArray())
+            {
+                auto emote = seventv::detail::parseEmote(el.toObject(), false);
+                if (!emote)
+                {
+                    continue;
+                }
+                auto name = emote->name;
+                auto ptr = std::make_shared<const Emote>(*std::move(emote));
+                (*map)[name] = std::move(ptr);
+            }
         }
 
         this->messages =

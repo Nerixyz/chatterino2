@@ -1130,11 +1130,6 @@ void SplitHeader::reloadChannelEmotes()
     {
         holder->refresh(true);
     }
-
-    if (auto *twitchChannel = dynamic_cast<TwitchChannel *>(channel.get()))
-    {
-        twitchChannel->refreshSevenTVChannelEmotes(true);
-    }
 }
 
 void SplitHeader::reloadSubscriberEmotes()
