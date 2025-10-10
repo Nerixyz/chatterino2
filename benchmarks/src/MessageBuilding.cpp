@@ -69,13 +69,6 @@ MessageBenchmark::MessageBenchmark(QString name)
                                          false)));
     }
 
-    if (bttvEmotes)
-    {
-        this->chan->setBttvEmotes(
-            std::make_shared<const EmoteMap>(bttv::detail::parseChannelEmotes(
-                bttvEmotes->object(), this->name)));
-    }
-
     this->messages =
         readJsonFile(u":/bench/recentmessages-%1.json"_s.arg(this->name));
 }

@@ -61,11 +61,6 @@ public:
         return &this->emotes;
     }
 
-    BttvEmotes *getBttvEmotes() override
-    {
-        return &this->bttvEmotes;
-    }
-
     SeventvEmotes *getSeventvEmotes() override
     {
         return &this->seventvEmotes;
@@ -80,7 +75,6 @@ public:
     AccountController accounts;
     mock::MockTwitchIrcServer twitch;
     mock::EmoteController emotes;
-    BttvEmotes bttvEmotes;
     SeventvEmotes seventvEmotes;
 };
 

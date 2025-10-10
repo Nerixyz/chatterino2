@@ -12,7 +12,6 @@
 #include "controllers/emotes/EmoteController.hpp"
 #include "controllers/spellcheck/SpellChecker.hpp"
 #include "messages/Emote.hpp"
-#include "providers/bttv/BttvEmotes.hpp"
 #include "providers/seventv/SeventvEmotes.hpp"
 #include "providers/twitch/TwitchAccount.hpp"
 #include "providers/twitch/TwitchChannel.hpp"
@@ -30,8 +29,7 @@ bool isEmote(TwitchChannel *twitch, const QString &word)
     EmoteName name{word};
     if (twitch)
     {
-        if (twitch->channelEmotes().resolve(name) || twitch->bttvEmote(name) ||
-            twitch->seventvEmote(name))
+        if (twitch->channelEmotes().resolve(name) || twitch->seventvEmote(name))
         {
             return true;
         }
@@ -42,7 +40,6 @@ bool isEmote(TwitchChannel *twitch, const QString &word)
         }
     }
     if (getApp()->getEmotes()->resolveGlobal(name) ||
-        getApp()->getBttvEmotes()->emote(name) ||
         getApp()->getSeventvEmotes()->globalEmote(name))
     {
         return true;

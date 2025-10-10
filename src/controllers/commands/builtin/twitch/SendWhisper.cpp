@@ -12,7 +12,6 @@
 #include "messages/Message.hpp"
 #include "messages/MessageBuilder.hpp"
 #include "messages/MessageElement.hpp"
-#include "providers/bttv/BttvEmotes.hpp"
 #include "providers/emoji/Emojis.hpp"
 #include "providers/twitch/api/Helix.hpp"
 #include "providers/twitch/TwitchAccount.hpp"
@@ -110,7 +109,6 @@ bool appendWhisperMessageWordsLocally(const QStringList &words)
 
     const auto &acc = app->getAccounts()->twitch.getCurrent();
     const auto &accemotes = *acc->accessEmotes();
-    const auto *bttvemotes = app->getBttvEmotes();
     const auto *emoteController = app->getEmotes();
     auto emote = std::optional<EmotePtr>{};
     for (int i = 2; i < words.length(); i++)
@@ -132,15 +130,6 @@ bool appendWhisperMessageWordsLocally(const QStringList &words)
                 continue;
             }
         }  // third party emotes
-        {  // bttv emote
-            emote = bttvemotes->emote({words[i]});
-            // TODO: Load 7tv global emotes
-            if (emote)
-            {
-                b.emplace<EmoteElement>(*emote, MessageElementFlag::Emote);
-                continue;
-            }
-        }  // bttv emote
         {  // emoji/text
             for (auto &variant : emoteController->getEmojis()->parse(words[i]))
             {

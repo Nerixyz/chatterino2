@@ -10,7 +10,6 @@
 #include "controllers/emotes/ChannelEmotes.hpp"
 #include "controllers/emotes/EmoteController.hpp"
 #include "controllers/emotes/EmoteProvider.hpp"
-#include "providers/bttv/BttvEmotes.hpp"
 #include "providers/emoji/Emojis.hpp"
 #include "providers/seventv/SeventvEmotes.hpp"
 #include "providers/twitch/TwitchAccount.hpp"
@@ -123,11 +122,6 @@ void EmoteSource::initializeFromChannel(const Channel *channel)
                 addEmotes(emotes, *data.emotes, u"Channel " % provider->name());
             }
 
-            // TODO extract "Channel {BetterTTV,7TV,FrankerFaceZ}" text into a #define.
-            if (auto bttv = tc->bttvEmotes())
-            {
-                addEmotes(emotes, *bttv, "Channel BetterTTV");
-            }
             if (auto seventv = tc->seventvEmotes())
             {
                 addEmotes(emotes, *seventv, "Channel 7TV");
@@ -140,10 +134,6 @@ void EmoteSource::initializeFromChannel(const Channel *channel)
                       u"Global " % provider->name());
         }
 
-        if (auto bttvG = app->getBttvEmotes()->emotes())
-        {
-            addEmotes(emotes, *bttvG, "Global BetterTTV");
-        }
         if (auto seventvG = app->getSeventvEmotes()->globalEmotes())
         {
             addEmotes(emotes, *seventvG, "Global 7TV");

@@ -224,18 +224,14 @@ public:
     const ChannelEmotes &channelEmotes() const;
 
     std::optional<EmotePtr> twitchEmote(const EmoteName &name) const;
-    std::optional<EmotePtr> bttvEmote(const EmoteName &name) const;
     std::optional<EmotePtr> seventvEmote(const EmoteName &name) const;
 
     std::shared_ptr<const EmoteMap> localTwitchEmotes() const;
-    std::shared_ptr<const EmoteMap> bttvEmotes() const;
     std::shared_ptr<const EmoteMap> seventvEmotes() const;
 
     void refreshTwitchChannelEmotes(bool manualRefresh);
-    void refreshBTTVChannelEmotes(bool manualRefresh);
     void refreshSevenTVChannelEmotes(bool manualRefresh);
 
-    void setBttvEmotes(std::shared_ptr<const EmoteMap> &&map);
     void setSeventvEmotes(std::shared_ptr<const EmoteMap> &&map);
 
     const QString &seventvUserID() const;
@@ -374,6 +370,11 @@ public:
     void updateDisplayName(const QString &displayName);
 
     /**
+     * Returns the localized name of the user
+     **/
+    const QString &getLocalizedName() const override;
+
+    /**
      * Sync the text of the send wait timer to the actual time remaining.
      */
     void syncSendWaitTimer();
@@ -450,11 +451,6 @@ private:
 
     void onLiveStatusChanged(bool isLive, bool isInitialUpdate);
 
-    /**
-     * Returns the localized name of the user
-     **/
-    const QString &getLocalizedName() const override;
-
     QString prepareMessage(const QString &message) const;
 
     /**
@@ -510,7 +506,6 @@ protected:
 
     Atomic<std::shared_ptr<const EmoteMap>> localTwitchEmotes_;
     Atomic<QString> localTwitchEmoteSetID_;
-    Atomic<std::shared_ptr<const EmoteMap>> bttvEmotes_;
     Atomic<std::shared_ptr<const EmoteMap>> seventvEmotes_;
     Atomic<std::optional<EmotePtr>> ffzCustomModBadge_;
     Atomic<std::optional<EmotePtr>> ffzCustomVipBadge_;

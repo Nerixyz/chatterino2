@@ -23,7 +23,7 @@
 #include "messages/MessageBuilder.hpp"
 #include "messages/MessageElement.hpp"
 #include "messages/MessageThread.hpp"
-#include "providers/bttv/BttvEmotes.hpp"
+#include "providers/bttv/BttvEmoteProvider.hpp"
 #include "providers/bttv/BttvLiveUpdates.hpp"
 #include "providers/bttv/liveupdates/BttvLiveUpdateMessages.hpp"
 #include "providers/emoji/Emojis.hpp"
@@ -123,7 +123,6 @@ TwitchChannel::TwitchChannel(const QString &name)
     , channelUrl_("https://www.twitch.tv/" + name)
     , popoutPlayerUrl_(TWITCH_PLAYER_URL.arg(name))
     , localTwitchEmotes_(std::make_shared<EmoteMap>())
-    , bttvEmotes_(std::make_shared<EmoteMap>())
     , seventvEmotes_(std::make_shared<EmoteMap>())
     , channelEmotes_(this)
 {
@@ -377,36 +376,6 @@ void TwitchChannel::refreshTwitchChannelEmotes(bool manualRefresh)
         });
 }
 
-void TwitchChannel::refreshBTTVChannelEmotes(bool manualRefresh)
-{
-    if (!Settings::instance().enableBTTVChannelEmotes)
-    {
-        this->bttvEmotes_.set(EMPTY_EMOTE_MAP);
-        return;
-    }
-
-    bool cacheHit = readProviderEmotesCache(
-        this->roomId(), "betterttv",
-        [this, weak = weakOf<Channel>(this)](auto jsonDoc) {
-            if (auto shared = weak.lock())
-            {
-                auto emoteMap = bttv::detail::parseChannelEmotes(
-                    jsonDoc.toObject(), this->getLocalizedName());
-                this->setBttvEmotes(std::make_shared<const EmoteMap>(emoteMap));
-            }
-        });
-
-    BttvEmotes::loadChannel(
-        weakOf<Channel>(this), this->roomId(), this->getLocalizedName(),
-        [this, weak = weakOf<Channel>(this)](auto &&emoteMap) {
-            if (auto shared = weak.lock())
-            {
-                this->setBttvEmotes(std::make_shared<const EmoteMap>(emoteMap));
-            }
-        },
-        manualRefresh, cacheHit);
-}
-
 void TwitchChannel::refreshSevenTVChannelEmotes(bool manualRefresh)
 {
     if (!Settings::instance().enableSevenTVChannelEmotes)
@@ -439,11 +408,6 @@ void TwitchChannel::refreshSevenTVChannelEmotes(bool manualRefresh)
             }
         },
         manualRefresh, cacheHit);
-}
-
-void TwitchChannel::setBttvEmotes(std::shared_ptr<const EmoteMap> &&map)
-{
-    this->bttvEmotes_.set(std::move(map));
 }
 
 void TwitchChannel::setSeventvEmotes(std::shared_ptr<const EmoteMap> &&map)
@@ -718,7 +682,6 @@ void TwitchChannel::roomIdChanged()
     this->refreshBadges();
     this->refreshCheerEmotes();
     this->refreshTwitchChannelEmotes(false);
-    this->refreshBTTVChannelEmotes(false);
     this->refreshSevenTVChannelEmotes(false);
     this->channelEmotes_.refresh(false);
     this->joinBttvChannel();
@@ -1013,18 +976,6 @@ std::optional<EmotePtr> TwitchChannel::twitchEmote(const EmoteName &name) const
     return it->second;
 }
 
-std::optional<EmotePtr> TwitchChannel::bttvEmote(const EmoteName &name) const
-{
-    auto emotes = this->bttvEmotes_.get();
-    auto it = emotes->find(name);
-
-    if (it == emotes->end())
-    {
-        return std::nullopt;
-    }
-    return it->second;
-}
-
 std::optional<EmotePtr> TwitchChannel::seventvEmote(const EmoteName &name) const
 {
     auto emotes = this->seventvEmotes_.get();
@@ -1040,11 +991,6 @@ std::optional<EmotePtr> TwitchChannel::seventvEmote(const EmoteName &name) const
 std::shared_ptr<const EmoteMap> TwitchChannel::localTwitchEmotes() const
 {
     return this->localTwitchEmotes_.get();
-}
-
-std::shared_ptr<const EmoteMap> TwitchChannel::bttvEmotes() const
-{
-    return this->bttvEmotes_.get();
 }
 
 std::shared_ptr<const EmoteMap> TwitchChannel::seventvEmotes() const
@@ -1079,8 +1025,16 @@ void TwitchChannel::joinBttvChannel() const
 void TwitchChannel::addBttvEmote(
     const BttvLiveUpdateEmoteUpdateAddMessage &message)
 {
-    auto emote = BttvEmotes::addEmote(this->getDisplayName(), this->bttvEmotes_,
-                                      message);
+    auto bttv = BttvEmoteProvider::instance();
+    if (!bttv)
+    {
+        return;
+    }
+    auto emote = bttv->addEmote(this, message);
+    if (!emote)
+    {
+        return;
+    }
 
     this->addOrReplaceLiveUpdatesAddRemove(true, "BTTV", QString() /*actor*/,
                                            emote->name.string);
@@ -1089,8 +1043,12 @@ void TwitchChannel::addBttvEmote(
 void TwitchChannel::updateBttvEmote(
     const BttvLiveUpdateEmoteUpdateAddMessage &message)
 {
-    auto updated = BttvEmotes::updateEmote(this->getDisplayName(),
-                                           this->bttvEmotes_, message);
+    auto bttv = BttvEmoteProvider::instance();
+    if (!bttv)
+    {
+        return;
+    }
+    auto updated = bttv->updateEmote(this, message);
     if (!updated)
     {
         return;
@@ -1111,14 +1069,19 @@ void TwitchChannel::updateBttvEmote(
 void TwitchChannel::removeBttvEmote(
     const BttvLiveUpdateEmoteRemoveMessage &message)
 {
-    auto removed = BttvEmotes::removeEmote(this->bttvEmotes_, message);
+    auto bttv = BttvEmoteProvider::instance();
+    if (!bttv)
+    {
+        return;
+    }
+    auto removed = bttv->removeEmote(this, message);
     if (!removed)
     {
         return;
     }
 
     this->addOrReplaceLiveUpdatesAddRemove(false, "BTTV", QString() /*actor*/,
-                                           (*removed)->name.string);
+                                           removed->name.string);
 }
 
 void TwitchChannel::addSeventvEmote(
