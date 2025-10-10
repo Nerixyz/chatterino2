@@ -10,7 +10,6 @@
 #include "messages/LimitedQueueSnapshot.hpp"
 #include "messages/Message.hpp"
 #include "messages/MessageBuilder.hpp"
-#include "providers/bttv/BttvEmotes.hpp"
 #include "providers/bttv/BttvLiveUpdates.hpp"
 #include "providers/bttv/liveupdates/BttvLiveUpdateMessages.hpp"  // IWYU pragma: keep
 #include "providers/irc/IrcConnection2.hpp"
@@ -936,16 +935,6 @@ void TwitchIrcServer::initEventAPIs(BttvLiveUpdates *bttvLiveUpdates,
         qCDebug(chatterinoSeventvEventAPI)
             << "Skipping initialization as the EventAPI is disabled";
     }
-}
-
-void TwitchIrcServer::reloadAllBTTVChannelEmotes()
-{
-    this->forEachChannel([](const auto &chan) {
-        if (auto *channel = dynamic_cast<TwitchChannel *>(chan.get()))
-        {
-            channel->refreshBTTVChannelEmotes(false);
-        }
-    });
 }
 
 void TwitchIrcServer::reloadAllSevenTVChannelEmotes()

@@ -11,7 +11,6 @@
 #include "controllers/ignores/IgnoreController.hpp"
 #include "controllers/notifications/NotificationController.hpp"
 #include "controllers/sound/ISoundController.hpp"
-#include "providers/bttv/BttvEmotes.hpp"
 #include "providers/links/LinkResolver.hpp"
 #include "providers/pronouns/Pronouns.hpp"
 #include "providers/seventv/SeventvAPI.hpp"
@@ -240,7 +239,6 @@ void Application::initialize(Settings &settings, const Paths &paths)
     this->ffzBadges->load();
 
     // Load global emotes
-    this->bttvEmotes->loadEmotes();
     this->seventvEmotes->loadGlobalEmotes();
 
     this->twitch->initialize();
@@ -306,11 +304,6 @@ int Application::run()
         this->windows->getMainWindow().show();
     }
 
-    getSettings()->enableBTTVChannelEmotes.connect(
-        [this] {
-            this->twitch->reloadAllBTTVChannelEmotes();
-        },
-        false);
     getSettings()->enableSevenTVChannelEmotes.connect(
         [this] {
             this->twitch->reloadAllSevenTVChannelEmotes();
@@ -535,14 +528,6 @@ ITwitchUsers *Application::getTwitchUsers()
     return this->twitchUsers.get();
 }
 
-BttvEmotes *Application::getBttvEmotes()
-{
-    assertInGuiThread();
-    assert(this->bttvEmotes);
-
-    return this->bttvEmotes.get();
-}
-
 BttvLiveUpdates *Application::getBttvLiveUpdates()
 {
     assertInGuiThread();
@@ -608,7 +593,6 @@ void Application::stop()
     this->seventvEventAPI.reset();
     this->seventvEmotes.reset();
     this->bttvLiveUpdates.reset();
-    this->bttvEmotes.reset();
     this->chatterinoBadges.reset();
     this->twitchBadges.reset();
     this->twitchPubSub.reset();

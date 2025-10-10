@@ -184,4 +184,81 @@ bool BuiltinEmoteProvider::hasGlobalEmotes() const
     return this->globalSetting->getValue();
 }
 
+bool BuiltinEmoteProvider::addChannelEmote(EmoteHolder &holder, EmotePtr emote)
+{
+    auto *item = holder.itemByProvider(this->weak_from_this());
+    if (!item)
+    {
+        return false;
+    }
+
+    EmoteMap copy = *item->emotes;
+    EmoteName name = emote->name;
+    copy[name] = std::move(emote);
+    item->emotes = std::make_shared<const EmoteMap>(std::move(copy));
+    return true;
+}
+
+std::optional<std::pair<EmotePtr, EmotePtr>>
+    BuiltinEmoteProvider::updateChannelEmote(
+        EmoteHolder &holder, const QString &id, const QString &nameHint,
+        FunctionRef<EmotePtr(const EmotePtr &)> createUpdatedEmote)
+{
+    auto *item = holder.itemByProvider(this->weak_from_this());
+    if (!item)
+    {
+        return std::nullopt;
+    }
+
+    EmoteMap copy = *item->emotes;
+
+    // Step 1: remove the existing emote
+    auto it = copy.findEmote(nameHint, id);
+    if (it == copy.end())
+    {
+        // We already copied the map at this point and are now discarding the copy.
+        // This is fine, because this case should be really rare.
+        return std::nullopt;
+    }
+    auto oldEmotePtr = it->second;
+    copy.erase(it);
+
+    // Step 2: update the emote
+    auto newEmotePtr = createUpdatedEmote(oldEmotePtr);
+    if (!newEmotePtr)
+    {
+        // The emote wasn't actually updated
+        return std::nullopt;
+    }
+
+    copy[newEmotePtr->name] = newEmotePtr;
+    item->emotes = std::make_shared<const EmoteMap>(std::move(copy));
+
+    return std::make_pair(oldEmotePtr, newEmotePtr);
+}
+
+EmotePtr BuiltinEmoteProvider::removeChannelEmote(EmoteHolder &holder,
+                                                  const QString &id,
+                                                  const QString &nameHint)
+{
+    auto *item = holder.itemByProvider(this->weak_from_this());
+    if (!item)
+    {
+        return nullptr;
+    }
+
+    EmoteMap copy = *item->emotes;
+    auto it = copy.findEmote(nameHint, id);
+    if (it == copy.end())
+    {
+        // We already copied the map at this point and are now discarding the copy.
+        // This is fine, because this case should be really rare.
+        return nullptr;
+    }
+    auto emote = it->second;
+    copy.erase(it);
+    item->emotes = std::make_shared<const EmoteMap>(std::move(copy));
+    return emote;
+}
+
 }  // namespace chatterino

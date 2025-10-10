@@ -1,6 +1,7 @@
 #include "controllers/emotes/EmoteController.hpp"
 
 #include "controllers/emotes/EmoteProvider.hpp"
+#include "providers/bttv/BttvEmoteProvider.hpp"
 #include "providers/emoji/Emojis.hpp"
 #include "providers/ffz/FfzEmoteProvider.hpp"
 #include "providers/twitch/TwitchEmotes.hpp"
@@ -21,6 +22,7 @@ void EmoteController::initialize()
     this->emojis_->load();
     this->gifTimer_->initialize();
 
+    this->providers_.emplace_back(std::make_shared<BttvEmoteProvider>());
     this->providers_.emplace_back(std::make_shared<FfzEmoteProvider>());
     this->sort();
 
