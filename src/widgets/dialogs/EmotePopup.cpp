@@ -13,7 +13,6 @@
 #include "messages/MessageBuilder.hpp"
 #include "messages/MessageElement.hpp"
 #include "providers/emoji/Emojis.hpp"
-#include "providers/seventv/SeventvEmotes.hpp"
 #include "providers/twitch/TwitchAccount.hpp"
 #include "providers/twitch/TwitchChannel.hpp"
 #include "singletons/Settings.hpp"
@@ -448,13 +447,6 @@ void EmotePopup::reloadEmotes()
             *getApp()->getAccounts()->twitch.getCurrent()->accessEmoteSets(),
             *globalChannel, *subChannel, twitchChannel_->roomId(),
             twitchChannel_->getName());
-
-        // channel
-        if (Settings::instance().enableSevenTVChannelEmotes)
-        {
-            addEmotes(*channelChannel, *this->twitchChannel_->seventvEmotes(),
-                      "7TV");
-        }
     }
 
     if (auto *holder = this->channel_->emotes())
@@ -468,13 +460,6 @@ void EmotePopup::reloadEmotes()
             }
             addEmotes(*channelChannel, *data.emotes, provider->name());
         }
-    }
-
-    // global
-    if (Settings::instance().enableSevenTVGlobalEmotes)
-    {
-        addEmotes(*globalChannel, *getApp()->getSeventvEmotes()->globalEmotes(),
-                  "7TV");
     }
 
     for (const auto &provider : getApp()->getEmotes()->getProviders())
@@ -537,15 +522,6 @@ void EmotePopup::filterTwitchEmotes(std::shared_ptr<Channel> searchChannel,
         }
     }
 
-    auto seventvGlobalEmotes = filterEmoteMap(
-        searchText, getApp()->getSeventvEmotes()->globalEmotes());
-
-    // global
-    if (!seventvGlobalEmotes.empty())
-    {
-        addEmotes(*searchChannel, seventvGlobalEmotes, "7TV (Global)");
-    }
-
     for (const auto &provider : getApp()->getEmotes()->getProviders())
     {
         auto filtered = filterEmoteMap(searchText, provider->globalEmotes());
@@ -575,20 +551,6 @@ void EmotePopup::filterTwitchEmotes(std::shared_ptr<Channel> searchChannel,
             addEmotes(*searchChannel, std::move(filtered),
                       provider->name() % u" (Channel)");
         }
-    }
-
-    if (this->twitchChannel_ == nullptr)
-    {
-        return;
-    }
-
-    auto seventvChannelEmotes =
-        filterEmoteMap(searchText, this->twitchChannel_->seventvEmotes());
-
-    // channel
-    if (!seventvChannelEmotes.empty())
-    {
-        addEmotes(*searchChannel, seventvChannelEmotes, "7TV (Channel)");
     }
 }
 

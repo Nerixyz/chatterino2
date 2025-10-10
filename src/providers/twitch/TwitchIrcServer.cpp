@@ -13,7 +13,6 @@
 #include "providers/bttv/liveupdates/BttvLiveUpdateMessages.hpp"  // IWYU pragma: keep
 #include "providers/irc/IrcConnection2.hpp"
 #include "providers/seventv/eventapi/Dispatch.hpp"  // IWYU pragma: keep
-#include "providers/seventv/SeventvEmotes.hpp"
 #include "providers/seventv/SeventvEventAPI.hpp"
 #include "providers/twitch/api/Helix.hpp"
 #include "providers/twitch/IrcMessageHandler.hpp"
@@ -933,16 +932,6 @@ void TwitchIrcServer::initEventAPIs(BttvLiveUpdates *bttvLiveUpdates,
         qCDebug(chatterinoSeventvEventAPI)
             << "Skipping initialization as the EventAPI is disabled";
     }
-}
-
-void TwitchIrcServer::reloadAllSevenTVChannelEmotes()
-{
-    this->forEachChannel([](const auto &chan) {
-        if (auto *channel = dynamic_cast<TwitchChannel *>(chan.get()))
-        {
-            channel->refreshSevenTVChannelEmotes(false);
-        }
-    });
 }
 
 void TwitchIrcServer::forEachSeventvEmoteSet(

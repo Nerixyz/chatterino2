@@ -57,11 +57,6 @@ public:
         return &this->emotes;
     }
 
-    SeventvEmotes *getSeventvEmotes() override
-    {
-        return &this->seventvEmotes;
-    }
-
     ILogging *getChatLogger() override
     {
         return &this->logging;
@@ -71,7 +66,6 @@ public:
     AccountController accounts;
     mock::MockTwitchIrcServer twitch;
     mock::EmoteController emotes;
-    SeventvEmotes seventvEmotes;
 };
 
 void containsRoughly(std::span<EmoteItem> span, const std::set<QString> &values)

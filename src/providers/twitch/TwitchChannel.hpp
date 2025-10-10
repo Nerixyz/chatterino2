@@ -213,15 +213,10 @@ public:
 
     // Emotes
     std::optional<EmotePtr> twitchEmote(const EmoteName &name) const;
-    std::optional<EmotePtr> seventvEmote(const EmoteName &name) const;
 
     std::shared_ptr<const EmoteMap> localTwitchEmotes() const;
-    std::shared_ptr<const EmoteMap> seventvEmotes() const;
 
     void refreshTwitchChannelEmotes(bool manualRefresh);
-    void refreshSevenTVChannelEmotes(bool manualRefresh);
-
-    void setSeventvEmotes(std::shared_ptr<const EmoteMap> &&map);
 
     const QString &seventvUserID() const;
     const QString &seventvEmoteSetID() const;
@@ -245,9 +240,11 @@ public:
     void updateSeventvUser(
         const seventv::eventapi::UserConnectionUpdateDispatch &dispatch);
 
-    // Update the channel's 7TV information (the channel's 7TV user ID and emote set ID)
+    // Update the channel's 7TV information (the channel's 7TV user ID, emote
+    // set ID, and index of Twitch connection)
     void updateSeventvData(const QString &newUserID,
-                           const QString &newEmoteSetID);
+                           const QString &newEmoteSetID,
+                           size_t userConnectionIndex);
 
     // Badges
     std::optional<EmotePtr> ffzCustomModBadge() const;
@@ -452,7 +449,6 @@ protected:
 
     Atomic<std::shared_ptr<const EmoteMap>> localTwitchEmotes_;
     Atomic<QString> localTwitchEmoteSetID_;
-    Atomic<std::shared_ptr<const EmoteMap>> seventvEmotes_;
     Atomic<std::optional<EmotePtr>> ffzCustomModBadge_;
     Atomic<std::optional<EmotePtr>> ffzCustomVipBadge_;
 

@@ -114,11 +114,6 @@ public:
         return &this->highlights;
     }
 
-    SeventvEmotes *getSeventvEmotes() override
-    {
-        return &this->seventvEmotes;
-    }
-
     ILogging *getChatLogger() override
     {
         return &this->logging;
@@ -148,7 +143,6 @@ public:
     FfzBadges ffzBadges;
     SeventvBadges seventvBadges;
     HighlightController highlights;
-    SeventvEmotes seventvEmotes;
     TwitchBadges twitchBadges;
     mock::EmptyLinkResolver linkResolver;
     NullBackend sound;

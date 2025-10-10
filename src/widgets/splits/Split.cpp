@@ -1259,7 +1259,6 @@ void Split::reloadChannelAndSubscriberEmotes()
     if (auto *twitchChannel = dynamic_cast<TwitchChannel *>(channel.get()))
     {
         twitchChannel->refreshTwitchChannelEmotes(true);
-        twitchChannel->refreshSevenTVChannelEmotes(true);
     }
 }
 
