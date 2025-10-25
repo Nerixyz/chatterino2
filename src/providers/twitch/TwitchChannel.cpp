@@ -8,6 +8,7 @@
 #include "common/network/NetworkResult.hpp"
 #include "common/QLogging.hpp"
 #include "controllers/accounts/AccountController.hpp"
+#include "controllers/emotes/EmoteController.hpp"
 #include "controllers/notifications/NotificationController.hpp"
 #include "controllers/twitch/LiveController.hpp"
 #include "debug/AssertInGuiThread.hpp"
@@ -21,6 +22,7 @@
 #include "providers/bttv/BttvEmotes.hpp"
 #include "providers/bttv/BttvLiveUpdates.hpp"
 #include "providers/bttv/liveupdates/BttvLiveUpdateMessages.hpp"
+#include "providers/emoji/Emojis.hpp"
 #include "providers/ffz/FfzBadges.hpp"
 #include "providers/ffz/FfzEmotes.hpp"
 #include "providers/recentmessages/Api.hpp"
@@ -37,7 +39,6 @@
 #include "providers/twitch/TwitchCommon.hpp"
 #include "providers/twitch/TwitchIrcServer.hpp"
 #include "providers/twitch/TwitchUsers.hpp"
-#include "singletons/Emotes.hpp"
 #include "singletons/Settings.hpp"
 #include "singletons/StreamerMode.hpp"
 #include "singletons/Toasts.hpp"
@@ -1559,6 +1560,20 @@ void TwitchChannel::refreshPubSub()
 
     auto currentAccount = getApp()->getAccounts()->twitch.getCurrent();
 
+    getApp()->getTwitchPubSub()->listenToChannelPointRewards(roomId);
+
+    if (currentAccount->isAnon())
+    {
+        this->eventSubChannelModerateHandle.reset();
+        this->eventSubAutomodMessageHoldHandle.reset();
+        this->eventSubAutomodMessageUpdateHandle.reset();
+        this->eventSubSuspiciousUserMessageHandle.reset();
+        this->eventSubSuspiciousUserUpdateHandle.reset();
+        this->eventSubChannelChatUserMessageHoldHandle.reset();
+        this->eventSubChannelChatUserMessageUpdateHandle.reset();
+        return;
+    }
+
     const auto &currentTwitchUserID = currentAccount->getUserId();
 
     if (this->hasModRights())
@@ -1696,8 +1711,6 @@ void TwitchChannel::refreshPubSub()
                     },
             });
     }
-
-    getApp()->getTwitchPubSub()->listenToChannelPointRewards(roomId);
 }
 
 void TwitchChannel::refreshChatters()
@@ -2386,12 +2399,11 @@ void TwitchChannel::upsertPersonalSeventvEmotes(
 
                 std::vector<LayeredEmoteElement::Emote> layers{
                     {.ptr = baseEmote, .flags = baseEmoteElement->getFlags()},
-                    {.ptr = emote, .flags = MessageElementFlag::SevenTVEmote},
+                    {.ptr = emote, .flags = MessageElementFlag::Emote},
                 };
                 elements.emplace_back(std::make_unique<LayeredEmoteElement>(
                     std::move(layers),
-                    baseEmoteElement->getFlags() |
-                        MessageElementFlag::SevenTVEmote,
+                    baseEmoteElement->getFlags() | MessageElementFlag::Emote,
                     textElement->color()));
                 return true;
             }
@@ -2401,8 +2413,8 @@ void TwitchChannel::upsertPersonalSeventvEmotes(
             if (asLayered)
             {
                 asLayered->addEmoteLayer(
-                    {.ptr = emote, .flags = MessageElementFlag::SevenTVEmote});
-                asLayered->addFlags(MessageElementFlag::SevenTVEmote);
+                    {.ptr = emote, .flags = MessageElementFlag::Emote});
+                asLayered->addFlags(MessageElementFlag::Emote);
                 return true;
             }
             return false;
@@ -2430,7 +2442,7 @@ void TwitchChannel::upsertPersonalSeventvEmotes(
             flush();
 
             elements.emplace_back(std::make_unique<EmoteElement>(
-                emoteIt->second, MessageElementFlag::SevenTVEmote));
+                emoteIt->second, MessageElementFlag::Emote));
         }
 
         if (anyChange)
