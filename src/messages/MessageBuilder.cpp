@@ -1456,6 +1456,29 @@ MessagePtr MessageBuilder::buildHypeChatMessage(
     return builder.release();
 }
 
+MessagePtrMut MessageBuilder::makeAccountExpiredMessage(
+    const QString &expirationText)
+{
+    auto loginPromptText = u"Try adding your account again."_s;
+
+    MessageBuilder builder;
+    QString text = expirationText % ' ' % loginPromptText;
+    builder->messageText = text;
+    builder->searchText = text;
+    builder->flags.set(MessageFlag::System,
+                       MessageFlag::DoNotTriggerNotification);
+
+    builder.emplace<TimestampElement>();
+    builder.emplace<TextElement>(expirationText, MessageElementFlag::Text,
+                                 MessageColor::System);
+    builder
+        .emplace<TextElement>(loginPromptText, MessageElementFlag::Text,
+                              MessageColor::Link)
+        ->setLink({Link::OpenAccountsPage, {}});
+
+    return builder.release();
+}
+
 MessagePtrMut MessageBuilder::makeMissingScopesMessage(
     const QString &missingScopes)
 {
