@@ -14,7 +14,7 @@
 #    include "messages/Message.hpp"
 #    include "mocks/BaseApplication.hpp"
 #    include "mocks/Channel.hpp"
-#    include "mocks/Emotes.hpp"
+#    include "mocks/EmoteController.hpp"
 #    include "mocks/Logging.hpp"
 #    include "mocks/TwitchIrcServer.hpp"
 #    include "NetworkHelpers.hpp"
@@ -92,7 +92,7 @@ public:
         return &this->commands;
     }
 
-    IEmotes *getEmotes() override
+    EmoteController *getEmotes() override
     {
         return &this->emotes;
     }
@@ -110,7 +110,7 @@ public:
     PluginController plugins;
     mock::Logging logging;
     CommandController commands;
-    mock::Emotes emotes;
+    mock::EmoteController emotes;
     MockTwitch twitch;
 };
 
@@ -479,7 +479,7 @@ TEST_F(PluginTest, ioNoPerms)
     configure();
     auto file = rawpl->dataDirectory().filePath("testfile");
     QFile f(file);
-    f.open(QFile::WriteOnly);
+    EXPECT_TRUE(f.open(QFile::WriteOnly));
     f.write(TEST_FILE_DATA);
     f.close();
 
@@ -531,7 +531,7 @@ TEST_F(PluginTest, requireNoData)
 
     auto file = rawpl->dataDirectory().filePath("thisiscode.lua");
     QFile f(file);
-    f.open(QFile::WriteOnly);
+    EXPECT_TRUE(f.open(QFile::WriteOnly));
     f.write(R"lua(print("Data was executed"))lua");
     f.close();
 
@@ -899,27 +899,21 @@ TEST_F(PluginTest, MessageElementFlag)
                          "BitsAmount=0x200000,"
                          "BitsAnimated=0x1000,"
                          "BitsStatic=0x800,"
-                         "BttvEmoteImage=0x40,"
-                         "BttvEmoteText=0x80,"
                          "ChannelName=0x100000,"
                          "ChannelPointReward=0x100,"
                          "Collapsed=0x4000000,"
                          "EmojiImage=0x800000,"
                          "EmojiText=0x1000000,"
-                         "FfzEmoteImage=0x200,"
-                         "FfzEmoteText=0x400,"
+                         "EmoteImage=0x10,"
+                         "EmoteText=0x20,"
                          "LowercaseLinks=0x20000000,"
                          "Mention=0x8000000,"
                          "Misc=0x1,"
                          "ModeratorTools=0x400000,"
                          "RepliedMessage=0x100000000,"
                          "ReplyButton=0x200000000,"
-                         "SevenTVEmoteImage=0x400000000,"
-                         "SevenTVEmoteText=0x800000000,"
                          "Text=0x2,"
                          "Timestamp=0x8,"
-                         "TwitchEmoteImage=0x10,"
-                         "TwitchEmoteText=0x20,"
                          "Username=0x4";
 
     std::string got = (*lua)["out"];
@@ -977,6 +971,59 @@ TEST_F(PluginTest, ChannelAddMessage)
     ASSERT_EQ(added[0].first, logged[0]);
     ASSERT_EQ(added[2].first, logged[1]);
     ASSERT_EQ(added[5].first, logged[2]);
+}
+
+/// Test that both C++ exceptions and luaL_error properly unwind the stack.
+TEST_F(PluginTest, LuaUnwind)
+{
+    configure();
+
+    size_t i = 0;
+    lua->set_function(
+        "do_something",
+        [&](sol::this_state state, bool should_error, bool use_lua_error) {
+            auto g = qScopeGuard([&] {
+                ++i;
+            });
+            if (should_error)
+            {
+                if (use_lua_error)
+                {
+                    luaL_error(state.lua_state(), "My message");
+                }
+                else
+                {
+                    throw std::runtime_error("My message");
+                }
+            }
+        });
+
+    ASSERT_EQ(i, 0);
+
+    ASSERT_TRUE(lua->do_string("do_something(false, false)").valid());
+    ASSERT_EQ(i, 1);
+
+    ASSERT_TRUE(lua->do_string("do_something(false, true)").valid());
+    ASSERT_EQ(i, 2);
+
+    ASSERT_FALSE(lua->do_string("do_something(true, false)").valid());
+    ASSERT_EQ(i, 3);
+
+    ASSERT_FALSE(lua->do_string("do_something(true, true)").valid());
+    ASSERT_EQ(i, 4);
+}
+
+/// Test that we're running with the Lua version we're compiled against.
+TEST_F(PluginTest, LuaVersion)
+{
+    configure();
+
+    lua->set_function("check_it", [](sol::this_state state) {
+        luaL_checkversion(state.lua_state());
+    });
+    ASSERT_TRUE(lua->script("check_it()").valid());
+
+    static_assert(LUA_VERSION_NUM >= 504);
 }
 
 class PluginMessageConstructionTest
