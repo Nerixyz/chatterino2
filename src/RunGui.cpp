@@ -19,14 +19,20 @@
 #include "util/UnixSignalHandler.hpp"
 #include "widgets/dialogs/LastRunCrashDialog.hpp"
 
+#include <private/qcoreapplication_p.h>
+#include <private/qobject_p.h>
+#include <private/qthread_p.h>
 #include <QApplication>
 #include <QFile>
 #include <QPalette>
 #include <QStyleFactory>
 #include <Qt>
 #include <QtConcurrent>
+#include <rapidjson/filewritestream.h>
+#include <rapidjson/writer.h>
 
 #include <csignal>
+#include <cstdio>
 #include <cstdlib>
 #include <tuple>
 
@@ -45,6 +51,12 @@
 // Forward declaration (Qt doesn't declare this in headers)
 // NOLINTNEXTLINE(readability-identifier-naming)
 extern void qt_set_sequence_auto_mnemonic(bool b);
+
+template <>
+struct magic_enum::customize::enum_range<QEvent::Type> {
+    constexpr static int min = QEvent::None;                   // required
+    constexpr static int max = QEvent::SafeAreaMarginsChange;  // required
+};
 
 namespace chatterino {
 namespace {
@@ -83,6 +95,120 @@ void installCustomPalette()
     QApplication::setPalette(dark);
 }
 
+bool doNotify(QObject *receiver, QEvent *event)
+{
+    Q_ASSERT(event);
+
+    // ### Qt 7: turn into an assert
+    if (receiver == nullptr)
+    {  // serious error
+        qWarning("QCoreApplication::notify: Unexpected null receiver");
+        return true;
+    }
+
+#ifndef QT_NO_DEBUG
+    QCoreApplicationPrivate::checkReceiverThread(receiver);
+#endif
+
+    return receiver->isWidgetType()
+               ? false
+               : QCoreApplicationPrivate::notify_helper(receiver, event);
+}
+
+class EventTracer : public QObject
+{
+public:
+    /// Handler for QInternal::EventNotifyCallback.
+    ///
+    /// This is called by Qt before an event is handled:
+    /// https://github.com/qt/qtbase/blob/9d046435577d105406681df4a2440aea517af485/src/corelib/kernel/qcoreapplication.cpp#L1113-L1119
+    static bool cb(void **args)
+    {
+        auto *receiver = static_cast<QObject *>(args[0]);
+        auto *event = static_cast<QEvent *>(args[1]);
+        auto *result = static_cast<bool *>(args[2]);
+        const auto *eventTy = &typeid(*event);
+        QEvent::Type ty = event->type();
+        auto tid = static_cast<int32_t>(
+            reinterpret_cast<size_t>(QThread::currentThreadId()));
+
+        // Hack: Get the d_ptr of `receiver`. We can't access that for other
+        // classes directly, because we're not a friend. However, since we
+        // derive from `QObject` we can get a member pointer and access it this
+        // way.
+        auto dPtrMember = &QObject::d_ptr;
+        auto *d = reinterpret_cast<QObjectPrivate *>(
+            qGetPtrHelper(receiver->*dPtrMember));
+        auto *threadData = d->threadData.loadAcquire();
+        bool selfRequired = threadData->requiresCoreApplication;
+
+        // This mimics the code in QCoreApplication::notifyInternal2:
+        // https://github.com/qt/qtbase/blob/9d046435577d105406681df4a2440aea517af485/src/corelib/kernel/qcoreapplication.cpp#L1121-L1129
+        // ```cpp
+        //     QScopedScopeLevelCounter scopeLevelCounter(threadData);
+        //     if (!selfRequired)
+        //          return doNotify(receiver, event);
+        //     return qApp->notify(receiver, event);
+        // ```
+        QScopedScopeLevelCounter scopeLevelCounter(threadData);
+        if (!selfRequired)
+        {
+            auto start = std::chrono::steady_clock::now();
+            *result = doNotify(receiver, event);
+            auto end = std::chrono::steady_clock::now();
+            {
+                std::lock_guard g(STATE->mtx);
+                STATE->events.emplace_back(Event{
+                    .typ = ty,
+                    .dur = static_cast<int32_t>(
+                        std::chrono::duration_cast<std::chrono::microseconds>(
+                            end - start)
+                            .count()),
+                    .start = start,
+                    .tid = tid,
+                    .eventTy = eventTy,
+                });
+            }
+            return true;
+        }
+
+        auto start = std::chrono::steady_clock::now();
+        *result = qApp->notify(receiver, event);
+        auto end = std::chrono::steady_clock::now();
+        {
+            std::lock_guard g(STATE->mtx);
+            STATE->events.emplace_back(Event{
+                .typ = ty,
+                .dur = static_cast<int32_t>(
+                    std::chrono::duration_cast<std::chrono::microseconds>(end -
+                                                                          start)
+                        .count()),
+                .start = start,
+                .tid = tid,
+                .eventTy = eventTy,
+            });
+        }
+        return true;
+    }
+
+    struct Event {
+        QEvent::Type typ{};
+        int32_t dur = 0;
+        std::chrono::steady_clock::time_point start;
+        int32_t tid = 0;
+        const std::type_info *eventTy{};
+    };
+    struct State {
+        std::mutex mtx;
+        std::vector<Event> events;
+    };
+
+    static State *STATE;
+    static int MAIN_TID;
+};
+constinit EventTracer::State *EventTracer::STATE = nullptr;
+constinit int EventTracer::MAIN_TID = 0;
+
 void initQt(const Args &args)
 {
     if (args.useOldScaling)
@@ -112,6 +238,9 @@ void initQt(const Args &args)
     // Enable mnemonics (menu hotkeys) on macOS - they are disabled by default
     qt_set_sequence_auto_mnemonic(true);
 #endif
+
+    QInternal::registerCallback(QInternal::EventNotifyCallback,
+                                &EventTracer::cb);
 
     installCustomPalette();
 }
@@ -245,6 +374,9 @@ void clearCrashes(QDir dir)
 void runGui(QApplication &a, const Modes &modes, const Paths &paths,
             Settings &settings, const Args &args, Updates &updates)
 {
+    EventTracer::MAIN_TID = static_cast<int32_t>(
+        reinterpret_cast<size_t>(QThread::currentThreadId()));
+    EventTracer::STATE = new EventTracer::State();
     initQt(args);
     initResources();
     initSignalHandler();
@@ -299,6 +431,59 @@ void runGui(QApplication &a, const Modes &modes, const Paths &paths,
     // flushing windows clipboard to keep copied messages
     flushClipboard();
 #endif
+
+    // Uses Google's trace format.
+    FILE *fp = fopen("events.json", "wb+");
+
+    std::array<char, 65536> writeBuffer{};
+    rapidjson::FileWriteStream os(fp, writeBuffer.data(), writeBuffer.size());
+
+    rapidjson::Writer<rapidjson::FileWriteStream> writer(os);
+    writer.StartArray();
+    {
+        std::lock_guard g(EventTracer::STATE->mtx);
+        for (const auto &el : EventTracer::STATE->events)
+        {
+            // Ignore anything below 10ms.
+            if (el.dur < 1000 * 10)
+            {
+                continue;
+            }
+            writer.StartObject();
+            std::string_view n = magic_enum::enum_name(el.typ);
+            writer.Key("cat");
+            std::string eventName;
+            if (n.empty())
+            {
+                eventName = std::to_string(el.typ);
+                writer.String(eventName);
+            }
+            else
+            {
+                eventName += n;
+                writer.String(n.data(), n.size());
+            }
+            eventName += " (";
+            eventName += el.eventTy->name();
+            eventName += ')';
+            writer.Key("name");
+            writer.String(eventName);
+            writer.Key("ph");
+            writer.String("X");
+            writer.Key("ts");
+            writer.Int64(std::chrono::duration_cast<std::chrono::microseconds>(
+                             el.start.time_since_epoch())
+                             .count());
+            writer.Key("dur");
+            writer.Int(el.dur);
+            writer.Key("tid");
+            writer.Int(el.tid);
+            writer.EndObject();
+        }
+    }
+    writer.EndArray();
+
+    (void)fclose(fp);
 }
 
 }  // namespace chatterino
