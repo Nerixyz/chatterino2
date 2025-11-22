@@ -15,14 +15,20 @@
 #include "util/UnixSignalHandler.hpp"
 #include "widgets/dialogs/LastRunCrashDialog.hpp"
 
+#include <private/qcoreapplication_p.h>
+#include <private/qobject_p.h>
+#include <private/qthread_p.h>
 #include <QApplication>
 #include <QFile>
 #include <QPalette>
 #include <QStyleFactory>
 #include <Qt>
 #include <QtConcurrent>
+#include <rapidjson/filewritestream.h>
+#include <rapidjson/writer.h>
 
 #include <csignal>
+#include <cstdio>
 #include <cstdlib>
 #include <tuple>
 
@@ -37,6 +43,12 @@
 #ifdef Q_OS_MAC
 #    include "corefoundation/CFBundle.h"
 #endif
+
+template <>
+struct magic_enum::customize::enum_range<QEvent::Type> {
+    constexpr static int min = QEvent::None;                   // required
+    constexpr static int max = QEvent::SafeAreaMarginsChange;  // required
+};
 
 namespace chatterino {
 namespace {
@@ -75,6 +87,97 @@ void installCustomPalette()
     QApplication::setPalette(dark);
 }
 
+bool doNotify(QObject *receiver, QEvent *event)
+{
+    Q_ASSERT(event);
+
+    // ### Qt 7: turn into an assert
+    if (receiver == nullptr)
+    {  // serious error
+        qWarning("QCoreApplication::notify: Unexpected null receiver");
+        return true;
+    }
+
+#ifndef QT_NO_DEBUG
+    QCoreApplicationPrivate::checkReceiverThread(receiver);
+#endif
+
+    return receiver->isWidgetType()
+               ? false
+               : QCoreApplicationPrivate::notify_helper(receiver, event);
+}
+
+class Dummy : public QObject
+{
+public:
+    static bool cb(void **args)
+    {
+        auto *receiver = static_cast<QObject *>(args[0]);
+        auto *event = static_cast<QEvent *>(args[1]);
+        auto *result = static_cast<bool *>(args[2]);
+
+        auto xd = &Dummy::d_ptr;
+        auto *d =
+            reinterpret_cast<QObjectPrivate *>(qGetPtrHelper(receiver->*xd));
+        auto *threadData = d->threadData.loadAcquire();
+        bool selfRequired = threadData->requiresCoreApplication;
+        auto tid = static_cast<int32_t>(
+            std::bit_cast<size_t>(QThread::currentThreadId()));
+
+        QScopedScopeLevelCounter scopeLevelCounter(threadData);
+        if (!selfRequired)
+        {
+            QEvent::Type ty = event->type();
+            auto start = std::chrono::high_resolution_clock::now();
+            *result = doNotify(receiver, event);
+            auto end = std::chrono::high_resolution_clock::now();
+            {
+                std::lock_guard g(state->mtx);
+                state->events.emplace_back(
+                    ty,
+                    static_cast<int32_t>(
+                        std::chrono::duration_cast<std::chrono::microseconds>(
+                            end - start)
+                            .count()),
+                    start, tid);
+            }
+            return true;
+        }
+
+        QEvent::Type ty = event->type();
+        auto start = std::chrono::high_resolution_clock::now();
+        *result = qApp->notify(receiver, event);
+        auto end = std::chrono::high_resolution_clock::now();
+        {
+            std::lock_guard g(state->mtx);
+            state->events.emplace_back(
+                ty,
+                static_cast<int32_t>(
+                    std::chrono::duration_cast<std::chrono::microseconds>(end -
+                                                                          start)
+                        .count()),
+                start, tid);
+        }
+        return true;
+    }
+
+    struct Event {
+        QEvent::Type typ{};
+        int32_t dur = 0;
+        std::chrono::high_resolution_clock::time_point start;
+        int32_t tid = 0;
+    };
+    struct State {
+        std::mutex mtx;
+        std::vector<Event> events;
+    };
+
+    static State *state;
+    static int mainTid;
+};
+constinit Dummy::State *Dummy::state = nullptr;
+constinit int Dummy::mainTid = 0;
+
 void initQt()
 {
     // set up the QApplication flags
@@ -98,6 +201,8 @@ void initQt()
     // We override it to ensure shortcuts show in context menus on that platform
     QApplication::setAttribute(Qt::AA_DontShowShortcutsInContextMenus, false);
 #endif
+
+    QInternal::registerCallback(QInternal::EventNotifyCallback, &Dummy::cb);
 
     installCustomPalette();
 }
@@ -231,6 +336,9 @@ void clearCrashes(QDir dir)
 void runGui(QApplication &a, const Paths &paths, Settings &settings,
             const Args &args, Updates &updates)
 {
+    Dummy::mainTid =
+        static_cast<int32_t>(std::bit_cast<size_t>(QThread::currentThreadId()));
+    Dummy::state = new Dummy::State();
     initQt();
     initResources();
     initSignalHandler();
@@ -285,6 +393,58 @@ void runGui(QApplication &a, const Paths &paths, Settings &settings,
     // flushing windows clipboard to keep copied messages
     flushClipboard();
 #endif
+
+    FILE *fp = fopen("events.json", "wb+");  // non-Windows use "w"
+
+    char writeBuffer[65536];
+    rapidjson::FileWriteStream os(fp, writeBuffer, sizeof(writeBuffer));
+
+    rapidjson::Writer<rapidjson::FileWriteStream> writer(os);
+    writer.StartArray();
+    {
+        std::lock_guard g(Dummy::state->mtx);
+        for (const auto &el : Dummy::state->events)
+        {
+            if (el.dur < 1000 * 10)  // 10ms
+            {
+                continue;
+            }
+            writer.StartObject();
+            std::string_view n = magic_enum::enum_name(el.typ);
+            writer.Key("cat");
+            if (n.empty())
+            {
+                writer.String(std::to_string(el.typ));
+            }
+            else
+            {
+                writer.String(n.data(), n.size());
+            }
+            writer.Key("name");
+            if (n.empty())
+            {
+                writer.String(std::to_string(el.typ));
+            }
+            else
+            {
+                writer.String(n.data(), n.size());
+            }
+            writer.Key("ph");
+            writer.String("X");
+            writer.Key("ts");
+            writer.Int64(std::chrono::duration_cast<std::chrono::microseconds>(
+                             el.start.time_since_epoch())
+                             .count());
+            writer.Key("dur");
+            writer.Int(el.dur);
+            writer.Key("tid");
+            writer.Int(el.tid);
+            writer.EndObject();
+        }
+    }
+    writer.EndArray();
+
+    fclose(fp);
 }
 
 }  // namespace chatterino
