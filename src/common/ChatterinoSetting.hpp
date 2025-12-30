@@ -113,7 +113,6 @@ public:
         _registerSetting(this->getData());
     }
 
-    template <typename T2>
     EnumStringSetting<Enum> &operator=(Enum newValue)
     {
         this->setValue(qmagicenum::enumNameString(newValue).toLower());
@@ -138,6 +137,21 @@ public:
         return qmagicenum::enumCast<Enum>(this->getValue(),
                                           qmagicenum::CASE_INSENSITIVE)
             .value_or(this->defaultValue);
+    }
+
+    static Enum get(const std::string &path, Enum defaultValue)
+    {
+        EnumStringSetting<Enum> setting(path, defaultValue);
+
+        return setting.getEnum();
+    }
+
+    static void set(const std::string &path, Enum newValue,
+                    Enum defaultValue = static_cast<Enum>(0))
+    {
+        EnumStringSetting<Enum> setting(path, defaultValue);
+
+        setting = newValue;
     }
 
     Enum defaultValue;

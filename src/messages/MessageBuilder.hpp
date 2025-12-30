@@ -244,6 +244,9 @@ public:
                                             const QTime &time,
                                             TwitchChannel *channel);
 
+    static MessagePtrMut makeAccountExpiredMessage(
+        const QString &expirationText);
+
     static MessagePtrMut makeMissingScopesMessage(const QString &missingScopes);
 
     /// "Chat has been cleared by a moderator." or "{actor} cleared the chat."
