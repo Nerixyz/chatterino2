@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2017 Contributors to Chatterino <https://chatterino.com>
+//
+// SPDX-License-Identifier: MIT
+
 #pragma once
 
 #include <cassert>
@@ -40,6 +44,7 @@ class IChatterinoBadges;
 class ChatterinoBadges;
 class SeventvPaints;
 class FfzBadges;
+class BttvBadges;
 class SeventvBadges;
 class SeventvPersonalEmotes;
 class ImageUploader;
@@ -60,6 +65,9 @@ class Pronouns;
 namespace eventsub {
 class IController;
 }  // namespace eventsub
+class SpellChecker;
+
+class KickChatServer;
 
 class IApplication
 {
@@ -92,6 +100,7 @@ public:
     virtual ILogging *getChatLogger() = 0;
     virtual IChatterinoBadges *getChatterinoBadges() = 0;
     virtual FfzBadges *getFfzBadges() = 0;
+    virtual BttvBadges *getBttvBadges() = 0;
     virtual SeventvBadges *getSeventvBadges() = 0;
     virtual IUserDataController *getUserData() = 0;
     virtual ISoundController *getSound() = 0;
@@ -116,6 +125,8 @@ public:
     virtual ITwitchUsers *getTwitchUsers() = 0;
     virtual pronouns::Pronouns *getPronouns() = 0;
     virtual eventsub::IController *getEventSub() = 0;
+    virtual SpellChecker *getSpellChecker() = 0;
+    virtual KickChatServer *getKickChatServer() = 0;
 };
 
 class Application : public IApplication
@@ -167,6 +178,7 @@ private:
     std::unique_ptr<HighlightController> highlights;
     std::unique_ptr<TwitchIrcServer> twitch;
     std::unique_ptr<FfzBadges> ffzBadges;
+    std::unique_ptr<BttvBadges> bttvBadges;
     std::unique_ptr<SeventvBadges> seventvBadges;
     std::unique_ptr<SeventvPaints> seventvPaints;
     std::unique_ptr<SeventvPersonalEmotes> seventvPersonalEmotes;
@@ -185,6 +197,8 @@ private:
     std::unique_ptr<IStreamerMode> streamerMode;
     std::unique_ptr<ITwitchUsers> twitchUsers;
     std::unique_ptr<pronouns::Pronouns> pronouns;
+    std::unique_ptr<SpellChecker> spellChecker;
+    std::unique_ptr<KickChatServer> kickChatServer;
 #ifdef CHATTERINO_HAVE_PLUGINS
     std::unique_ptr<PluginController> plugins;
 #endif
@@ -213,6 +227,7 @@ public:
     PubSub *getTwitchPubSub() override;
     ILogging *getChatLogger() override;
     FfzBadges *getFfzBadges() override;
+    BttvBadges *getBttvBadges() override;
     SeventvBadges *getSeventvBadges() override;
     IUserDataController *getUserData() override;
     ISoundController *getSound() override;
@@ -240,6 +255,8 @@ public:
     ILinkResolver *getLinkResolver() override;
     IStreamerMode *getStreamerMode() override;
     ITwitchUsers *getTwitchUsers() override;
+    SpellChecker *getSpellChecker() override;
+    KickChatServer *getKickChatServer() override;
 
 private:
     void initNm(const Paths &paths);

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2017 Contributors to Chatterino <https://chatterino.com>
+//
+// SPDX-License-Identifier: MIT
+
 #include "messages/Message.hpp"
 
 #include "Application.hpp"
@@ -38,6 +42,14 @@ ScrollbarHighlight Message::getScrollBarHighlight() const
     {
         return {
             this->highlightColor,
+        };
+    }
+
+    if (this->flags.has(MessageFlag::WatchStreak) &&
+        getSettings()->enableWatchStreakHighlight)
+    {
+        return {
+            ColorProvider::instance().color(ColorType::WatchStreak),
         };
     }
 
@@ -107,8 +119,9 @@ std::shared_ptr<Message> Message::clone() const
     cloned->channelName = this->channelName;
     cloned->usernameColor = this->usernameColor;
     cloned->serverReceivedTime = this->serverReceivedTime;
-    cloned->badges = this->badges;
-    cloned->badgeInfos = this->badgeInfos;
+    cloned->twitchBadges = this->twitchBadges;
+    cloned->twitchBadgeInfos = this->twitchBadgeInfos;
+    cloned->externalBadges = this->externalBadges;
     cloned->highlightColor = this->highlightColor;
     cloned->replyThread = this->replyThread;
     cloned->count = this->count;
@@ -140,19 +153,21 @@ QJsonObject Message::toJson() const
         {"frozen"_L1, this->frozen},
     };
 
-    QJsonArray badges;
-    for (const auto &badge : this->badges)
+    QJsonArray twitchBadges;
+    for (const auto &badge : this->twitchBadges)
     {
-        badges.append(badge.key_);
+        twitchBadges.append(badge.key_);
     }
-    msg["badges"_L1] = badges;
+    msg["twitchBadges"_L1] = twitchBadges;
 
-    QJsonObject badgeInfos;
-    for (const auto &[key, value] : this->badgeInfos)
+    QJsonObject twitchBadgeInfos;
+    for (const auto &[key, value] : this->twitchBadgeInfos)
     {
-        badgeInfos.insert(key, value);
+        twitchBadgeInfos.insert(key, value);
     }
-    msg["badgeInfos"_L1] = badgeInfos;
+    msg["twitchBadgeInfos"_L1] = twitchBadgeInfos;
+
+    msg["externalBadges"_L1] = QJsonArray::fromStringList(this->externalBadges);
 
     if (this->highlightColor)
     {

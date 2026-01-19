@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2017 Contributors to Chatterino <https://chatterino.com>
+//
+// SPDX-License-Identifier: MIT
+
 #pragma once
 
 #include "common/enums/MessageContext.hpp"
@@ -19,6 +23,8 @@ namespace chatterino {
 
 struct Message;
 using MessagePtr = std::shared_ptr<const Message>;
+
+class EmoteMap;
 
 class Channel : public std::enable_shared_from_this<Channel>, public MessageSink
 {
@@ -48,6 +54,7 @@ public:
         TwitchAutomod,
         /// TwitchEnd
         TwitchEnd,
+        Kick,
         /// Misc
         Misc,
     };
@@ -78,8 +85,16 @@ public:
     virtual const QString &getDisplayName() const;
     virtual const QString &getLocalizedName() const;
     bool isTwitchChannel() const;
+    bool isKickChannel() const;
+    bool isTwitchOrKickChannel() const;
     virtual bool isEmpty() const;
-    LimitedQueueSnapshot<MessagePtr> getMessageSnapshot();
+
+    std::vector<MessagePtr> getMessageSnapshot() const;
+    std::vector<MessagePtr> getMessageSnapshot(size_t nItems) const;
+
+    /// Returns the last message (the one at the bottom). If the channel has no
+    /// messages, this will return an empty shared pointer.
+    MessagePtr getLastMessage() const;
 
     // MESSAGES
     // overridingFlags can be filled in with flags that should be used instead
@@ -132,6 +147,11 @@ public:
     virtual QString getCurrentStreamID() const;
 
     static std::shared_ptr<Channel> getEmpty();
+
+    /// Update the user's last message and insert the personal emotes if necessary.
+    void upsertPersonalSeventvEmotes(
+        const QString &userLogin,
+        const std::shared_ptr<const EmoteMap> &emoteMap);
 
     TabCompletionModel *completionModel;
     QDate lastDate_;

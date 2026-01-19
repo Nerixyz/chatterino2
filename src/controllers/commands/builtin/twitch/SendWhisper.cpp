@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2023 Contributors to Chatterino <https://chatterino.com>
+//
+// SPDX-License-Identifier: MIT
+
 #include "controllers/commands/builtin/twitch/SendWhisper.hpp"
 
 #include "Application.hpp"
@@ -109,7 +113,6 @@ bool appendWhisperMessageWordsLocally(const QStringList &words)
     const auto &accemotes = *acc->accessEmotes();
     const auto *bttvemotes = app->getBttvEmotes();
     const auto *ffzemotes = app->getFfzEmotes();
-    auto flags = MessageElementFlags();
     auto emote = std::optional<EmotePtr>{};
     for (int i = 2; i < words.length(); i++)
     {
@@ -144,8 +147,7 @@ bool appendWhisperMessageWordsLocally(const QStringList &words)
                         b.emplace<EmoteElement>(emote,
                                                 MessageElementFlag::EmojiAll);
                     }
-                    void operator()(const QString &string,
-                                    MessageBuilder &b) const
+                    void operator()(QStringView string, MessageBuilder &b) const
                     {
                         auto link = linkparser::parse(string);
                         if (link)
@@ -154,12 +156,12 @@ bool appendWhisperMessageWordsLocally(const QStringList &words)
                         }
                         else
                         {
-                            b.emplace<TextElement>(string,
+                            b.emplace<TextElement>(string.toString(),
                                                    MessageElementFlag::Text);
                         }
                     }
                 } visitor;
-                boost::apply_visitor(
+                std::visit(
                     [&b](auto &&arg) {
                         visitor(arg, b);
                     },
