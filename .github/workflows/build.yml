@@ -162,7 +162,7 @@ jobs:
             skip-crashpad: false
           # Windows on ARM
           - os: windows-11-arm
-            qt-version: 6.9.1
+            qt-version: 6.9.3
             force-lto: false
             skip-artifact: false
             skip-crashpad: false
@@ -250,7 +250,7 @@ jobs:
         shell: bash
 
       - name: Save conan cache (Windows)
-        if: startsWith(matrix.os, 'windows') && always() && steps.cache-conan-restore.outputs.cache-hit != 'true'
+        if: startsWith(matrix.os, 'windows') && always()
         uses: actions/cache/save@v5
         with:
           key: ${{ steps.cache-conan-restore.outputs.cache-primary-key }}
