@@ -213,10 +213,9 @@ jobs:
           restore-keys: |
             sccache-build-${{ matrix.os }}-${{ runner.arch }}-${{ matrix.qt-version }}
 
-      - name: Restore conan package cache (Windows)
-        id: cache-conan-restore
+      - name: Cache conan packages (Windows)
         if: startsWith(matrix.os, 'windows')
-        uses: actions/cache/restore@v5
+        uses: actions/cache@v5
         with:
           key: ${{ runner.os }}-${{ runner.arch }}-conan-user-${{ hashFiles('**/conanfile.py') }}-QT6
           path: ~/.conan2/ # sync with save below
@@ -248,13 +247,6 @@ jobs:
               -o with_openssl3=True
           conan cache clean --source --build --download "*"
         shell: bash
-
-      - name: Save conan cache (Windows)
-        if: startsWith(matrix.os, 'windows') && always()
-        uses: actions/cache/save@v5
-        with:
-          key: ${{ steps.cache-conan-restore.outputs.cache-primary-key }}
-          path: ~/.conan2/ # sync with restore above
 
       - name: Build (Windows)
         if: startsWith(matrix.os, 'windows')

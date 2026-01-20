@@ -1,4 +1,4 @@
-name: Create installer2
+name: Create installer
 
 on:
   workflow_run:
