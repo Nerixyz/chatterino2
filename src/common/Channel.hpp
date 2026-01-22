@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2017 Contributors to Chatterino <https://chatterino.com>
+//
+// SPDX-License-Identifier: MIT
+
 #pragma once
 
 #include "common/enums/MessageContext.hpp"
@@ -19,6 +23,9 @@ namespace chatterino {
 
 struct Message;
 using MessagePtr = std::shared_ptr<const Message>;
+using MessagePtrMut = std::shared_ptr<Message>;
+
+class EmoteMap;
 
 class Channel : public std::enable_shared_from_this<Channel>, public MessageSink
 {
@@ -48,6 +55,7 @@ public:
         TwitchAutomod,
         /// TwitchEnd
         TwitchEnd,
+        Kick,
         /// Misc
         Misc,
     };
@@ -78,10 +86,18 @@ public:
     virtual const QString &getDisplayName() const;
     virtual const QString &getLocalizedName() const;
     bool isTwitchChannel() const;
+    bool isKickChannel() const;
+    bool isTwitchOrKickChannel() const;
     virtual bool isEmpty() const;
 
     std::vector<MessagePtr> getMessageSnapshot() const;
     std::vector<MessagePtr> getMessageSnapshot(size_t nItems) const;
+
+    /// Essentially the same as #getMessageSnapshot(size_t), but the returned
+    /// vector holds `std::shared_ptr<Message>`. This should only be used in
+    /// plugins, because they take messages as `Message` but check that they're
+    /// frozen.
+    std::vector<MessagePtrMut> getMessageSnapshotMut(size_t nItems) const;
 
     /// Returns the last message (the one at the bottom). If the channel has no
     /// messages, this will return an empty shared pointer.
@@ -118,6 +134,8 @@ public:
 
     bool hasMessages() const;
 
+    size_t countMessages() const;
+
     void applySimilarityFilters(const MessagePtr &message) const final;
 
     MessageSinkTraits sinkTraits() const final;
@@ -138,6 +156,11 @@ public:
     virtual QString getCurrentStreamID() const;
 
     static std::shared_ptr<Channel> getEmpty();
+
+    /// Update the user's last message and insert the personal emotes if necessary.
+    void upsertPersonalSeventvEmotes(
+        const QString &userLogin,
+        const std::shared_ptr<const EmoteMap> &emoteMap);
 
     TabCompletionModel *completionModel;
     QDate lastDate_;

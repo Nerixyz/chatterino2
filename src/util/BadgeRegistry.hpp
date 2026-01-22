@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 Contributors to Chatterino <https://chatterino.com>
+//
+// SPDX-License-Identifier: MIT
+
 #pragma once
 
 #include "common/Aliases.hpp"
@@ -19,11 +23,15 @@ public:
     /// Return the badge, if any, that is assigned to the user
     std::optional<EmotePtr> getBadge(const UserId &id) const;
 
+    std::optional<EmotePtr> getKickBadge(uint64_t id) const;
+
     /// Assign the given badge to the user
-    void assignBadgeToUser(const QString &badgeID, const UserId &userID);
+    void assignBadgeToUser(const QString &badgeID, const UserId &userID,
+                           uint64_t kickUserID = 0);
 
     /// Remove the given badge from the user
-    void clearBadgeFromUser(const QString &badgeID, const UserId &userID);
+    void clearBadgeFromUser(const QString &badgeID, const UserId &userID,
+                            uint64_t kickUserID = 0);
 
     /// Register a new known badge
     /// The json object will contain all information about the badge, like its ID & its images
@@ -43,6 +51,8 @@ private:
 
     /// user-id => badge
     std::unordered_map<QString, EmotePtr> badgeMap_;
+    /// user-id => badge
+    std::unordered_map<uint64_t, EmotePtr> kickBadgeMap_;
     /// badge-id => badge
     std::unordered_map<QString, EmotePtr> knownBadges_;
 };

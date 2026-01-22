@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2022 Contributors to Chatterino <https://chatterino.com>
+//
+// SPDX-License-Identifier: MIT
+
 #pragma once
 
 #include "providers/liveupdates/BasicPubSubClient.hpp"
@@ -49,7 +53,8 @@ private:
     SeventvEventAPI &manager_;
 
     struct LastPersonalEmoteAssignment {
-        QString userName;
+        QString twitchUserName;
+        QString kickUserName;
         QString emoteSetID;
         std::shared_ptr<const EmoteMap> emoteSet;
     };

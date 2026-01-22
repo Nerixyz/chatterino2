@@ -222,6 +222,11 @@ public:
         return nullptr;
     }
 
+    SpellChecker *getSpellChecker() override
+    {
+        return nullptr;
+    }
+
 #ifdef CHATTERINO_HAVE_PLUGINS
     PluginController *getPlugins() override
     {
@@ -298,6 +303,14 @@ public:
     {
         assert(false && "EmptyApplication::getEventSub was called without "
                         "being initialized");
+        return nullptr;
+    }
+
+    KickChatServer *getKickChatServer() override
+    {
+        assert(false &&
+               "EmptyApplication::getKickChatServer was called without "
+               "being initialized");
         return nullptr;
     }
 

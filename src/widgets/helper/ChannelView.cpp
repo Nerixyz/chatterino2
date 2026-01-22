@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2017 Contributors to Chatterino <https://chatterino.com>
+//
+// SPDX-License-Identifier: MIT
+
 #include "widgets/helper/ChannelView.hpp"
 
 #include "Application.hpp"
@@ -18,6 +22,8 @@
 #include "messages/MessageElement.hpp"
 #include "messages/MessageThread.hpp"
 #include "providers/colors/ColorProvider.hpp"
+#include "providers/kick/KickApi.hpp"
+#include "providers/kick/KickChannel.hpp"
 #include "providers/links/LinkInfo.hpp"
 #include "providers/links/LinkResolver.hpp"
 #include "providers/twitch/TwitchAccount.hpp"
@@ -1096,6 +1102,14 @@ void ChannelView::setChannel(const ChannelPtr &underlyingChannel)
     {
         this->channelConnections_.managedConnect(
             twitchChannel->streamStatusChanged, [this]() {
+                this->liveStatusChanged.invoke();
+            });
+    }
+    else if (auto *kickChannel =
+                 dynamic_cast<KickChannel *>(underlyingChannel.get()))
+    {
+        this->channelConnections_.managedConnect(
+            kickChannel->liveStatusChanged, [this] {
                 this->liveStatusChanged.invoke();
             });
     }
@@ -2706,19 +2720,27 @@ void ChannelView::addMessageContextMenuItems(QMenu *menu,
         }
     }
 
-    auto *twitchChannel =
-        dynamic_cast<TwitchChannel *>(this->underlyingChannel_.get());
-    if (!layout->getMessage()->id.isEmpty() && twitchChannel &&
-        twitchChannel->hasModRights())
+    if (!layout->getMessage()->id.isEmpty() &&
+        this->underlyingChannel_->hasModRights())
     {
         menu->addSeparator();
         auto *moderateAction = menu->addAction("Mo&derate");
         auto *moderateMenu = new QMenu(menu);
         moderateAction->setMenu(moderateMenu);
         moderateMenu->addAction(
-            "&Delete message", [twitchChannel, id = layout->getMessage()->id] {
-                twitchChannel->deleteMessagesAs(
-                    id, getApp()->getAccounts()->twitch.getCurrent().get());
+            "&Delete message", [this, id = layout->getMessage()->id] {
+                auto *twitchChannel = dynamic_cast<TwitchChannel *>(
+                    this->underlyingChannel_.get());
+                if (twitchChannel)
+                {
+                    twitchChannel->deleteMessagesAs(
+                        id, getApp()->getAccounts()->twitch.getCurrent().get());
+                }
+                else if (auto *kc = dynamic_cast<KickChannel *>(
+                             this->underlyingChannel_.get()))
+                {
+                    kc->deleteMessage(id);
+                }
             });
     }
 
@@ -3290,10 +3312,15 @@ void ChannelView::setInputReply(const MessagePtr &message)
         // Message did not already have a thread attached, try to find or create one
         auto *tc =
             dynamic_cast<TwitchChannel *>(this->underlyingChannel_.get());
+        auto *kc = dynamic_cast<KickChannel *>(this->underlyingChannel_.get());
 
         if (tc)
         {
             tc->getOrCreateThread(message);
+        }
+        else if (kc)
+        {
+            kc->getOrCreateThread(message->id);
         }
         else
         {
@@ -3348,7 +3375,7 @@ bool ChannelView::canReplyToMessages() const
 
     assert(this->channel_ != nullptr);
 
-    if (!this->channel_->isTwitchChannel())
+    if (!this->channel_->isTwitchOrKickChannel())
     {
         return false;
     }

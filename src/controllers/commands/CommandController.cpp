@@ -1,9 +1,14 @@
+// SPDX-FileCopyrightText: 2017 Contributors to Chatterino <https://chatterino.com>
+//
+// SPDX-License-Identifier: MIT
+
 #include "controllers/commands/CommandController.hpp"
 
 #include "Application.hpp"
 #include "common/Channel.hpp"
 #include "controllers/accounts/AccountController.hpp"
 #include "controllers/commands/builtin/chatterino/Debugging.hpp"
+#include "controllers/commands/builtin/kick/KickRawEvent.hpp"
 #include "controllers/commands/builtin/Misc.hpp"
 #include "controllers/commands/builtin/twitch/AddModerator.hpp"
 #include "controllers/commands/builtin/twitch/AddVIP.hpp"
@@ -37,6 +42,7 @@
 #include "messages/Message.hpp"
 #include "messages/MessageBuilder.hpp"
 #include "providers/emoji/Emojis.hpp"
+#include "providers/kick/KickChannel.hpp"
 #include "providers/twitch/TwitchAccount.hpp"
 #include "providers/twitch/TwitchChannel.hpp"
 #include "providers/twitch/TwitchCommon.hpp"
@@ -474,6 +480,9 @@ CommandController::CommandController(const Paths &paths)
     this->registerCommand("/debug-invalidate-buffers",
                           &commands::invalidateBuffers);
 
+    this->registerCommand("/debug-kick-raw-event",
+                          &commands::debugKickRawEvent);
+
     this->registerCommand("/debug-eventsub", &commands::eventsub);
 
     this->registerCommand("/debug-test", &commands::debugTest);
@@ -559,6 +568,7 @@ QString CommandController::execCommand(const QString &textNoEmoji,
                     words,
                     channel,
                     dynamic_cast<TwitchChannel *>(channel.get()),
+                    dynamic_cast<KickChannel *>(channel.get()),
                 };
                 return (*command)(ctx);
             }
@@ -727,6 +737,38 @@ QString CommandController::execCustomCommand(
 QStringList CommandController::getDefaultChatterinoCommandList()
 {
     return this->defaultChatterinoCommandAutoCompletions_;
+}
+
+qsizetype CommandController::commandTriggerLen(QStringView text)
+{
+    auto words = text.split(' ');
+
+    qsizetype triggerLen = 0;
+    qsizetype spaces = 0;
+    QString commandName{};
+
+    for (qsizetype i = 0; i < words.length() && spaces <= this->maxSpaces_; ++i)
+    {
+        commandName += words[i];
+        triggerLen += words[i].length();
+
+        if (this->commands_.contains(commandName) ||
+            this->userCommands_.contains(commandName))
+        {
+            return triggerLen;
+        }
+
+        // ignore consecutive spaces
+        if (!words[i].isEmpty())
+        {
+            commandName += ' ';
+            ++spaces;
+        }
+        // account for the space between the current and next word
+        ++triggerLen;
+    }
+
+    return 0;
 }
 
 }  // namespace chatterino

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2017 Contributors to Chatterino <https://chatterino.com>
+//
+// SPDX-License-Identifier: MIT
+
 #pragma once
 
 #include "common/Aliases.hpp"
@@ -91,6 +95,10 @@ public:
     /// @pre The name and userID must match this account.
     /// @returns true if the value has changed, otherwise false
     bool setData(const TwitchAccountData &data);
+
+    // Attempts to update the users username
+    // Returns true if the value has changed, otherwise false
+    bool setUserName(const QString &newUserName);
 
     bool isAnon() const;
 

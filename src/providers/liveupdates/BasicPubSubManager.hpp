@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2022 Contributors to Chatterino <https://chatterino.com>
+//
+// SPDX-License-Identifier: MIT
+
 #pragma once
 
 #include "common/QLogging.hpp"
@@ -161,7 +165,7 @@ private:
                 qCDebug(chatterinoLiveupdates)
                     << "Failed to subscribe to" << last << "on new client.";
                 // TODO: should we try to add a new client here?
-                return;
+                break;
             }
             DebugCount::decrease("LiveUpdates subscription backlog");
             pendingSubsToTake--;

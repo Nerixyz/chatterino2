@@ -79,6 +79,10 @@ set(SOURCE_FILES
         controllers/commands/builtin/chatterino/Debugging.hpp
         controllers/commands/builtin/Misc.cpp
         controllers/commands/builtin/Misc.hpp
+        controllers/commands/builtin/kick/KickRawEvent.cpp
+        controllers/commands/builtin/kick/KickRawEvent.hpp
+        controllers/commands/builtin/kick/ModerationActions.cpp
+        controllers/commands/builtin/kick/ModerationActions.hpp
         controllers/commands/builtin/twitch/AddModerator.cpp
         controllers/commands/builtin/twitch/AddModerator.hpp
         controllers/commands/builtin/twitch/AddVIP.cpp
@@ -292,6 +296,9 @@ set(SOURCE_FILES
         controllers/sound/NullBackend.cpp
         controllers/sound/NullBackend.hpp
 
+        controllers/spellcheck/SpellChecker.cpp
+        controllers/spellcheck/SpellChecker.hpp
+
         controllers/twitch/LiveController.cpp
         controllers/twitch/LiveController.hpp
 
@@ -388,6 +395,27 @@ set(SOURCE_FILES
 
         providers/irc/IrcConnection2.cpp
         providers/irc/IrcConnection2.hpp
+
+        providers/kick/KickAccount.cpp
+        providers/kick/KickAccount.hpp
+        providers/kick/KickAccountManager.cpp
+        providers/kick/KickAccountManager.hpp
+        providers/kick/KickApi.cpp
+        providers/kick/KickApi.hpp
+        providers/kick/KickBadges.cpp
+        providers/kick/KickBadges.hpp
+        providers/kick/KickChannel.cpp
+        providers/kick/KickChannel.hpp
+        providers/kick/KickChatServer.cpp
+        providers/kick/KickChatServer.hpp
+        providers/kick/KickEmotes.cpp
+        providers/kick/KickEmotes.hpp
+        providers/kick/KickLiveController.cpp
+        providers/kick/KickLiveController.hpp
+        providers/kick/KickLiveUpdates.cpp
+        providers/kick/KickLiveUpdates.hpp
+        providers/kick/KickMessageBuilder.cpp
+        providers/kick/KickMessageBuilder.hpp
 
         providers/links/LinkInfo.cpp
         providers/links/LinkInfo.hpp
@@ -543,6 +571,8 @@ set(SOURCE_FILES
         util/AttachToConsole.hpp
         util/BadgeRegistry.cpp
         util/BadgeRegistry.hpp
+        util/BoostJsonWrap.cpp
+        util/BoostJsonWrap.hpp
         util/CancellationToken.hpp
         util/ChannelHelpers.hpp
         util/Clipboard.cpp
@@ -563,6 +593,8 @@ set(SOURCE_FILES
         util/FuzzyConvert.hpp
         util/Helpers.cpp
         util/Helpers.hpp
+        util/HttpServer.cpp
+        util/HttpServer.hpp
         util/ImageUploader.cpp
         util/ImageUploader.hpp
         util/IncognitoBrowser.cpp
@@ -699,6 +731,8 @@ set(SOURCE_FILES
         widgets/dialogs/font/PreviewWidget.cpp
         widgets/dialogs/font/PreviewWidget.hpp
 
+        widgets/dialogs/KickLoginPage.cpp
+        widgets/dialogs/KickLoginPage.hpp
         widgets/dialogs/LastRunCrashDialog.cpp
         widgets/dialogs/LastRunCrashDialog.hpp
         widgets/dialogs/LoginDialog.cpp
@@ -761,8 +795,12 @@ set(SOURCE_FILES
         widgets/helper/IconDelegate.hpp
         widgets/helper/InvisibleSizeGrip.cpp
         widgets/helper/InvisibleSizeGrip.hpp
+        widgets/helper/KickAccountSwitchWidget.cpp
+        widgets/helper/KickAccountSwitchWidget.hpp
         widgets/helper/MessageView.cpp
         widgets/helper/MessageView.hpp
+        widgets/helper/MicroNotebook.cpp
+        widgets/helper/MicroNotebook.hpp
         widgets/helper/NotebookTab.cpp
         widgets/helper/NotebookTab.hpp
         widgets/helper/OverlayInteraction.cpp
@@ -840,6 +878,8 @@ set(SOURCE_FILES
         widgets/splits/InputCompletionItem.hpp
         widgets/splits/InputCompletionPopup.cpp
         widgets/splits/InputCompletionPopup.hpp
+        widgets/splits/InputHighlighter.cpp
+        widgets/splits/InputHighlighter.hpp
         widgets/splits/Split.cpp
         widgets/splits/Split.hpp
         widgets/splits/SplitCommon.hpp
@@ -945,6 +985,11 @@ target_link_libraries(${LIBRARY_PROJECT}
         )
 if (CHATTERINO_PLUGINS)
     target_link_libraries(${LIBRARY_PROJECT} PUBLIC lua sol2::sol2)
+endif()
+
+if (CHATTERINO_SPELLCHECK)
+    target_compile_definitions(${LIBRARY_PROJECT} PUBLIC CHATTERINO_WITH_SPELLCHECK)
+    target_link_libraries(${LIBRARY_PROJECT} PRIVATE hunspell::hunspell)
 endif()
 
 if (CHATTERINO_ALLOW_PRIVATE_QT_API)

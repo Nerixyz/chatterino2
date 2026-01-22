@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2018 Contributors to Chatterino <https://chatterino.com>
+//
+// SPDX-License-Identifier: MIT
+
 #include "providers/twitch/TwitchIrcServer.hpp"
 
 #include "Application.hpp"
@@ -973,6 +977,11 @@ void TwitchIrcServer::initEventAPIs(BttvLiveUpdates *bttvLiveUpdates,
         this->signalHolder.managedConnect(
             seventvEventAPI->signals_.personalEmoteSetAdded,
             [&](const auto &data) {
+                if (data.twitchUserName.isEmpty())
+                {
+                    return;
+                }
+
                 postToThread(
                     [this, data]() {
                         this->forEachChannelAndSpecialChannels([=](auto chan) {
@@ -980,7 +989,7 @@ void TwitchIrcServer::initEventAPIs(BttvLiveUpdates *bttvLiveUpdates,
                                     dynamic_cast<TwitchChannel *>(chan.get()))
                             {
                                 twitchChannel->upsertPersonalSeventvEmotes(
-                                    data.first, data.second);
+                                    data.twitchUserName, data.emoteSet);
                             }
                         });
                     },
