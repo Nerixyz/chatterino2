@@ -408,6 +408,21 @@ const KickChannel::StreamData &KickChannel::streamData() const
     return this->streamData_;
 }
 
+const KickChannel::RoomModes &KickChannel::roomModes() const
+{
+    return this->roomModes_;
+}
+
+void KickChannel::updateRoomModes(const RoomModes &modes)
+{
+    if (modes == this->roomModes_)
+    {
+        return;
+    }
+    this->roomModes_ = modes;
+    this->roomModesChanged.invoke();
+}
+
 void KickChannel::resolveChannelInfo()
 {
     auto weak = this->weakFromThis();
@@ -442,6 +457,13 @@ void KickChannel::resolveChannelInfo()
             {
                 self->displayNameChanged.invoke();
             }
+
+            self->updateRoomModes(RoomModes{
+                .subscribersMode = res->chatroom.subscribersMode,
+                .emotesMode = res->chatroom.emotesMode,
+                .slowModeDuration = res->chatroom.slowModeDuration,
+                .followersModeDuration = res->chatroom.followersModeDuration,
+            });
         });
 }
 
@@ -480,7 +502,7 @@ size_t KickChannel::maxBurstMessages() const
     // FIXME: this isn't fully tested (maybe these are higher?)
     if (this->hasHighRateLimit())
     {
-        return 10;
+        return 20;
     }
     return 5;
 }
@@ -492,6 +514,10 @@ std::chrono::milliseconds KickChannel::minMessageOffset() const
     {
         return 50ms;
     }
+    if (this->roomModes().slowModeDuration)
+    {
+        return 500ms;
+    }
     return 100ms;
 }
 
@@ -501,7 +527,7 @@ bool KickChannel::checkMessageRatelimit()
     auto &timestamps = this->lastMessageTimestamps_;
 
     // FIXME: haven't tested this fully
-    const auto cooldown = 30s;
+    const auto cooldown = 5s;
 
     // This is mostly identical to the logic in TwitchIrcServer
     if (!timestamps.empty() &&
