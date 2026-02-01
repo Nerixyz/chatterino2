@@ -381,6 +381,14 @@ void GeneralPage::initLayout(GeneralPageView &layout)
             "limit, or a lower limit enforced by a moderation bot")
         ->addTo(layout);
 
+    SettingWidget::checkbox("Show countdown on slow mode or when timed out",
+                            s.showSendWaitTimer)
+        ->setTooltip("Show how long you may need to wait before being able to "
+                     "send in a Twitch channel again if the channel is in slow "
+                     "mode or if you have been timed out")
+        ->addKeywords({"slowmode", "timeout"})
+        ->addTo(layout);
+
     SettingWidget::checkbox("Allow sending duplicate messages",
                             s.allowDuplicateMessages)
         ->setTooltip(
@@ -1295,6 +1303,13 @@ void GeneralPage::initLayout(GeneralPageView &layout)
             ->conditionallyEnabledBy(s.searchEnabled)
             ->addTo(layout);
     }
+    if (supportsIncognitoLinks())
+    {
+        SettingWidget::checkbox("Search in incognito/private mode",
+                                s.searchIncognito)
+            ->addTo(layout);
+    }
+
     layout.addSubtitle("Miscellaneous");
 
     if (supportsIncognitoLinks())

@@ -103,6 +103,8 @@ set(SOURCE_FILES
         controllers/commands/builtin/twitch/GetModerators.hpp
         controllers/commands/builtin/twitch/GetVIPs.cpp
         controllers/commands/builtin/twitch/GetVIPs.hpp
+        controllers/commands/builtin/twitch/LowTrust.cpp
+        controllers/commands/builtin/twitch/LowTrust.hpp
         controllers/commands/builtin/twitch/Poll.cpp
         controllers/commands/builtin/twitch/Poll.hpp
         controllers/commands/builtin/twitch/Prediction.cpp
@@ -258,6 +260,8 @@ set(SOURCE_FILES
         controllers/plugins/api/Accounts.hpp
         controllers/plugins/api/ChannelRef.cpp
         controllers/plugins/api/ChannelRef.hpp
+        controllers/plugins/api/ConnectionHandle.cpp
+        controllers/plugins/api/ConnectionHandle.hpp
         controllers/plugins/api/DebugLibrary.cpp
         controllers/plugins/api/DebugLibrary.hpp
         controllers/plugins/api/EventType.hpp
@@ -277,6 +281,8 @@ set(SOURCE_FILES
         controllers/plugins/api/Message.hpp
         controllers/plugins/api/WebSocket.cpp
         controllers/plugins/api/WebSocket.hpp
+        controllers/plugins/ConnectionManager.cpp
+        controllers/plugins/ConnectionManager.hpp
         controllers/plugins/LuaAPI.cpp
         controllers/plugins/LuaAPI.hpp
         controllers/plugins/LuaUtilities.cpp
@@ -289,6 +295,8 @@ set(SOURCE_FILES
         controllers/plugins/PluginMeta.hpp
         controllers/plugins/PluginPermission.cpp
         controllers/plugins/PluginPermission.hpp
+        controllers/plugins/PluginRef.cpp
+        controllers/plugins/PluginRef.hpp
         controllers/plugins/SolTypes.cpp
         controllers/plugins/SolTypes.hpp
 
