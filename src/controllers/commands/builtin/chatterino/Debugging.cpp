@@ -7,6 +7,7 @@
 #include "Application.hpp"
 #include "common/Channel.hpp"
 #include "common/Env.hpp"
+#include "common/network/NetworkPrivate.hpp"
 #include "controllers/commands/CommandContext.hpp"
 #include "controllers/notifications/NotificationController.hpp"
 #include "controllers/spellcheck/SpellChecker.hpp"
@@ -22,6 +23,7 @@
 #include "singletons/Toasts.hpp"
 #include "singletons/Updates.hpp"
 #include "singletons/WindowManager.hpp"
+#include "util/FormatTime.hpp"
 #include "util/PostToThread.hpp"
 
 #include <QApplication>
@@ -236,6 +238,37 @@ QString debugTest(const CommandContext &ctx)
         {
             getApp()->getTwitch()->setWatchingChannel(chan);
         }
+    }
+    else if (command == "live-requests")
+    {
+        visitNetworkData([&](const std::list<NetworkData *> &data) {
+            if (data.empty())
+            {
+                ctx.channel->addSystemMessage("No live requests.");
+            }
+
+            for (const auto &item : data)
+            {
+                QString timeoutStr = u"none"_s;
+                if (item->timeout)
+                {
+                    timeoutStr = formatTime(
+                        std::chrono::duration_cast<std::chrono::seconds>(
+                            *item->timeout));
+                }
+
+                QString msg =
+                    item->request.url().toDisplayString() % u" { was-sent: " %
+                    (item->wasSent ? "true" : "false") % ", created: " %
+                    formatLongFriendlyDuration(item->createdAt,
+                                               QDateTime::currentDateTime()) %
+                    u" ago, timeout: " % timeoutStr % u" }";
+                MessageBuilder b(systemMessage, "");
+                b.emplace<TextElement>(msg, MessageElementFlag::Text,
+                                       MessageColor::System);
+                ctx.channel->addMessage(b.release(), MessageContext::Original);
+            }
+        });
     }
     else
     {

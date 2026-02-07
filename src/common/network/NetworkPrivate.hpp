@@ -7,6 +7,7 @@
 #include "common/Common.hpp"
 #include "common/network/NetworkCommon.hpp"
 #include "util/DebugCount.hpp"
+#include "util/FunctionRef.hpp"
 
 #include <QHttpMultiPart>
 #include <QNetworkRequest>
@@ -46,6 +47,9 @@ public:
     bool cache{};
     bool executeConcurrently{};
 
+    bool wasSent = false;
+    QDateTime createdAt;
+
     NetworkSuccessCallback onSuccess;
     NetworkErrorCallback onError;
     NetworkFinallyCallback finally;
@@ -72,7 +76,10 @@ public:
 
 private:
     QString hash_;
+    std::list<NetworkData *>::iterator ref;
 };
+
+void visitNetworkData(FunctionRef<void(const std::list<NetworkData *> &)> cb);
 
 void load(std::shared_ptr<NetworkData> &&data);
 

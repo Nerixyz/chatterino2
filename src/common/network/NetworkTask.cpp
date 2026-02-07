@@ -47,6 +47,7 @@ void NetworkTask::run()
 #if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
         QObject::connect(this->reply_, &QNetworkReply::requestSent, this,
                          [this]() {
+                             this->data_->wasSent = true;
                              const auto &timeout = this->data_->timeout;
                              this->timer_ = new QTimer(this);
                              this->timer_->setSingleShot(true);

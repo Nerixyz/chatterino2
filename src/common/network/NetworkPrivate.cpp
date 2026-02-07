@@ -99,17 +99,44 @@ void loadCached(std::shared_ptr<NetworkData> &&data)
     data->emitFinally();
 }
 
+// NOLINTBEGIN
+std::list<NetworkData *> LIVE_NETWORK_DATA;
+std::mutex LIVE_NETWORK_MUTEX;
+// NOLINTEND
+
+std::list<NetworkData *>::iterator allocNetworkData(NetworkData *data)
+{
+    std::lock_guard g(LIVE_NETWORK_MUTEX);
+    LIVE_NETWORK_DATA.emplace_front(data);
+    return LIVE_NETWORK_DATA.begin();
+}
+
+void deallocNetworkData(std::list<NetworkData *>::iterator it)
+{
+    std::lock_guard g(LIVE_NETWORK_MUTEX);
+    LIVE_NETWORK_DATA.erase(std::move(it));
+}
+
 }  // namespace
 
 namespace chatterino {
 
+void visitNetworkData(FunctionRef<void(const std::list<NetworkData *> &)> cb)
+{
+    std::lock_guard g(LIVE_NETWORK_MUTEX);
+    cb(LIVE_NETWORK_DATA);
+}
+
 NetworkData::NetworkData()
+    : createdAt(QDateTime::currentDateTime())
+    , ref(allocNetworkData(this))
 {
     DebugCount::increase(DebugObject::NetworkData);
 }
 
 NetworkData::~NetworkData()
 {
+    deallocNetworkData(this->ref);
     DebugCount::decrease(DebugObject::NetworkData);
 }
 
