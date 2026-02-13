@@ -2,7 +2,7 @@
 
 ## Unversioned
 
-- Minor: Added a countdown timer to the input box to show when you can chat again during slow mode or after a timeout. This feature is disabled by default, and can be enabled with the "Show countdown on slow mode or when timed out" setting. (#6782)
+- Minor: Added a countdown timer to the input box to show when you can chat again during slow mode or after a timeout. This feature is disabled by default, and can be enabled with the "Show countdown on slow mode or when timed out" setting. (#6782, #6791)
 - Minor: Add search engine selection for context menu search action. (#6743, #6770)
 - Minor: Add a separate highlight option for watchstreak notifications. (#6571, #6581)
 - Minor: Badges now link to their home page like emotes in the context menu. (#6437)
@@ -54,6 +54,7 @@
 - Bugfix: Disable "Sort Tabs Alphabetically" action when notebook layout is locked. (#6710)
 - Bugfix: Fix highlight mentions not updating when username changes. (#6723, #6739)
 - Bugfix: Fixed Return and Enter being treated as different keys on Mac OS. (#6726)
+- Dev: Nightly builds are now defined through a build flag rather than the Modes file. (#6798)
 - Dev: Update release documentation. (#6498)
 - Dev: Make code sanitizers opt in with the `CHATTERINO_SANITIZER_SUPPORT` CMake option. After that's enabled, use the `SANITIZE_*` flag to enable individual sanitizers. (#6493)
 - Dev: Remove unused QTextCodec includes. (#6487)
@@ -106,6 +107,9 @@
 - Dev: Refactored `DebugCount`. (#6753)
 - Dev: Moved `PluginMeta` to its own file. (#6757)
 - Dev: Moves some `Channel` signals to `TwitchChannel`. (#6787)
+- Dev: Updated `pajlada-settings` to v0.5.0. (#6797)
+- Dev: Updated `pajlada-serialize` to v0.2.1. (#6797)
+- Dev: Updated `pajlada-signals` to v0.1.1. (#6797)
 
 ## 2.5.4
 
