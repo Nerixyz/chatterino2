@@ -210,11 +210,13 @@ function c2.Channel:count_messages() end
 function c2.Channel:is_twitch_channel() end
 
 --- Returns a copy of the channel mode settings (subscriber only, r9k etc.)
+--- Use `on_room_modes_changed` to listen to changes.
 ---
 ---@return RoomModes
 function c2.Channel:get_room_modes() end
 
 --- Returns a copy of the stream status.
+--- Use `on_stream_status_changed` to listen to changes.
 ---
 ---@return StreamStatus
 function c2.Channel:get_stream_status() end
@@ -249,6 +251,24 @@ function c2.Channel:__tostring() end
 ---@param cb fun()
 ---@return c2.ConnectionHandle hdl
 function c2.Channel:on_display_name_changed(cb) end
+
+--- Callback when the stream status is changed.
+--- This includes when the stream goes from offline to online, the viewer
+--- count changes, or the title is updated.
+--- Use `get_stream_status` to retrieve the current status.
+--- Only available in Twitch channels.
+---
+---@param cb fun()
+---@return c2.ConnectionHandle hdl
+function c2.Channel:on_stream_status_changed(cb) end
+
+--- Callback when the room modes in the channel change.
+--- Use `get_room_modes` to retrieve the current state.
+--- Only available in Twitch channels.
+---
+---@param cb fun()
+---@return c2.ConnectionHandle hdl
+function c2.Channel:on_room_modes_changed(cb) end
 
 --- Finds a channel by name.
 --- Misc channels are marked as Twitch:

@@ -254,6 +254,24 @@ api::ConnectionHandle ChannelRef::on_display_name_changed(
         plugin->createCallback(std::move(pfn)));
 }
 
+api::ConnectionHandle ChannelRef::on_stream_status_changed(
+    ThisPluginState state, sol::main_protected_function pfn)
+{
+    auto *plugin = state.plugin();
+    return plugin->connections.managedConnect(
+        this->twitch()->streamStatusChanged,
+        plugin->createCallback(std::move(pfn)));
+}
+
+api::ConnectionHandle ChannelRef::on_room_modes_changed(
+    ThisPluginState state, sol::main_protected_function pfn)
+{
+    auto *plugin = state.plugin();
+    return plugin->connections.managedConnect(
+        this->twitch()->roomModesChanged,
+        plugin->createCallback(std::move(pfn)));
+}
+
 std::optional<ChannelRef> ChannelRef::get_by_name(const QString &name)
 {
     auto chan = getApp()->getTwitch()->getChannelOrEmpty(name);
@@ -312,6 +330,9 @@ void ChannelRef::createUserType(sol::table &c2)
         "is_broadcaster", &ChannelRef::is_broadcaster,
         "is_mod", &ChannelRef::is_mod,
         "is_vip", &ChannelRef::is_vip,
+
+        "on_stream_status_changed", &ChannelRef::on_stream_status_changed,
+        "on_room_modes_changed", &ChannelRef::on_room_modes_changed,
 
         // static
         "by_name", &ChannelRef::get_by_name,

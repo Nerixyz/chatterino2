@@ -1556,6 +1556,52 @@ TEST_F(PluginTest, ChannelOnDisplayNameChanged)
     ASSERT_FALSE(gotEvent);
 }
 
+TEST_F(PluginTest, ChannelOnStreamStatusChanged)
+{
+    this->configure();
+
+    bool gotEvent = false;
+    this->lua->set_function("on_test_event", [&] {
+        gotEvent = true;
+    });
+
+    auto chan = std::make_shared<TwitchChannel>("mock");
+    this->lua->set("chan", lua::api::ChannelRef(chan));
+    sol::protected_function init = this->lua->script(R"lua(
+        return function(chan)
+            chan:on_stream_status_changed(on_test_event)
+        end
+    )lua");
+
+    ASSERT_TRUE(init(lua::api::ChannelRef(chan)).valid());
+
+    chan->streamStatusChanged.invoke();
+    ASSERT_TRUE(gotEvent);
+}
+
+TEST_F(PluginTest, ChannelOnRoomModesChanged)
+{
+    this->configure();
+
+    bool gotEvent = false;
+    this->lua->set_function("on_test_event", [&] {
+        gotEvent = true;
+    });
+
+    auto chan = std::make_shared<TwitchChannel>("mock");
+    this->lua->set("chan", lua::api::ChannelRef(chan));
+    sol::protected_function init = this->lua->script(R"lua(
+        return function(chan)
+            chan:on_room_modes_changed(on_test_event)
+        end
+    )lua");
+
+    ASSERT_TRUE(init(lua::api::ChannelRef(chan)).valid());
+
+    chan->roomModesChanged.invoke();
+    ASSERT_TRUE(gotEvent);
+}
+
 class PluginMessageConstructionTest
     : public PluginTest,
       public ::testing::WithParamInterface<QString>

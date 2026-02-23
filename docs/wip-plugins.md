@@ -361,6 +361,29 @@ updated name.
 This returns a [`ConnectionHandle`](#connectionhandle) which can be used to
 disconnect the handler.
 
+##### `Channel:on_stream_status_changed(cb)`
+
+Callback when the stream status changes. The callback doesn't get any arguments,
+use `Channel:get_stream_status` to get the updated status.
+
+This includes when the stream goes from offline to online, the viewer count
+changes, or the title is updated.
+
+Only available in Twitch channels.
+
+This returns a [`ConnectionHandle`](#connectionhandle) which can be used to
+disconnect the handler.
+
+##### `Channel:on_room_modes_changed(cb)`
+
+Callback when the room modes change. The callback doesn't get any arguments, use
+`Channel:get_room_modes` to get the updated modes.
+
+Only available in Twitch channels.
+
+This returns a [`ConnectionHandle`](#connectionhandle) which can be used to
+disconnect the handler.
+
 ##### `Channel:send_message(message[, execute_commands])`
 
 Sends a message to the channel with the given text. If `execute_commands` is

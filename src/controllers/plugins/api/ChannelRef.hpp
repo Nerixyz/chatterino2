@@ -188,6 +188,8 @@ public:
     /**
      * Returns a copy of the channel mode settings (subscriber only, r9k etc.)
      *
+     * Use `on_room_modes_changed` to listen to changes.
+     *
      * @lua@return RoomModes
      * @exposed c2.Channel:get_room_modes
      */
@@ -195,6 +197,8 @@ public:
 
     /**
      * Returns a copy of the stream status.
+     *
+     * Use `on_stream_status_changed` to listen to changes.
      *
      * @lua@return StreamStatus
      * @exposed c2.Channel:get_stream_status
@@ -256,6 +260,35 @@ public:
      */
     ConnectionHandle on_display_name_changed(ThisPluginState state,
                                              sol::main_protected_function pfn);
+
+    /**
+     * Callback when the stream status is changed.
+     *
+     * This includes when the stream goes from offline to online, the viewer 
+     * count changes, or the title is updated.
+     *
+     * Use `get_stream_status` to retrieve the current status.
+     * Only available in Twitch channels.
+     *
+     * @lua@param cb fun()
+     * @lua@return c2.ConnectionHandle hdl
+     * @exposed c2.Channel:on_stream_status_changed
+     */
+    ConnectionHandle on_stream_status_changed(ThisPluginState state,
+                                              sol::main_protected_function pfn);
+
+    /**
+     * Callback when the room modes in the channel change.
+     *
+     * Use `get_room_modes` to retrieve the current state.
+     * Only available in Twitch channels.
+     *
+     * @lua@param cb fun()
+     * @lua@return c2.ConnectionHandle hdl
+     * @exposed c2.Channel:on_room_modes_changed
+     */
+    ConnectionHandle on_room_modes_changed(ThisPluginState state,
+                                           sol::main_protected_function pfn);
 
     /**
      * Static functions

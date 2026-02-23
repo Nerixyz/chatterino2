@@ -96,6 +96,9 @@ declare namespace c2 {
         is_mod(): boolean;
         is_vip(): boolean;
 
+        on_stream_status_changed(cb: () => void): ConnectionHandle;
+        on_room_modes_changed(cb: () => void): ConnectionHandle;
+
         static by_name(this: void, name: string): null | Channel;
         static by_twitch_id(this: void, id: string): null | Channel;
     }
