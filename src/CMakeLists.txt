@@ -180,8 +180,6 @@ set(SOURCE_FILES
         controllers/filters/lang/expressions/BinaryOperation.hpp
         controllers/filters/lang/expressions/ListExpression.cpp
         controllers/filters/lang/expressions/ListExpression.hpp
-        controllers/filters/lang/expressions/RegexExpression.cpp
-        controllers/filters/lang/expressions/RegexExpression.hpp
         controllers/filters/lang/expressions/UnaryOperation.hpp
         controllers/filters/lang/expressions/UnaryOperation.cpp
         controllers/filters/lang/expressions/ValueExpression.cpp

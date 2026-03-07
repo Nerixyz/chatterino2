@@ -6,4 +6,9 @@
 
 namespace chatterino::filters {
 
+QVariant Expression::asConstant() const
+{
+    return {};
+}
+
 }  // namespace chatterino::filters

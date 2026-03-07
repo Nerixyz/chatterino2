@@ -5,18 +5,18 @@
 #pragma once
 
 #include <QMap>
+#include <QRegularExpression>
 #include <QString>
 #include <QVariant>
 
-#include <memory>
-#include <set>
 #include <variant>
 
 namespace chatterino::filters {
 
 class Expression;
 
-enum class Type {
+// When updating the order of these members, check for 'ORDER'.
+enum class Type : uint8_t {
     String,
     Int,
     Bool,
@@ -25,7 +25,6 @@ enum class Type {
     List,
     StringList,         // List of only strings
     MatchingSpecifier,  // 2-element list in {RegularExpression, Int} form
-    Map
 };
 
 using ContextMap = QMap<QString, QVariant>;
@@ -61,6 +60,7 @@ struct IllTyped {
 };
 
 using PossibleType = std::variant<TypeClass, IllTyped>;
+using MatchingSpecifier = std::pair<QRegularExpression, int>;
 
 inline bool isWellTyped(const PossibleType &possible)
 {
@@ -109,4 +109,64 @@ inline bool variantTypesMatch(QVariant &a, QVariant &b, int type)
     return variantIs(a, type) && variantIs(b, type);
 }
 
+namespace detail {
+
+template <typename T>
+struct TypeTraits {
+};
+
+template <>
+struct TypeTraits<QString> {
+    static constexpr Type TYPE = Type::String;
+};
+
+template <>
+struct TypeTraits<int> {
+    static constexpr Type TYPE = Type::Int;
+    using Narrow = int;
+};
+template <>
+struct TypeTraits<uint64_t> : TypeTraits<int> {
+};
+template <>
+struct TypeTraits<int64_t> : TypeTraits<int> {
+};
+
+template <>
+struct TypeTraits<bool> {
+    static constexpr Type TYPE = Type::Bool;
+};
+
+template <>
+struct TypeTraits<QColor> {
+    static constexpr Type TYPE = Type::Color;
+};
+
+template <>
+struct TypeTraits<QRegularExpression> {
+    static constexpr Type TYPE = Type::RegularExpression;
+};
+
+template <>
+struct TypeTraits<QVariantList> {
+    static constexpr Type TYPE = Type::List;
+};
+
+template <>
+struct TypeTraits<QStringList> {
+    static constexpr Type TYPE = Type::StringList;
+};
+
+template <>
+struct TypeTraits<MatchingSpecifier> {
+    static constexpr Type TYPE = Type::MatchingSpecifier;
+};
+
+}  // namespace detail
+
+template <typename T>
+inline constexpr Type TYPE_OF_V = detail::TypeTraits<T>::TYPE;
+
 }  // namespace chatterino::filters
+
+Q_DECLARE_METATYPE(chatterino::filters::MatchingSpecifier);

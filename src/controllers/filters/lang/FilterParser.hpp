@@ -10,39 +10,26 @@
 
 namespace chatterino::filters {
 
+ExpectedStr<ExpressionPtr> parseFilter(const QString &text);
+
 class FilterParser
 {
 public:
-    /**
-     * Take input text & attempt to parse it into a filter
-     **/
     FilterParser(const QString &text);
 
-    bool valid() const;
-    Type returnType() const;
-    ExpressionPtr release();
-
-    const QStringList &errors() const;
-    const QString debugString() const;
+    CreateResult parse();
 
 private:
-    ExpressionPtr parseExpression(bool top = false);
-    ExpressionPtr parseAnd();
-    ExpressionPtr parseUnary();
-    ExpressionPtr parseParentheses();
-    ExpressionPtr parseCondition();
-    ExpressionPtr parseValue();
-    ExpressionPtr parseList();
-
-    void errorLog(const QString &text, bool expand = false);
-
-    QStringList parseLog_;
-    bool valid_ = true;
+    CreateResult parseExpression(bool top = false);
+    CreateResult parseAnd();
+    CreateResult parseUnary();
+    CreateResult parseParentheses();
+    CreateResult parseCondition();
+    CreateResult parseValue();
+    CreateResult parseList();
 
     QString text_;
     Tokenizer tokenizer_;
-    ExpressionPtr builtExpression_;
-    Type returnType_ = Type::Bool;
 };
 
 }  // namespace chatterino::filters

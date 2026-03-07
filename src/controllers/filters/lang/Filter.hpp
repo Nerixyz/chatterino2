@@ -28,25 +28,15 @@ namespace chatterino::filters {
 // i.e. if all the variables and operators being used have compatible types.
 extern const QMap<QString, Type> MESSAGE_TYPING_CONTEXT;
 
-ContextMap buildContextMap(const MessagePtr &m, chatterino::Channel *channel);
-
-class Filter;
-struct FilterError {
-    QString message;
-};
-
-using FilterResult = std::variant<Filter, FilterError>;
-
 class Filter
 {
 public:
-    static FilterResult fromString(const QString &str);
+    static ExpectedStr<Filter> fromString(const QString &str);
 
     Type returnType() const;
-    QVariant execute(const ContextMap &context) const;
+    QVariant execute(const RunContext &context) const;
 
     QString filterString() const;
-    QString debugString(const TypingContext &context) const;
 
 private:
     Filter(ExpressionPtr expression, Type returnType);

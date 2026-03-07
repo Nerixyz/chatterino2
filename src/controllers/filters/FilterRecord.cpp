@@ -12,10 +12,9 @@ static std::unique_ptr<filters::Filter> buildFilter(const QString &filterText)
 {
     using namespace filters;
     auto result = Filter::fromString(filterText);
-    if (std::holds_alternative<Filter>(result))
+    if (result)
     {
-        auto filter =
-            std::make_unique<Filter>(std::move(std::get<Filter>(result)));
+        auto filter = std::make_unique<Filter>(*std::move(result));
 
         if (filter->returnType() != Type::Bool)
         {
@@ -62,7 +61,7 @@ bool FilterRecord::valid() const
     return this->filter_ != nullptr;
 }
 
-bool FilterRecord::filter(const filters::ContextMap &context) const
+bool FilterRecord::filter(const filters::RunContext &context) const
 {
     assert(this->valid());
     return this->filter_->execute(context).toBool();

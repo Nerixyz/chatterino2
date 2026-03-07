@@ -101,9 +101,9 @@ void FiltersPage::tableCellClicked(const QModelIndex &clicked,
             view->getModel()->data(clicked.siblingAtColumn(1)).toString();
         auto filterResult = filters::Filter::fromString(filterText);
 
-        if (std::holds_alternative<filters::Filter>(filterResult))
+        if (filterResult)
         {
-            auto f = std::move(std::get<filters::Filter>(filterResult));
+            auto f = *std::move(filterResult);
             if (f.returnType() == filters::Type::Bool)
             {
                 popup.setIcon(QMessageBox::Icon::Information);
@@ -125,11 +125,11 @@ void FiltersPage::tableCellClicked(const QModelIndex &clicked,
         }
         else
         {
-            auto err = std::move(std::get<filters::FilterError>(filterResult));
+            auto err = std::move(filterResult).error();
             popup.setIcon(QMessageBox::Icon::Warning);
             popup.setWindowTitle("Invalid filter");
             popup.setText(QString("Parsing errors occurred:"));
-            popup.setInformativeText(err.message);
+            popup.setInformativeText(err);
         }
 
         popup.exec();

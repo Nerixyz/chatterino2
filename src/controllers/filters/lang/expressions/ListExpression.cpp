@@ -6,93 +6,177 @@
 
 namespace chatterino::filters {
 
-ListExpression::ListExpression(ExpressionList &&list)
-    : list_(std::move(list)) {};
+namespace {
 
-QVariant ListExpression::execute(const ContextMap &context) const
-{
-    QList<QVariant> results;
-    bool allStrings = true;
-    for (const auto &exp : this->list_)
+struct ListExpressionBase : public Expression {
+    ListExpressionBase(ExpressionList list)
+        : expressions(std::move(list))
     {
-        auto res = exp->execute(context);
-        if (allStrings && variantIsNot(res, QMetaType::QString))
-        {
-            allStrings = false;
-        }
-        results.append(res);
     }
 
-    // if everything is a string return a QStringList for case-insensitive comparison
-    if (allStrings)
+    QString filterString() const override
     {
         QStringList strings;
-        strings.reserve(results.size());
-        for (const auto &val : results)
+        for (const auto &exp : this->expressions)
         {
-            strings << val.toString();
+            strings.append(exp->filterString());
         }
-        return strings;
+        return QString("{%1}").arg(strings.join(", "));
     }
 
-    return results;
-}
+    ExpressionList expressions;
+};
 
-PossibleType ListExpression::synthesizeType(const TypingContext &context) const
-{
-    std::vector<TypeClass> types;
-    types.reserve(this->list_.size());
-    bool allStrings = true;
-    for (const auto &exp : this->list_)
+struct ConstListExpression final : public ListExpressionBase {
+    ConstListExpression(ExpressionList list, Type type, QVariant value)
+        : ListExpressionBase(std::move(list))
+        , type_(type)
+        , value(std::move(value))
     {
-        auto typSyn = exp->synthesizeType(context);
-        if (isIllTyped(typSyn))
+    }
+
+    QVariant run(const RunContext & /*ctx*/) override
+    {
+        return this->value;
+    }
+
+    QVariant asConstant() const override
+    {
+        return this->value;
+    }
+
+    Type type() const override
+    {
+        return this->type_;
+    }
+
+    Type type_;  // NOLINT(readability-identifier-naming)
+    QVariant value;
+};
+
+struct DynStringListExpression final : public ListExpressionBase {
+    DynStringListExpression(ExpressionList list)
+        : ListExpressionBase(std::move(list))
+    {
+    }
+
+    QVariant run(const RunContext &ctx) override
+    {
+        QStringList l;
+        for (const auto &expr : this->expressions)
         {
-            return typSyn;  // Ill-typed
+            l.emplace_back(expr->run(ctx).toString());
         }
+        return l;
+    }
 
-        auto typ = std::get<TypeClass>(typSyn);
+    Type type() const override
+    {
+        return Type::StringList;
+    }
+};
 
-        if (typ != Type::String)
+struct DynVariantListExpression final : public ListExpressionBase {
+    DynVariantListExpression(ExpressionList list)
+        : ListExpressionBase(std::move(list))
+    {
+    }
+
+    QVariant run(const RunContext &ctx) override
+    {
+        QVariantList l;
+        for (const auto &expr : this->expressions)
         {
-            allStrings = false;
+            l.emplace_back(expr->run(ctx));
         }
-
-        types.push_back(typ);
+        return l;
     }
 
-    if (types.size() == 2 && types[0] == Type::RegularExpression &&
-        types[1] == Type::Int)
+    Type type() const override
     {
-        // Specific {RegularExpression, Int} form
-        return TypeClass{Type::MatchingSpecifier};
+        return Type::List;
+    }
+};
+
+struct DynMatchingSpecifierExpression final : public ListExpressionBase {
+    DynMatchingSpecifierExpression(ExpressionList list)
+        : ListExpressionBase(std::move(list))
+    {
+        assert(this->expressions.size() == 2);
     }
 
-    return allStrings ? TypeClass{Type::StringList} : TypeClass{Type::List};
-}
+    QVariant run(const RunContext &ctx) override
+    {
+        auto re = this->expressions[0]->run(ctx).toRegularExpression();
+        auto idx = this->expressions[1]->run(ctx).toInt();
+        return QVariant::fromValue(std::pair{re, idx});
+    }
 
-QString ListExpression::debug(const TypingContext &context) const
+    Type type() const override
+    {
+        return Type::MatchingSpecifier;
+    }
+};
+
+}  // namespace
+
+CreateResult createListExpression(ExpressionList list)
 {
-    QStringList debugs;
-    for (const auto &exp : this->list_)
+    if (list.empty())
     {
-        debugs.append(
-            QString("%1 : %2")
-                .arg(exp->debug(context))
-                .arg(possibleTypeToString(exp->synthesizeType(context))));
+        return std::make_unique<ConstListExpression>(
+            std::move(list), Type::List, QVariantList());
     }
 
-    return QString("List(%1)").arg(debugs.join(", "));
-}
-
-QString ListExpression::filterString() const
-{
-    QStringList strings;
-    for (const auto &exp : this->list_)
+    // special case for {regex, index}
+    if (list.size() == 2 && list[0]->type() == Type::RegularExpression &&
+        list[1]->type() == Type::Int)
     {
-        strings.append(exp->filterString());
+        auto re = list[0]->asConstant();
+        auto idx = list[1]->asConstant();
+        if (re.isValid() && idx.isValid())
+        {
+            return std::make_unique<ConstListExpression>(
+                std::move(list), Type::MatchingSpecifier,
+                QVariant::fromValue(
+                    std::pair{re.toRegularExpression(), idx.toInt()}));
+        }
+        return std::make_unique<DynMatchingSpecifierExpression>(
+            std::move(list));
     }
-    return QString("{%1}").arg(strings.join(", "));
+
+    bool allStrings = std::ranges::all_of(list, [](const auto &it) {
+        return it->type() == Type::String;
+    });
+    if (allStrings)
+    {
+        QStringList constList;
+        for (const auto &it : list)
+        {
+            auto val = it->asConstant();
+            if (!val.isValid())
+            {
+                return std::make_unique<DynStringListExpression>(
+                    std::move(list));
+            }
+            constList.emplace_back(val.toString());
+        }
+        return std::make_unique<ConstListExpression>(
+            std::move(list), Type::StringList, std::move(constList));
+    }
+
+    QVariantList constList;
+    for (const auto &it : list)
+    {
+        auto val = it->asConstant();
+        if (!val.isValid())
+        {
+            return std::make_unique<DynVariantListExpression>(std::move(list));
+        }
+        constList.emplace_back(val);
+    }
+    return std::make_unique<ConstListExpression>(std::move(list), Type::List,
+                                                 std::move(constList));
 }
 
 }  // namespace chatterino::filters

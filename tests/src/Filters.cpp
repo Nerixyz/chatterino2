@@ -7,6 +7,7 @@
 #include "controllers/filters/lang/Filter.hpp"
 #include "controllers/filters/lang/Types.hpp"
 #include "controllers/highlights/HighlightController.hpp"
+#include "messages/Message.hpp"
 #include "messages/MessageBuilder.hpp"
 #include "mocks/BaseApplication.hpp"
 #include "mocks/Channel.hpp"
@@ -200,10 +201,11 @@ TEST(Filters, Validity)
     for (const auto &[input, expected] : tests)
     {
         auto filterResult = Filter::fromString(input);
-        bool isValid = std::holds_alternative<Filter>(filterResult);
+        bool isValid = filterResult.has_value();
         EXPECT_EQ(isValid, expected)
             << "Filter::fromString( " << input << " ) should be "
-            << (expected ? "valid" : "invalid");
+            << (expected ? "valid" : "invalid") << " error: "
+            << (filterResult ? u"(none)"_s : filterResult.error());
     }
 }
 
@@ -231,29 +233,32 @@ TEST(Filters, TypeSynthesis)
     for (const auto &[input, expected] : tests)
     {
         auto filterResult = Filter::fromString(input);
-        bool isValid = std::holds_alternative<Filter>(filterResult);
+        bool isValid = filterResult.has_value();
         ASSERT_TRUE(isValid)
             << "Filter::fromString( " << input << " ) is invalid";
 
-        auto filter = std::move(std::get<Filter>(filterResult));
+        auto filter = *std::move(filterResult);
         T type = filter.returnType();
-        EXPECT_EQ(type, expected)
-            << "Filter{ " << input << " } has type " << type << " instead of "
-            << expected
-            << ".\nDebug: " << filter.debugString(MESSAGE_TYPING_CONTEXT);
+        EXPECT_EQ(type, expected) << "Filter{ " << input << " } has type "
+                                  << type << " instead of " << expected << ".";
     }
 }
 
 TEST(Filters, Evaluation)
 {
-    ContextMap contextMap = {
-        {"author.name", QVariant("icelys")},
-        {"author.color", QVariant(QColor("#ff0000"))},
-        {"author.subbed", QVariant(false)},
-        {"message.content", QVariant("hey there :) 2038-01-19 123 456")},
-        {"channel.name", QVariant("forsen")},
-        {"author.badges", QVariant(QStringList({"moderator", "staff"}))},
-        {"author.external_badges", QStringList{"frankerfacez:bot"}},
+    Message message;
+    message.displayName = "icelys";
+    message.usernameColor = QColor(0xff0000);
+    message.messageText = "hey there :) 2038-01-19 123 456";
+    message.channelName = "forsen";
+    message.twitchBadges = {
+        TwitchBadge("moderator", ""),
+        TwitchBadge("staff", ""),
+    };
+    message.externalBadges = {"frankerfacez:bot"};
+    RunContext ctx{
+        .message = message,
+        .channel = nullptr,
     };
 
     std::vector<std::pair<QString, QVariant>> tests{
@@ -316,171 +321,15 @@ TEST(Filters, Evaluation)
     for (const auto &[input, expected] : tests)
     {
         auto filterResult = Filter::fromString(input);
-        bool isValid = std::holds_alternative<Filter>(filterResult);
+        bool isValid = filterResult.has_value();
         ASSERT_TRUE(isValid)
             << "Filter::fromString( " << input << " ) is invalid";
 
-        auto filter = std::move(std::get<Filter>(filterResult));
-        auto result = filter.execute(contextMap);
+        auto filter = *std::move(filterResult);
+        auto result = filter.execute(ctx);
 
         EXPECT_EQ(result, expected)
             << "Filter{ " << input << " } evaluated to " << result.toString()
-            << " instead of " << expected.toString()
-            << ".\nDebug: " << filter.debugString(MESSAGE_TYPING_CONTEXT);
-    }
-}
-
-TEST_F(FiltersF, TypingContextChecks)
-{
-    TwitchChannel channel("pajlada");
-
-    QByteArray message =
-        R"(@badge-info=subscriber/80;badges=broadcaster/1,subscriber/3072,partner/1;color=#CC44FF;display-name=pajlada;emote-only=1;emotes=25:0-4;first-msg=0;flags=;id=90ef1e46-8baa-4bf2-9c54-272f39d6fa11;mod=0;returning-chatter=0;room-id=11148817;subscriber=1;tmi-sent-ts=1662206235860;turbo=0;user-id=11148817;user-type= :pajlada!pajlada@pajlada.tmi.twitch.tv PRIVMSG #pajlada :ACTION Kappa)";
-
-    struct TestCase {
-        QByteArray input;
-    };
-
-    auto *privmsg = dynamic_cast<Communi::IrcPrivateMessage *>(
-        Communi::IrcPrivateMessage::fromData(message, nullptr));
-    EXPECT_NE(privmsg, nullptr);
-
-    QString originalMessage = privmsg->content();
-
-    auto [msg, alert] = MessageBuilder::makeIrcMessage(&channel, privmsg,
-                                                       MessageParseArgs{
-                                                           .isAction = true,
-                                                       },
-                                                       originalMessage, 0);
-
-    EXPECT_NE(msg.get(), nullptr);
-
-    auto contextMap = buildContextMap(msg, &channel);
-    qDebug() << contextMap;
-
-    ContextMap expected{
-        {"author.badges", QStringList{"broadcaster", "subscriber", "partner"}},
-        {"author.color", QColor(0xCC44FF)},
-        {"author.external_badges", QStringList{}},
-        {"author.name", u"pajlada"_s},
-        {"author.no_color", false},
-        {"author.sub_length", 80},
-        {"author.subbed", true},
-        {"author.user_id", u"11148817"_s},
-
-        {"channel.live", false},
-        {"channel.name", u"pajlada"_s},
-        {"channel.watching", false},
-
-        {"flags.action", true},
-        {"flags.automod", false},
-        {"flags.cheer_message", false},
-        {"flags.elevated_message", false},
-        {"flags.first_message", false},
-        {"flags.highlighted", false},
-        {"flags.hype_chat", false},
-        {"flags.monitored", false},
-        {"flags.points_redeemed", false},
-        {"flags.reply", false},
-        {"flags.restricted", false},
-        {"flags.reward_message", false},
-        {"flags.shared", false},
-        {"flags.similar", false},
-        {"flags.sub_message", false},
-        {"flags.system_message", false},
-        {"flags.whisper", false},
-
-        {"message.content", "Kappa"},
-        {"message.length", 5},
-
-        {"reward.cost", -1},
-        {"reward.id", QString{}},
-        {"reward.title", QString{}},
-    };
-    EXPECT_EQ(contextMap, expected);
-
-    delete privmsg;
-}
-
-TEST_F(FiltersF, ExpressionDebug)
-{
-    struct TestCase {
-        QString input;
-        QString debugString;
-        QString filterString;
-    };
-
-    // clang-format off
-    std::vector<TestCase> tests{
-        {
-            .input = R".(1 + 1).",
-            .debugString = "BinaryOp[Plus](Val(1) : Int, Val(1) : Int)",
-            .filterString = "(1 + 1)",
-        },
-        {
-            .input = R".(author.color == "#ff0000").",
-            .debugString = "BinaryOp[Eq](Val(author.color) : Color, Val(#ff0000) : String)",
-            .filterString = R".((author.color == "#ff0000")).",
-        },
-        {
-            .input = R".(1).",
-            .debugString = "Val(1)",
-            .filterString = R".(1).",
-        },
-        {
-            .input = R".("asd").",
-            .debugString = R".(Val(asd)).",
-            .filterString = R".("asd").",
-        },
-        {
-            .input = R".(("asd")).",
-            .debugString = R".(Val(asd)).",
-            .filterString = R".("asd").",
-        },
-        {
-            .input = R".(author.subbed).",
-            .debugString = R".(Val(author.subbed)).",
-            .filterString = R".(author.subbed).",
-        },
-        {
-            .input = R".(!author.subbed).",
-            .debugString = R".(UnaryOp[Not](Val(author.subbed) : Bool)).",
-            .filterString = R".((!author.subbed)).",
-        },
-        {
-            .input = R".({"foo", "bar"} contains "foo").",
-            .debugString = R".(BinaryOp[Contains](List(Val(foo) : String, Val(bar) : String) : StringList, Val(foo) : String)).",
-            .filterString = R".(({"foo", "bar"} contains "foo")).",
-        },
-        {
-            .input = R".(!({"foo", "bar"} contains "foo")).",
-            .debugString = R".(UnaryOp[Not](BinaryOp[Contains](List(Val(foo) : String, Val(bar) : String) : StringList, Val(foo) : String) : Bool)).",
-            .filterString = R".((!({"foo", "bar"} contains "foo"))).",
-        },
-        {
-            .input = R".(message.content match r"(\d\d)/(\d\d)/(\d\d\d\d)").",
-            .debugString = R".(BinaryOp[Match](Val(message.content) : String, RegEx((\d\d)/(\d\d)/(\d\d\d\d)) : RegularExpression)).",
-            .filterString = R".((message.content match r"(\d\d)/(\d\d)/(\d\d\d\d)")).",
-        },
-    };
-    // clang-format on
-
-    for (const auto &[input, debugString, filterString] : tests)
-    {
-        const auto filterResult = Filter::fromString(input);
-        const auto *filter = std::get_if<Filter>(&filterResult);
-        EXPECT_NE(filter, nullptr) << "Filter::fromString(" << input
-                                   << ") did not build a proper filter";
-
-        const auto actualDebugString =
-            filter->debugString(MESSAGE_TYPING_CONTEXT);
-        EXPECT_EQ(actualDebugString, debugString)
-            << "filter->debugString() on '" << input << "' should be '"
-            << debugString << "', but got '" << actualDebugString << "'";
-
-        const auto actualFilterString = filter->filterString();
-        EXPECT_EQ(actualFilterString, filterString)
-            << "filter->filterString() on '" << input << "' should be '"
-            << filterString << "', but got '" << actualFilterString << "'";
+            << " instead of " << expected.toString() << ".";
     }
 }

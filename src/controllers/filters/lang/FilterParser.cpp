@@ -7,146 +7,131 @@
 #include "controllers/filters/lang/expressions/BinaryOperation.hpp"
 #include "controllers/filters/lang/expressions/Expression.hpp"
 #include "controllers/filters/lang/expressions/ListExpression.hpp"
-#include "controllers/filters/lang/expressions/RegexExpression.hpp"
 #include "controllers/filters/lang/expressions/UnaryOperation.hpp"
 #include "controllers/filters/lang/expressions/ValueExpression.hpp"
-#include "controllers/filters/lang/Filter.hpp"
-#include "controllers/filters/lang/Types.hpp"
 
 namespace {
 
 using namespace chatterino::filters;
 
-QString explainIllType(const IllTyped &ill)
-{
-    return QString("%1\n\nProblem occurred here:\n%2")
-        .arg(ill.message)
-        .arg(ill.expr->filterString());
-}
-
 }  // namespace
 
 namespace chatterino::filters {
 
+ExpectedStr<ExpressionPtr> parseFilter(const QString &text)
+{
+    FilterParser parser(text);
+    return parser.parse();
+}
+
 FilterParser::FilterParser(const QString &text)
     : text_(text)
     , tokenizer_(Tokenizer(text))
-    , builtExpression_(this->parseExpression(true))
 {
-    if (!this->valid_)
-    {
-        return;
-    }
-
-    // safety: returnType must not live longer than the parsed expression. See
-    // comment on IllTyped::expr.
-    auto returnType =
-        this->builtExpression_->synthesizeType(MESSAGE_TYPING_CONTEXT);
-    if (isIllTyped(returnType))
-    {
-        this->errorLog(explainIllType(std::get<IllTyped>(returnType)));
-        return;
-    }
-
-    this->returnType_ = std::get<TypeClass>(returnType).type;
 }
 
-bool FilterParser::valid() const
+CreateResult FilterParser::parse()
 {
-    return this->valid_;
+    return this->parseExpression(true);
 }
 
-Type FilterParser::returnType() const
-{
-    return this->returnType_;
-}
-
-ExpressionPtr FilterParser::release()
-{
-    ExpressionPtr ret;
-    this->builtExpression_.swap(ret);
-    return ret;
-}
-
-ExpressionPtr FilterParser::parseExpression(bool top)
+CreateResult FilterParser::parseExpression(bool top)
 {
     auto e = this->parseAnd();
+    if (!e)
+    {
+        return e;
+    }
     while (this->tokenizer_.hasNext() &&
            this->tokenizer_.nextTokenType() == TokenType::OR)
     {
         this->tokenizer_.next();
         auto nextAnd = this->parseAnd();
-        e = std::make_unique<BinaryOperation>(TokenType::OR, std::move(e),
-                                              std::move(nextAnd));
+        if (!nextAnd)
+        {
+            return nextAnd;
+        }
+        e = createBinaryExpression(TokenType::OR, *std::move(e),
+                                   *std::move(nextAnd));
     }
 
     if (this->tokenizer_.hasNext() && top)
     {
-        this->errorLog(QString("Unexpected token at end: %1")
-                           .arg(this->tokenizer_.preview()));
+        return makeUnexpected(QString("Unexpected token at end: %1")
+                                  .arg(this->tokenizer_.preview()));
     }
 
     return e;
 }
 
-ExpressionPtr FilterParser::parseAnd()
+CreateResult FilterParser::parseAnd()
 {
     auto e = this->parseUnary();
+    if (!e)
+    {
+        return e;
+    }
     while (this->tokenizer_.hasNext() &&
            this->tokenizer_.nextTokenType() == TokenType::AND)
     {
         this->tokenizer_.next();
         auto nextUnary = this->parseUnary();
-        e = std::make_unique<BinaryOperation>(TokenType::AND, std::move(e),
-                                              std::move(nextUnary));
+        if (!nextUnary)
+        {
+            return nextUnary;
+        }
+        e = createBinaryExpression(TokenType::AND, *std::move(e),
+                                   *std::move(nextUnary));
     }
     return e;
 }
 
-ExpressionPtr FilterParser::parseUnary()
+CreateResult FilterParser::parseUnary()
 {
     if (this->tokenizer_.hasNext() && this->tokenizer_.nextTokenIsUnaryOp())
     {
         this->tokenizer_.next();
         auto type = this->tokenizer_.tokenType();
         auto nextCondition = this->parseCondition();
-        return std::make_unique<UnaryOperation>(type, std::move(nextCondition));
+        if (!nextCondition)
+        {
+            return nextCondition;
+        }
+        return createUnaryExpression(type, *std::move(nextCondition));
     }
-    else
-    {
-        return this->parseCondition();
-    }
+
+    return this->parseCondition();
 }
 
-ExpressionPtr FilterParser::parseParentheses()
+CreateResult FilterParser::parseParentheses()
 {
     // Don't call .next() before calling this method
     assert(this->tokenizer_.nextTokenType() == TokenType::LP);
 
     this->tokenizer_.next();
     auto e = this->parseExpression();
+    if (!e)
+    {
+        return e;
+    }
     if (this->tokenizer_.hasNext() &&
         this->tokenizer_.nextTokenType() == TokenType::RP)
     {
         this->tokenizer_.next();
         return e;
     }
-    else
-    {
-        const auto message =
-            this->tokenizer_.hasNext()
-                ? QString("Missing closing parentheses: got %1")
-                      .arg(this->tokenizer_.preview())
-                : "Missing closing parentheses at end of statement";
-        this->errorLog(message);
 
-        return e;
-    }
+    const auto message =
+        this->tokenizer_.hasNext()
+            ? QString("Missing closing parentheses: got %1")
+                  .arg(this->tokenizer_.preview())
+            : "Missing closing parentheses at end of statement";
+    return makeUnexpected(message);
 }
 
-ExpressionPtr FilterParser::parseCondition()
+CreateResult FilterParser::parseCondition()
 {
-    ExpressionPtr value;
+    CreateResult value;
     // parse expression wrapped in parentheses
     if (this->tokenizer_.hasNext() &&
         this->tokenizer_.nextTokenType() == TokenType::LP)
@@ -160,6 +145,11 @@ ExpressionPtr FilterParser::parseCondition()
         value = this->parseValue();
     }
 
+    if (!value)
+    {
+        return value;
+    }
+
     // expecting an operator or nothing
     while (this->tokenizer_.hasNext())
     {
@@ -168,16 +158,28 @@ ExpressionPtr FilterParser::parseCondition()
             this->tokenizer_.next();
             auto type = this->tokenizer_.tokenType();
             auto nextValue = this->parseValue();
-            return std::make_unique<BinaryOperation>(type, std::move(value),
-                                                     std::move(nextValue));
+            if (!nextValue)
+            {
+                return nextValue;
+            }
+            return createBinaryExpression(type, *std::move(value),
+                                          *std::move(nextValue));
         }
-        else if (this->tokenizer_.nextTokenIsMathOp())
+        if (this->tokenizer_.nextTokenIsMathOp())
         {
             this->tokenizer_.next();
             auto type = this->tokenizer_.tokenType();
             auto nextValue = this->parseValue();
-            value = std::make_unique<BinaryOperation>(type, std::move(value),
-                                                      std::move(nextValue));
+            if (!nextValue)
+            {
+                return nextValue;
+            }
+            value = createBinaryExpression(type, *std::move(value),
+                                           *std::move(nextValue));
+            if (!value)
+            {
+                return value;
+            }
         }
         else if (this->tokenizer_.nextTokenType() == TokenType::RP)
         {
@@ -186,11 +188,10 @@ ExpressionPtr FilterParser::parseCondition()
         }
         else if (!this->tokenizer_.nextTokenIsOp())
         {
-            this->errorLog(QString("Expected an operator but got %1 %2")
-                               .arg(this->tokenizer_.preview())
-                               .arg(tokenTypeToInfoString(
-                                   this->tokenizer_.nextTokenType())));
-            break;
+            return makeUnexpected(QString("Expected an operator but got %1 %2")
+                                      .arg(this->tokenizer_.preview())
+                                      .arg(tokenTypeToInfoString(
+                                          this->tokenizer_.nextTokenType())));
         }
         else
         {
@@ -201,7 +202,7 @@ ExpressionPtr FilterParser::parseCondition()
     return value;
 }
 
-ExpressionPtr FilterParser::parseValue()
+CreateResult FilterParser::parseValue()
 {
     // parse a literal or an expression wrapped in parenthsis
     if (this->tokenizer_.hasNext())
@@ -209,24 +210,22 @@ ExpressionPtr FilterParser::parseValue()
         auto type = this->tokenizer_.nextTokenType();
         if (type == TokenType::INT)
         {
-            return std::make_unique<ValueExpression>(
-                this->tokenizer_.next().toInt(), type);
+            return createValueExpression(this->tokenizer_.next().toInt(), type);
         }
-        else if (type == TokenType::STRING)
+        if (type == TokenType::STRING)
         {
             auto before = this->tokenizer_.next();
             // remove quote marks
             auto val = before.mid(1);
             val.chop(1);
             val = val.replace("\\\"", "\"");
-            return std::make_unique<ValueExpression>(val, type);
+            return createValueExpression(val, type);
         }
-        else if (type == TokenType::IDENTIFIER)
+        if (type == TokenType::IDENTIFIER)
         {
-            return std::make_unique<ValueExpression>(this->tokenizer_.next(),
-                                                     type);
+            return createValueExpression(this->tokenizer_.next(), type);
         }
-        else if (type == TokenType::REGULAR_EXPRESSION)
+        if (type == TokenType::REGULAR_EXPRESSION)
         {
             auto before = this->tokenizer_.next();
             // remove quote marks and r/ri
@@ -234,33 +233,27 @@ ExpressionPtr FilterParser::parseValue()
             auto val = before.mid(caseInsensitive ? 3 : 2);
             val.chop(1);
             val = val.replace("\\\"", "\"");
-            return std::make_unique<RegexExpression>(val, caseInsensitive);
+            return createRegexExpression(val, caseInsensitive);
         }
-        else if (type == TokenType::LP)
+        if (type == TokenType::LP)
         {
             return this->parseParentheses();
         }
-        else if (type == TokenType::LIST_START)
+        if (type == TokenType::LIST_START)
         {
             return this->parseList();
         }
-        else
-        {
-            this->tokenizer_.next();
-            this->errorLog(QString("Expected value but got %1 %2")
-                               .arg(this->tokenizer_.current())
-                               .arg(tokenTypeToInfoString(type)));
-        }
-    }
-    else
-    {
-        this->errorLog("Unexpected end of statement");
+
+        this->tokenizer_.next();
+        return makeUnexpected(QString("Expected value but got %1 %2")
+                                  .arg(this->tokenizer_.current())
+                                  .arg(tokenTypeToInfoString(type)));
     }
 
-    return std::make_unique<ValueExpression>(0, TokenType::INT);
+    return makeUnexpected("Unexpected end of statement");
 }
 
-ExpressionPtr FilterParser::parseList()
+CreateResult FilterParser::parseList()
 {
     // Don't call .next() before calling this method
     assert(this->tokenizer_.nextTokenType() == TokenType::LIST_START);
@@ -274,17 +267,27 @@ ExpressionPtr FilterParser::parseList()
         if (this->tokenizer_.nextTokenType() == TokenType::LIST_END)
         {
             this->tokenizer_.next();
-            return std::make_unique<ListExpression>(std::move(list));
+            return createListExpression(std::move(list));
         }
-        else if (this->tokenizer_.nextTokenType() == TokenType::COMMA && !first)
+        if (this->tokenizer_.nextTokenType() == TokenType::COMMA && !first)
         {
             this->tokenizer_.next();
-            list.push_back(this->parseValue());
+            auto v = this->parseValue();
+            if (!v)
+            {
+                return v;
+            }
+            list.push_back(*std::move(v));
             first = false;
         }
         else if (first)
         {
-            list.push_back(this->parseValue());
+            auto v = this->parseValue();
+            if (!v)
+            {
+                return v;
+            }
+            list.push_back(*std::move(v));
             first = false;
         }
         else
@@ -298,27 +301,7 @@ ExpressionPtr FilterParser::parseList()
             ? QString("Missing closing list braces: got %1")
                   .arg(this->tokenizer_.preview())
             : "Missing closing list braces at end of statement";
-    this->errorLog(message);
-    return std::make_unique<ListExpression>(ExpressionList());
-}
-
-void FilterParser::errorLog(const QString &text, bool expand)
-{
-    this->valid_ = false;
-    if (expand || this->parseLog_.size() == 0)
-    {
-        this->parseLog_ << text;
-    }
-}
-
-const QStringList &FilterParser::errors() const
-{
-    return this->parseLog_;
-}
-
-const QString FilterParser::debugString() const
-{
-    return this->builtExpression_->debug(MESSAGE_TYPING_CONTEXT);
+    return makeUnexpected(message);
 }
 
 }  // namespace chatterino::filters

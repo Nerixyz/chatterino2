@@ -5,22 +5,9 @@
 #pragma once
 
 #include "controllers/filters/lang/expressions/Expression.hpp"
-#include "controllers/filters/lang/Types.hpp"
 
 namespace chatterino::filters {
 
-class ListExpression : public Expression
-{
-public:
-    ListExpression(ExpressionList &&list);
-
-    QVariant execute(const ContextMap &context) const override;
-    PossibleType synthesizeType(const TypingContext &context) const override;
-    QString debug(const TypingContext &context) const override;
-    QString filterString() const override;
-
-private:
-    ExpressionList list_;
-};
+CreateResult createListExpression(ExpressionList list);
 
 }  // namespace chatterino::filters

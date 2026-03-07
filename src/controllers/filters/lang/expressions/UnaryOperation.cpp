@@ -6,68 +6,58 @@
 
 namespace chatterino::filters {
 
-UnaryOperation::UnaryOperation(TokenType op, ExpressionPtr right)
-    : op_(op)
-    , right_(std::move(right))
-{
-}
+namespace {
 
-QVariant UnaryOperation::execute(const ContextMap &context) const
-{
-    auto right = this->right_->execute(context);
-    switch (this->op_)
+struct NotExpression final : public Expression {
+    NotExpression(ExpressionPtr rhs)
+        : rhs(std::move(rhs))
     {
-        case NOT:
-            return right.canConvert<bool>() && !right.toBool();
-        default:
-            return false;
-    }
-}
-
-PossibleType UnaryOperation::synthesizeType(const TypingContext &context) const
-{
-    auto rightSyn = this->right_->synthesizeType(context);
-    if (isIllTyped(rightSyn))
-    {
-        return rightSyn;
     }
 
-    auto right = std::get<TypeClass>(rightSyn);
-
-    switch (this->op_)
+    QString filterString() const override
     {
-        case NOT:
-            if (right == Type::Bool)
-            {
-                return TypeClass{Type::Bool};
-            }
-            return IllTyped{this, "Can only negate boolean values"};
-        default:
-            return IllTyped{this, "Not implemented"};
+        return '!' + this->rhs->filterString();
     }
-}
 
-QString UnaryOperation::debug(const TypingContext &context) const
-{
-    return QString("UnaryOp[%1](%2 : %3)")
-        .arg(tokenTypeToInfoString(this->op_))
-        .arg(this->right_->debug(context))
-        .arg(possibleTypeToString(this->right_->synthesizeType(context)));
-}
+    QVariant run(const RunContext &ctx) override
+    {
+        return !this->rhs->run(ctx).toBool();
+    }
 
-QString UnaryOperation::filterString() const
-{
-    const auto opText = [&]() -> QString {
-        switch (this->op_)
+    QVariant asConstant() const override
+    {
+        auto r = this->rhs->asConstant();
+        if (r.isValid())
         {
-            case NOT:
-                return "!";
-            default:
-                return "";
+            return !r.toBool();
         }
-    }();
+        return {};
+    }
 
-    return QString("(%1%2)").arg(opText).arg(this->right_->filterString());
+    Type type() const override
+    {
+        return Type::Bool;
+    }
+
+    ExpressionPtr rhs;
+};
+
+}  // namespace
+
+CreateResult createUnaryExpression(TokenType tt, ExpressionPtr rhs)
+{
+    switch (tt)
+    {
+        case NOT:
+            if (rhs->type() != Type::Bool)
+            {
+                return makeUnexpected("not: right side must return a bool");
+            }
+            return std::make_unique<NotExpression>(std::move(rhs));
+        default:
+            return makeUnexpected(tokenTypeToInfoString(tt) %
+                                  " can't create a unary expression");
+    }
 }
 
 }  // namespace chatterino::filters
