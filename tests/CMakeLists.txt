@@ -62,6 +62,7 @@ set(test_SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/src/FunctionRef.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/InputHighlighter.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/BalancedResolverResults.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/Hardening.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/src/lib/Snapshot.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/lib/Snapshot.hpp
@@ -110,6 +111,10 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_FRONTEND_VARIAN
         -Wno-missing-designated-field-initializers
         -Wno-missing-field-initializers
     )
+endif()
+
+if(CHATTERINO_HARDENED)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE CHATTERINO_HARDENED)
 endif()
 
 set_target_properties(${PROJECT_NAME}

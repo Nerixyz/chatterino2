@@ -128,6 +128,7 @@ jobs:
             -DCMAKE_PREFIX_PATH="$Qt6_DIR/lib/cmake" \
             -DCHATTERINO_STATIC_QT_BUILD=On \
             -DCHATTERINO_NIGHTLY_BUILD=${{ steps.build-type.outputs.NIGHTLY_BUILD }} \
+            -DCHATTERINO_HARDENED="${{ steps.build-type.outputs.NIGHTLY_BUILD }}" \
             -DFORCE_JSON_GENERATION=${{matrix.os == 'ubuntu-24.04' && 'On' || 'Off'}} \
             -DCHATTERINO_PLUGINS=${{ matrix.plugins && 'On' || 'Off' }} \
             ..
@@ -278,6 +279,7 @@ jobs:
               -DBUILD_WITH_CRASHPAD="$Env:C2_ENABLE_CRASHPAD" `
               -DCHATTERINO_LTO="$Env:C2_ENABLE_LTO" `
               -DCHATTERINO_NIGHTLY_BUILD="${{ steps.build-type.outputs.NIGHTLY_BUILD }}" `
+              -DCHATTERINO_HARDENED="${{ steps.build-type.outputs.NIGHTLY_BUILD }}" `
               -DFORCE_JSON_GENERATION=On `
               -DCHATTERINO_SPELLCHECK=On `
               ..
@@ -349,6 +351,7 @@ jobs:
               -DCHATTERINO_LTO="$C2_ENABLE_LTO" \
               -DFORCE_JSON_GENERATION=Off \
               -DCHATTERINO_NIGHTLY_BUILD=${{ steps.build-type.outputs.NIGHTLY_BUILD }} \
+              -DCHATTERINO_HARDENED="${{ steps.build-type.outputs.NIGHTLY_BUILD }}" \
               -DCHATTERINO_SPELLCHECK=On \
               ..
           make -j"$(sysctl -n hw.logicalcpu)"

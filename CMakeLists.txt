@@ -43,12 +43,20 @@ option(CHATTERINO_SANITIZER_SUPPORT "Attempt to enable Sanitizer support on the 
 mark_as_advanced(CHATTERINO_SANITIZER_SUPPORT)
 add_feature_info("Chatterino code sanitizer support" CHATTERINO_SANITIZER_SUPPORT "")
 
+option(CHATTERINO_HARDENED "Build with hardened compiler options (e.g. for the STL)" OFF)
+cmake_dependent_option(CHATTERINO_HARDENED_DEBUG "Build with expensive hardened checks" OFF CHATTERINO_HARDENED OFF)
+
 option(CHATTERINO_UPDATER "Enable update checks" ON)
 mark_as_advanced(CHATTERINO_UPDATER)
 
 set(CHATTERINO_EXTRA_BUILD_STRING "" CACHE STRING "Provide an extra string to show in the about page under the Chatterino version. This string allows the use of Qt's HTML subset.")
 
 set(USE_ALTERNATE_LINKER "" CACHE STRING "Use alternate linker. Leave empty for system default. CMake 3.29 users can use CMAKE_LINKER_TYPE instead.")
+
+if(CHATTERINO_HARDENED)
+    message(STATUS "Building with hardened compiler options")
+    include(${CMAKE_CURRENT_LIST_DIR}/cmake/Harden.cmake)
+endif()
 
 if(CHATTERINO_SANITIZER_SUPPORT)
     list(APPEND CMAKE_MODULE_PATH

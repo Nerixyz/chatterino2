@@ -63,6 +63,7 @@ jobs:
             -DCHATTERINO_STATIC_QT_BUILD=On \
             -DCHATTERINO_GENERATE_COVERAGE=On \
             -DCMAKE_BUILD_TYPE=Debug \
+            -DCHATTERINO_HARDENED=On \
             ..
           cmake --build . -j $(nproc)
         working-directory: build-test

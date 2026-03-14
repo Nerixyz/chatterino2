@@ -64,6 +64,8 @@ jobs:
               -DBUILD_TESTS=On \
               -DBUILD_APP=OFF \
               -DUSE_PRECOMPILED_HEADERS=OFF \
+              -DCHATTERINO_HARDENED=On \
+              -DCHATTERINO_HARDENED_DEBUG=On \
               -DCHATTERINO_SPELLCHECK=On \
               ..
           make -j"$(sysctl -n hw.logicalcpu)"

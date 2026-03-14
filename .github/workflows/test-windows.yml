@@ -116,6 +116,7 @@ jobs:
               -DUSE_PRECOMPILED_HEADERS=On `
               -DBUILD_WITH_CRASHPAD="$Env:C2_ENABLE_CRASHPAD" `
               -DCHATTERINO_SPELLCHECK=On `
+              -DCHATTERINO_HARDENED=On `
               ..
           set cl=/MP
           nmake /S /NOLOGO
