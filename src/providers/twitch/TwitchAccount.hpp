@@ -12,6 +12,7 @@
 #include "providers/twitch/TwitchEmotes.hpp"
 #include "providers/twitch/TwitchUser.hpp"
 #include "util/CancellationToken.hpp"
+#include "util/ExponentialBackoff.hpp"
 
 #include <pajlada/signals.hpp>
 #include <QColor>
@@ -161,6 +162,7 @@ private:
     QStringList userstateEmoteSets_;
 
     ScopedCancellationToken blockToken_;
+    ExponentialBackoff<5> blocksRetryBackoff_{std::chrono::seconds(5)};
     std::unordered_set<TwitchUser> ignores_;
     std::unordered_set<QString> ignoresUserIds_;
     std::unordered_set<QString> ignoresUserLogins_;
@@ -170,6 +172,8 @@ private:
     UniqueAccess<std::shared_ptr<const EmoteMap>> emotes_;
 
     QString seventvUserID_;
+
+    void tryLoadBlocks();
 };
 
 struct TwitchAccountData {
