@@ -46,6 +46,8 @@ public:
     QPointer<QObject> caller;
     bool cache{};
     bool executeConcurrently{};
+    /// Hide the request body in logs
+    bool hideRequestBody = false;
 
     bool wasSent = false;
     QDateTime createdAt;
