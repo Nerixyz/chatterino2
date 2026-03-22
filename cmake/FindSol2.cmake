@@ -1,6 +1,6 @@
 include(FindPackageHandleStandardArgs)
 
-find_path(Sol2_INCLUDE_DIR sol/sol.hpp HINTS ${CMAKE_SOURCE_DIR}/lib/sol2/include)
+find_path(Sol2_INCLUDE_DIR sol/sol.hpp HINTS ${CMAKE_CURRENT_SOURCE_DIR}/lib/sol2/include)
 
 find_package_handle_standard_args(Sol2 DEFAULT_MSG Sol2_INCLUDE_DIR)
 

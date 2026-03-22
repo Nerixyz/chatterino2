@@ -1,6 +1,6 @@
 include(FindPackageHandleStandardArgs)
 
-find_path(LRUCache_INCLUDE_DIR lrucache/lrucache.hpp HINTS ${CMAKE_SOURCE_DIR}/lib/lrucache)
+find_path(LRUCache_INCLUDE_DIR lrucache/lrucache.hpp HINTS ${CMAKE_CURRENT_SOURCE_DIR}/lib/lrucache)
 
 find_package_handle_standard_args(LRUCache DEFAULT_MSG LRUCache_INCLUDE_DIR)
 

@@ -9,7 +9,7 @@ include(FetchContent)
 include(CMakeDependentOption)
 
 list(APPEND CMAKE_MODULE_PATH
-    "${CMAKE_SOURCE_DIR}/cmake"
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
     )
 
 option(BUILD_APP "Build Chatterino" ON)
@@ -180,7 +180,7 @@ find_library(LIBRT rt)
 if (USE_SYSTEM_LIBCOMMUNI)
     find_package(LibCommuni REQUIRED)
 else()
-    set(LIBCOMMUNI_ROOT_LIB_FOLDER "${CMAKE_SOURCE_DIR}/lib/libcommuni")
+    set(LIBCOMMUNI_ROOT_LIB_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/lib/libcommuni")
     if (NOT EXISTS "${LIBCOMMUNI_ROOT_LIB_FOLDER}/CMakeLists.txt")
         message(FATAL_ERROR "Submodules probably not loaded, unable to find lib/libcommuni/CMakeLists.txt")
     endif()
@@ -193,7 +193,7 @@ if (BUILD_WITH_QTKEYCHAIN)
     if (USE_SYSTEM_QTKEYCHAIN)
         find_package(Qt${MAJOR_QT_VERSION}Keychain REQUIRED)
     else()
-        set(QTKEYCHAIN_ROOT_LIB_FOLDER "${CMAKE_SOURCE_DIR}/lib/qtkeychain")
+        set(QTKEYCHAIN_ROOT_LIB_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/lib/qtkeychain")
         if (NOT EXISTS "${QTKEYCHAIN_ROOT_LIB_FOLDER}/CMakeLists.txt")
             message(FATAL_ERROR "Submodules probably not loaded, unable to find lib/qtkeychain/CMakeLists.txt")
         endif()
@@ -275,14 +275,14 @@ find_package(Doxygen)
 find_package(BoostCertify REQUIRED)
 
 if (CHATTERINO_PLUGINS)
-    set(LUA_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/lib/lua/src")
+    set(LUA_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/lib/lua/src")
     add_subdirectory(lib/lua)
 
     find_package(Sol2 REQUIRED)
 endif()
 
 if (BUILD_WITH_CRASHPAD)
-    add_subdirectory("${CMAKE_SOURCE_DIR}/tools/crash-handler")
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/tools/crash-handler")
 endif()
 
 add_subdirectory(lib/twitch-eventsub-ws)

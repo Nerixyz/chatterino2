@@ -441,7 +441,7 @@ void WindowManager::initialize()
         this->applyWindowLayout(windowLayout);
     }
 
-    if (this->appArgs.isFramelessEmbed)
+    if (this->appArgs.isFramelessEmbed && !this->appArgs.dontLoadMainWindow)
     {
         this->framelessEmbedWindow_.reset(new FramelessEmbedWindow);
         this->framelessEmbedWindow_->show();

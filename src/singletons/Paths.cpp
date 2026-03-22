@@ -19,12 +19,12 @@ using namespace std::literals;
 
 namespace chatterino {
 
-Paths::Paths()
+Paths::Paths(const QString &rootAppDir)
 {
     this->initAppFilePathHash();
 
     this->initCheckPortable();
-    this->initRootDirectory();
+    this->initRootDirectory(rootAppDir);
     this->initSubDirectories();
 }
 
@@ -86,7 +86,7 @@ void Paths::initCheckPortable()
         combinePath(QCoreApplication::applicationDirPath(), "portable"));
 }
 
-void Paths::initRootDirectory()
+void Paths::initRootDirectory(const QString &rootAppDir)
 {
     assert(this->portable_.has_value());
 
@@ -98,6 +98,10 @@ void Paths::initRootDirectory()
         if (Modes::instance().isPortable)
         {
             return QCoreApplication::applicationDirPath();
+        }
+        if (!rootAppDir.isEmpty())
+        {
+            return rootAppDir;
         }
 
         // permanent installation
