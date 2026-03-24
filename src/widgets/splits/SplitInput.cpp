@@ -324,6 +324,11 @@ void SplitInput::themeChangedEvent()
 
     // Theme changed, reset current background color
     this->setBackgroundColor(this->theme->splits.input.background);
+    if (this->style()->metaObject()->className() ==
+        QLatin1String("QStyleSheetStyle"))
+    {
+        this->ui_.textEdit->setStyleSheet(this->theme->splits.input.styleSheet);
+    }
     this->backgroundColorAnimation.setStartValue(
         this->theme->splits.input.backgroundPulse);
     this->backgroundColorAnimation.setEndValue(

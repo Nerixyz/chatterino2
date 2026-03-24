@@ -675,23 +675,7 @@ void WindowManager::encodeNodeRecursively(SplitNode *node, QJsonObject &obj)
     switch (node->getType())
     {
         case SplitNode::Type::Split: {
-            obj.insert("type", "split");
-            obj.insert("moderationMode", node->getSplit()->getModerationMode());
-
-            QJsonObject split;
-            WindowManager::encodeChannel(node->getSplit()->getIndirectChannel(),
-                                         split);
-            obj.insert("data", split);
-
-            QJsonArray filters;
-            WindowManager::encodeFilters(node->getSplit(), filters);
-            obj.insert("filters", filters);
-
-            auto spellOverride = node->getSplit()->checkSpellingOverride();
-            if (spellOverride)
-            {
-                obj["checkSpelling"] = *spellOverride;
-            }
+            encodeSplit(node->getSplit(), obj);
         }
         break;
         case SplitNode::Type::HorizontalContainer:
@@ -759,6 +743,26 @@ void WindowManager::encodeChannel(IndirectChannel channel, QJsonObject &obj)
 
         default:
             break;
+    }
+}
+
+void WindowManager::encodeSplit(Split *split, QJsonObject &obj)
+{
+    obj.insert("type", "split");
+    obj.insert("moderationMode", split->getModerationMode());
+
+    QJsonObject splitObj;
+    WindowManager::encodeChannel(split->getIndirectChannel(), splitObj);
+    obj.insert("data", splitObj);
+
+    QJsonArray filters;
+    WindowManager::encodeFilters(split, filters);
+    obj.insert("filters", filters);
+
+    auto spellOverride = split->checkSpellingOverride();
+    if (spellOverride)
+    {
+        obj["checkSpelling"] = *spellOverride;
     }
 }
 
