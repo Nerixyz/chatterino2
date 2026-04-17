@@ -1339,11 +1339,6 @@ if (MSVC)
     )
 
     # Warnings on clang-cl
-    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        target_compile_options(${LIBRARY_PROJECT} PUBLIC
-            -Wno-missing-designated-field-initializers
-        )
-    endif()
 else ()
     target_compile_options(${LIBRARY_PROJECT} PUBLIC
         -Wall
@@ -1376,10 +1371,38 @@ else ()
     endif()
 endif ()
 
+include(CheckCXXCompilerFlag)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
+    set(_is_clang 1)
+endif()
+
+if(_is_clang OR CMAKE_CXX_COMPILER_ID MATCHES "GCC")
+    target_compile_options(${LIBRARY_PROJECT} PUBLIC
+        # -Wall enabled above (but not for clang-cl)
+        -Wextra
+        -Wpedantic
+
+        # This is too noisy right now, but we could enable it in the future.
+        -Wno-unused-parameter
+        # We sometimes do this intentionally, because fields have default initializers.
+        -Wno-missing-designated-field-initializers
+        # Usually after Qt macros like Q_PROPERTY() that already have a semicolon.
+        -Wno-extra-semi
+    )
+endif()
+
 # Extra Clang warnings
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if(_is_clang)
+    check_cxx_compiler_flag(-Wexperimental-lifetime-safety _exp_lifetime_safety)
+    check_cxx_compiler_flag(-Wlifetime-safety _exp_lifetime_safety)
+
     target_compile_options(${LIBRARY_PROJECT} PUBLIC
         -Wrange-loop-analysis
+        $<$<BOOL:${_exp_lifetime_safety}>:-Wexperimental-lifetime-safety>
+        $<$<BOOL:${_lifetime_safety}>:-Wlifetime-safety>
+        -Wdangling
+        -Wmost
     )
 endif()
 

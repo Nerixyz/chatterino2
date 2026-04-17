@@ -116,6 +116,7 @@ void initQt(const Args &args)
     installCustomPalette();
 }
 
+#ifdef Q_OS_WIN
 void showLastCrashDialog(const Args &args, const Paths &paths)
 {
     auto *dialog = new LastRunCrashDialog(args, paths);
@@ -123,6 +124,7 @@ void showLastCrashDialog(const Args &args, const Paths &paths)
     // and to be able to set the safe mode.
     dialog->exec();
 }
+#endif
 
 #if defined(NDEBUG) && !defined(CHATTERINO_WITH_CRASHPAD)
 std::chrono::steady_clock::time_point signalsInitTime;
