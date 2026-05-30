@@ -26,6 +26,7 @@
 #    include "mocks/TwitchIrcServer.hpp"
 #    include "NetworkHelpers.hpp"
 #    include "singletons/Logging.hpp"
+#    include "singletons/WindowManager.hpp"
 #    include "Test.hpp"
 
 #    include <lauxlib.h>
@@ -96,6 +97,8 @@ public:
         : mock::BaseApplication(TEST_SETTINGS)
         , plugins(this->paths_)
         , commands(this->paths_)
+        , windows(this->args_, this->paths_, this->settings, this->theme,
+                  this->fonts)
     {
     }
 
@@ -129,6 +132,11 @@ public:
         return &this->accounts;
     }
 
+    WindowManager *getWindows() override
+    {
+        return &this->windows;
+    }
+
     PluginController plugins;
     mock::Logging logging;
     CommandController commands;
@@ -136,6 +144,7 @@ public:
     MockTwitch twitch;
     AccountController accounts;
     mock::Helix helix;
+    WindowManager windows;
 };
 
 QDir luaTestBaseDir(const QString &category)
@@ -984,11 +993,13 @@ TEST_F(PluginTest, MessageElementFlag)
                          "EmojiText=0x1000000,"
                          "EmoteImage=0x10,"
                          "EmoteText=0x20,"
-                         "KickUsername=0x4000000000,"
+                         "KickUsername=0x4000000000000,"
                          "LowercaseLinks=0x20000000,"
                          "Mention=0x8000000,"
                          "Misc=0x1,"
                          "ModeratorTools=0x400000,"
+                         "PlatformBadgeAlways=0x8000000000000,"
+                         "PlatformBadgeIfUnselected=0x10000000000000,"
                          "RepliedMessage=0x100000000,"
                          "ReplyButton=0x200000000,"
                          "Text=0x2,"
@@ -1651,6 +1662,44 @@ TEST_P(PluginChannelTest, Run)
 
 INSTANTIATE_TEST_SUITE_P(PluginChannel, PluginChannelTest,
                          testing::ValuesIn(discoverLuaTests("channel")));
+
+class PluginImageTest : public PluginTest,
+                        public ::testing::WithParamInterface<QString>
+{
+};
+TEST_P(PluginImageTest, Run)
+{
+    this->configure({PluginPermission({{"type", "network"}})});
+    runLuaTest("images", GetParam(), *this->lua);
+}
+
+TEST_F(PluginImageTest, NoPerms)
+{
+    this->configure();
+    auto res = this->lua->safe_script(R"lua(
+        local ok, err = pcall(c2.Image.from_url, "https://foo.bar")
+        assert(not ok and err == "Missing network permission to create images")
+        ok, err = pcall(c2.ImageSet.new)
+        assert(not ok and err == "Missing network permission to create images")
+        ok, err = pcall(c2.ImageSet.new, c2.Image.empty(), "https://foo.bar")
+        assert(not ok and err == "Missing network permission to create images")
+        -- should still be able to query images
+        local img = c2.Image.empty()
+        assert(img.url == "")
+        assert(not img.animated)
+        assert(not img.is_loaded)
+        assert(img.is_empty)
+        assert(img.width == 0)
+        assert(img.height == 0)
+        assert(img.scale == 1)
+        assert(img.size[1] == img.width)
+        assert(img.size[2] == img.height)
+    )lua");
+    ASSERT_TRUE(res.valid());
+}
+
+INSTANTIATE_TEST_SUITE_P(PluginImage, PluginImageTest,
+                         testing::ValuesIn(discoverLuaTests("images")));
 
 // verify that all snapshots are included
 TEST(PluginMessageConstructionTest, Integrity)

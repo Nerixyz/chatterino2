@@ -53,7 +53,6 @@ public:
     }
 
     using pajlada::Settings::Setting<Type>::operator==;
-    using pajlada::Settings::Setting<Type>::operator!=;
 
     using pajlada::Settings::Setting<Type>::operator Type;
 };
@@ -162,7 +161,6 @@ public:
     Enum defaultValue;
 
     using pajlada::Settings::Setting<QString>::operator==;
-    using pajlada::Settings::Setting<QString>::operator!=;
 
     using pajlada::Settings::Setting<QString>::operator QString;
 };
