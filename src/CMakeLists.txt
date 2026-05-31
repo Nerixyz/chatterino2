@@ -1096,6 +1096,7 @@ if (BUILD_APP)
                 "execute_process(COMMAND ${WINDEPLOYQT_COMMAND} --dir \"\${CMAKE_INSTALL_PREFIX}\" COMMAND_ERROR_IS_FATAL ANY)"
             COMPONENT ${PROJECT_NAME}
         )
+        # setup_winappsdk_target(${EXECUTABLE_PROJECT})
     elseif (APPLE)
         install(TARGETS ${EXECUTABLE_PROJECT}
                 RUNTIME DESTINATION bin
@@ -1269,7 +1270,8 @@ endif ()
 if (WIN32)
     target_link_libraries(${LIBRARY_PROJECT}
         PUBLIC
-        WinToast)
+        WinToast
+        chatterinotify::chatterinotify)
 endif ()
 
 target_link_libraries(${LIBRARY_PROJECT}

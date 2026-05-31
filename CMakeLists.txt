@@ -294,6 +294,7 @@ if (BUILD_WITH_CRASHPAD)
 endif()
 
 add_subdirectory(lib/twitch-eventsub-ws)
+add_subdirectory(lib/libchatterinotify)
 
 # Used to provide a date of build in the About page (for nightly builds). Getting the actual time of
 # compilation in CMake is a more involved, as documented in https://stackoverflow.com/q/24292898.

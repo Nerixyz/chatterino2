@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <chatterinotify/Manager.hpp>
 #include <pajlada/settings/setting.hpp>
 #include <QString>
 
@@ -36,6 +37,7 @@ private:
     void sendWindowsNotification(const QString &channelName,
                                  const QString &channelTitle);
 
+    chatterinotify::NotificationManager manager;
     bool initialized_ = false;
 #elif defined(CHATTERINO_WITH_LIBNOTIFY)
     void ensureInitialized();

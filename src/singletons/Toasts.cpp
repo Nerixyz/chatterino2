@@ -5,6 +5,7 @@
 #include "singletons/Toasts.hpp"
 
 #include "Application.hpp"
+#include "chatterinotify/Notification.hpp"
 #include "common/Common.hpp"
 #include "common/Literals.hpp"
 #include "common/QLogging.hpp"
@@ -149,10 +150,10 @@ using WinToastLib::WinToastTemplate;
 Toasts::~Toasts()
 {
 #ifdef Q_OS_WIN
-    if (this->initialized_)
-    {
-        WinToast::instance()->clear();
-    }
+    // if (this->initialized_)
+    // {
+    //     WinToast::instance()->clear();
+    // }
 #elif defined(CHATTERINO_WITH_LIBNOTIFY)
     if (this->initialized_)
     {
@@ -286,7 +287,6 @@ void Toasts::ensureInitialized()
         return;
     }
     this->initialized_ = true;
-
     auto *instance = WinToast::instance();
     instance->setAppName(L"Chatterino");
     instance->setAppUserModelId(Version::instance().appUserModelID());
@@ -307,39 +307,41 @@ void Toasts::ensureInitialized()
 void Toasts::sendWindowsNotification(const QString &channelName,
                                      const QString &channelTitle)
 {
-    this->ensureInitialized();
+    // this->ensureInitialized();
+    this->manager.sendNotification(
+        chatterinotify::Notification("Testing", "something"));
 
-    WinToastTemplate templ(WinToastTemplate::ImageAndText03);
-    QString str = channelName % u" is live!";
+    // WinToastTemplate templ(WinToastTemplate::ImageAndText03);
+    // QString str = channelName % u" is live!";
 
-    templ.setTextField(str.toStdWString(), WinToastTemplate::FirstLine);
-    if (static_cast<ToastReaction>(getSettings()->openFromToast.getValue()) !=
-        ToastReaction::DontOpen)
-    {
-        QString mode =
-            Toasts::findStringFromReaction(getSettings()->openFromToast);
-        mode = mode.toLower();
+    // templ.setTextField(str.toStdWString(), WinToastTemplate::FirstLine);
+    // if (static_cast<ToastReaction>(getSettings()->openFromToast.getValue()) !=
+    //     ToastReaction::DontOpen)
+    // {
+    //     QString mode =
+    //         Toasts::findStringFromReaction(getSettings()->openFromToast);
+    //     mode = mode.toLower();
 
-        templ.setTextField(
-            u"%1 \nClick to %2"_s.arg(channelTitle).arg(mode).toStdWString(),
-            WinToastTemplate::SecondLine);
-    }
+    //     templ.setTextField(
+    //         u"%1 \nClick to %2"_s.arg(channelTitle).arg(mode).toStdWString(),
+    //         WinToastTemplate::SecondLine);
+    // }
 
-    QString avatarPath;
-    avatarPath = avatarFilePath(channelName);
-    templ.setImagePath(avatarPath.toStdWString());
-    if (getSettings()->notificationPlaySound)
-    {
-        templ.setAudioOption(WinToastTemplate::AudioOption::Silent);
-    }
+    // QString avatarPath;
+    // avatarPath = avatarFilePath(channelName);
+    // templ.setImagePath(avatarPath.toStdWString());
+    // if (getSettings()->notificationPlaySound)
+    // {
+    //     templ.setAudioOption(WinToastTemplate::AudioOption::Silent);
+    // }
 
-    WinToast::WinToastError error = WinToast::NoError;
-    WinToast::instance()->showToast(templ, new CustomHandler(channelName),
-                                    &error);
-    if (error != WinToast::NoError)
-    {
-        qCWarning(chatterinoNotification) << "Failed to show toast:" << error;
-    }
+    // WinToast::WinToastError error = WinToast::NoError;
+    // WinToast::instance()->showToast(templ, new CustomHandler(channelName),
+    //                                 &error);
+    // if (error != WinToast::NoError)
+    // {
+    //     qCWarning(chatterinoNotification) << "Failed to show toast:" << error;
+    // }
 }
 
 #elif defined(CHATTERINO_WITH_LIBNOTIFY)

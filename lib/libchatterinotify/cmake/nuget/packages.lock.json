@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "dependencies": {
+    "native,Version=v0.0": {
+      "Microsoft.Windows.CppWinRT": {
+        "type": "Direct",
+        "requested": "[2.0.250303.1, )",
+        "resolved": "2.0.250303.1",
+        "contentHash": "9ofajkdPu3wuic60KKXAyCgCCGMXTlyd8KEnCzY5hVwqS8o17zwDLrJElFRx7vEf/Tr/QF2uDNDYdsYlg6TKCw=="
+      },
+      "Microsoft.WindowsAppSDK.Base": {
+        "type": "Direct",
+        "requested": "[2.0.5-experimental2, )",
+        "resolved": "2.0.5-experimental2",
+        "contentHash": "1ZLLuK+S830P9U55xbDLiRUHlGD4r2kMtI34A6jJ9OF7pBzkqpBkfsVwGWare6BJ1616VNutez86sJtzFFGwng==",
+        "dependencies": {
+          "Microsoft.Windows.SDK.BuildTools": "10.0.26100.4654",
+          "Microsoft.Windows.SDK.BuildTools.MSIX": "1.7.251221100"
+        }
+      },
+      "Microsoft.WindowsAppSDK.Foundation": {
+        "type": "Direct",
+        "requested": "[2.0.19-experimental, )",
+        "resolved": "2.0.19-experimental",
+        "contentHash": "ZOZ6bkZcUevi34af0vVephQPi26y7X4EAINWPdJQugZ3d5H/5/gwtWoSm2G6UrNiNB2WId8+Vt2oen0C/VhR9g==",
+        "dependencies": {
+          "Microsoft.WindowsAppSDK.Base": "2.0.3-experimental1",
+          "Microsoft.WindowsAppSDK.InteractiveExperiences": "2.0.11-experimental"
+        }
+      },
+      "Microsoft.Windows.SDK.BuildTools": {
+        "type": "Transitive",
+        "resolved": "10.0.26100.4654",
+        "contentHash": "2mgcOlj/t2RfSyyw+pVESfO+Tk1RkfQzto9Vrq42M1lUQIfQEwbi8QLha9GXWIOj+TFzeHIEJckIoF25mgiM8A=="
+      },
+      "Microsoft.Windows.SDK.BuildTools.MSIX": {
+        "type": "Transitive",
+        "resolved": "1.7.251221100",
+        "contentHash": "f4aIZJ0NUth2403oxrpR+9rxVzZVI6dabqB21u8ncnk8eJAKCs9m77E4iYAnvP1YwrRe4axz3f8+yUcttNSfEA=="
+      },
+      "Microsoft.WindowsAppSDK.InteractiveExperiences": {
+        "type": "Transitive",
+        "resolved": "2.0.11-experimental",
+        "contentHash": "irrJDm4l6CLgkb4JufUJ7cLnGr7BtsV/rRn7llI9QK5lthsKhb8KabWM2A9zpCZ927PX0bRHZQ6c3sjTdNEoeA==",
+        "dependencies": {
+          "Microsoft.WindowsAppSDK.Base": "2.0.3-experimental1"
+        }
+      }
+    }
+  }
+}
