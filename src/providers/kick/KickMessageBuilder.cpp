@@ -733,7 +733,6 @@ std::tuple<MessagePtrMut, MessagePtrMut, HighlightAlert>
 
         MessageParseArgs args;
         args.isSubscriptionMessage = true;
-        args.isStaffOrBroadcaster = channel->isBroadcaster();
         alert = processHighlights(builder, args);
         customMessage = builder.release();
     }
