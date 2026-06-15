@@ -504,8 +504,6 @@ std::pair<MessagePtrMut, HighlightAlert> KickMessageBuilder::makeChatMessage(
     builder->messageText = messageText;
 
     MessageParseArgs args;
-    args.isStaffOrBroadcaster = kickChannel->isBroadcaster();
-
     auto highlightAlert = processHighlights(builder, args);
 
     return {builder.release(), highlightAlert};
