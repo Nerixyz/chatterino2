@@ -573,6 +573,7 @@ void WindowManager::save()
 
     QJsonObject obj;
     obj.insert("windows", windowArr);
+    obj.insert("sessionID", qApp->sessionId());
     document.setObject(obj);
 
     // save file
@@ -841,6 +842,13 @@ void WindowManager::applyWindowLayout(const WindowLayout &layout)
     {
         return;
     }
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 13, 0)
+    if (!layout.sessionID.isEmpty())
+    {
+        qApp->restoreSession(layout.sessionID);
+    }
+#endif
 
     // Set emote popup position
     this->emotePopupBounds_ = layout.emotePopupBounds_;

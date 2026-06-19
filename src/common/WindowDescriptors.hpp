@@ -115,6 +115,8 @@ public:
     // A complete window layout has a single emote popup position that is shared among all windows
     QRect emotePopupBounds_;
 
+    QString sessionID;
+
     std::vector<WindowDescriptor> windows_;
 
     /// Selects the split containing the channel specified by @a name for the specified

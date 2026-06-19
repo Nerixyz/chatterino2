@@ -18,7 +18,7 @@ namespace chatterino {
 
 namespace {
 
-QJsonArray loadWindowArray(const QString &settingsPath)
+QJsonObject loadWindowDescriptorObj(const QString &settingsPath)
 {
     QFile file(settingsPath);
     if (!file.open(QIODevice::ReadOnly))
@@ -27,8 +27,7 @@ QJsonArray loadWindowArray(const QString &settingsPath)
     }
     QByteArray data = file.readAll();
     QJsonDocument document = QJsonDocument::fromJson(data);
-    QJsonArray windows_arr = document.object().value("windows").toArray();
-    return windows_arr;
+    return document.object();
 }
 
 const QList<QUuid> loadFilters(QJsonValue val)
@@ -192,7 +191,8 @@ WindowLayout WindowLayout::loadFromFile(const QString &path)
     bool hasSetAMainWindow = false;
 
     // "deserialize"
-    for (const auto windowVal : loadWindowArray(path))
+    const QJsonObject root = loadWindowDescriptorObj(path);
+    for (const auto windowVal : root["windows"].toArray())
     {
         const QJsonObject windowObj = windowVal.toObject();
 
@@ -277,6 +277,7 @@ WindowLayout WindowLayout::loadFromFile(const QString &path)
 
         layout.windows_.emplace_back(std::move(window));
     }
+    layout.sessionID = root["sessionID"].toString();
 
     return layout;
 }
