@@ -473,6 +473,11 @@ jobs:
         working-directory: release-artifacts
         shell: bash
 
+      - name: Remove macOS artifacts
+        run: |
+          rm -f release-artifacts/*macos*.dmg
+        shell: bash
+
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
