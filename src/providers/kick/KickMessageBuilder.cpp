@@ -36,7 +36,7 @@ using namespace Qt::Literals;
 EmotePtr lookupEmote(const KickChannel &channel, uint64_t senderID,
                      QStringView word)
 {
-    EmoteName wordStr(word.toString());  // FIXME: don't do this...
+    EmoteName wordStr{word.toString()};  // FIXME: don't do this...
     const auto *globalFfzEmotes = getApp()->getFfzEmotes();
     const auto *globalBttvEmotes = getApp()->getBttvEmotes();
     const auto *globalSeventvEmotes = getApp()->getSeventvEmotes();
@@ -504,8 +504,6 @@ std::pair<MessagePtrMut, HighlightAlert> KickMessageBuilder::makeChatMessage(
     builder->messageText = messageText;
 
     MessageParseArgs args;
-    args.isStaffOrBroadcaster = kickChannel->isBroadcaster();
-
     auto highlightAlert = processHighlights(builder, args);
 
     return {builder.release(), highlightAlert};
@@ -735,7 +733,6 @@ std::tuple<MessagePtrMut, MessagePtrMut, HighlightAlert>
 
         MessageParseArgs args;
         args.isSubscriptionMessage = true;
-        args.isStaffOrBroadcaster = channel->isBroadcaster();
         alert = processHighlights(builder, args);
         customMessage = builder.release();
     }
