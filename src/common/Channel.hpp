@@ -246,6 +246,10 @@ constexpr magic_enum::customize::customize_t
             return "live";
         case Type::Misc:
             return "misc";
+        case Type::Kick:
+            return "kick";
+        case Type::Multi:
+            return "multi";
 
         case Type::None:
         case Type::Direct:

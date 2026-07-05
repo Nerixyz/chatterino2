@@ -1318,11 +1318,17 @@ bool ChannelView::hasSourceChannel() const
 
 ChannelPtr ChannelView::effectiveSourceChannel() const
 {
+    ChannelPtr base = this->underlyingChannel_;
     if (this->sourceChannel_)
     {
-        return this->sourceChannel_;
+        base = this->sourceChannel_;
     }
-    return this->underlyingChannel_;
+    auto *mc = dynamic_cast<MultiChannel *>(base.get());
+    if (mc && mc->activeChannel())
+    {
+        base = mc->activeChannel()->channel;
+    }
+    return base;
 }
 
 void ChannelView::messageAppended(MessagePtr &message,
