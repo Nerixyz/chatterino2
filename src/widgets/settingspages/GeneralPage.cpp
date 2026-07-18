@@ -1431,6 +1431,13 @@ void GeneralPage::initLayout(GeneralPageView &layout)
         s.autoCloseThreadPopup)
         ->addTo(layout);
 
+    SettingWidget::checkbox("Always show pinned channel message",
+                            s.alwaysShowPinnedMessage)
+        ->setTooltip(
+            "When enabled, pinned messages will stay visible instead of "
+            "automatically hiding after a few seconds.")
+        ->addTo(layout);
+
     SettingWidget::checkbox("Display 7TV Paints", s.displaySevenTVPaints)
         ->addTo(layout);
     SettingWidget::checkbox("Display 7TV Paint Shadows",
@@ -1662,6 +1669,14 @@ void GeneralPage::initLayout(GeneralPageView &layout)
                             s.disableTabRenamingOnClick)
         ->setTooltip("Prevents the rename dialog from opening when a tab is "
                      "double-clicked")
+        ->addTo(layout);
+
+    SettingWidget::intInput(
+        "Shared chat session status refresh interval",
+        s.sharedChatSessionRefreshInterval,
+        {.min = 5, .max = 999, .singleStep = 1, .suffix = "s"})
+        ->setTooltip("How often Chatterino polls the Twitch API for the "
+                     "shared chat session status.")
         ->addTo(layout);
 
     layout.addStretch();
