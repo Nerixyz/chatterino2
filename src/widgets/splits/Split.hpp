@@ -183,6 +183,7 @@ private:
     pajlada::Signals::Connection usermodeChangedConnection_;
     pajlada::Signals::Connection roomModeChangedConnection_;
     pajlada::Signals::ScopedConnection sendWaitConnection_;
+    pajlada::Signals::ScopedConnection sharedChatConnection_;
 
     pajlada::Signals::Connection indirectChannelChangedConnection_;
 

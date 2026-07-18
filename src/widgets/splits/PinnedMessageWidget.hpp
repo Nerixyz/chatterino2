@@ -75,8 +75,10 @@ private:
     QTimer *autoHideTimer_ = nullptr;
     /// Scaled cap for the message body.
     int messageMaxHeight_ = 110;
-    /// True while user manually pinned the widget.
-    bool userToggled_ = false;
+    /// - `std::nullopt`: The user didn't toggle the widget yet.
+    /// - `false`: The user hid the popup.
+    /// - `true`: The user manually opened the popup.
+    std::optional<bool> userToggled_ = std::nullopt;
     /// Invalid when no end time.
     QDateTime pinEndsAt_;
 };

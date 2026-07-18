@@ -1007,7 +1007,7 @@ void SplitHeader::setAddButtonVisible(bool value)
 
 void SplitHeader::updatePinButton()
 {
-    auto channel = this->split_->getChannel();
+    auto channel = this->split_->getSelectedChannel();
     auto *twitchChannel = dynamic_cast<TwitchChannel *>(channel.get());
     const bool hasPinnedMessage = twitchChannel != nullptr &&
                                   twitchChannel->getPinnedMessage() != nullptr;

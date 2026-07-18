@@ -133,7 +133,7 @@ PinnedMessageWidget::PinnedMessageWidget(QWidget *parent)
     // auto-hide timer
     this->autoHideTimer_->setSingleShot(true);
     QObject::connect(this->autoHideTimer_, &QTimer::timeout, this, [this] {
-        if (!this->userToggled_)
+        if (!this->userToggled_.value_or(false))
         {
             this->hide();
         }
@@ -199,14 +199,12 @@ void PinnedMessageWidget::setChannel(TwitchChannel *channel)
 {
     this->signalHolder_.clear();
     this->channel_ = channel;
-    this->userToggled_ = false;
     this->autoHideTimer_->stop();
 
     if (channel)
     {
         this->signalHolder_.managedConnect(channel->pinnedMessageChanged,
                                            [this] {
-                                               this->userToggled_ = false;
                                                this->refresh();
                                            });
         this->signalHolder_.managedConnect(channel->userStateChanged, [this] {
@@ -275,7 +273,6 @@ void PinnedMessageWidget::refresh()
     {
         this->progressTimer_->stop();
         this->autoHideTimer_->stop();
-        this->userToggled_ = false;
         this->hide();
         return;
     }
@@ -285,7 +282,7 @@ void PinnedMessageWidget::refresh()
     {
         this->progressTimer_->stop();
         this->autoHideTimer_->stop();
-        this->userToggled_ = false;
+        this->userToggled_ = std::nullopt;
         this->hide();
         return;
     }
@@ -317,10 +314,14 @@ void PinnedMessageWidget::refresh()
     const bool isMod = this->channel_->hasModRights();
     this->menuButton_->setVisible(isMod);
 
-    this->show();
+    if (this->userToggled_.value_or(true))
+    {
+        this->show();
+    }
 
     this->autoHideTimer_->stop();
-    if (!getSettings()->alwaysShowPinnedMessage && !this->userToggled_)
+    if (!getSettings()->alwaysShowPinnedMessage &&
+        !this->userToggled_.value_or(false))
     {
         this->autoHideTimer_->start(30s);
     }
