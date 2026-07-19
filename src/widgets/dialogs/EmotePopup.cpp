@@ -1031,7 +1031,7 @@ void EmotePopup::filterTwitchEmotes(std::shared_ptr<Channel> searchChannel,
     if (this->kickChannel_)
     {
         auto globalEmotes = filterEmoteMap(
-            searchText, *getApp()->getKickChatServer()->globalEmotes());
+            searchWord, tags, *getApp()->getKickChatServer()->globalEmotes());
         if (!globalEmotes.empty())
         {
             addEmotes(*searchChannel, std::move(globalEmotes), "Kick");
@@ -1061,8 +1061,8 @@ void EmotePopup::filterTwitchEmotes(std::shared_ptr<Channel> searchChannel,
 
     if (this->kickChannel_)
     {
-        auto seventvChannelEmotes =
-            filterEmoteMap(searchText, *this->kickChannel_->seventvEmotes());
+        auto seventvChannelEmotes = filterEmoteMap(
+            searchWord, tags, *this->kickChannel_->seventvEmotes());
 
         if (!seventvChannelEmotes.empty())
         {
@@ -1074,7 +1074,7 @@ void EmotePopup::filterTwitchEmotes(std::shared_ptr<Channel> searchChannel,
                 getApp()->getAccounts()->kick.current()->userID());
         for (const auto &map : personalEmotes)
         {
-            auto seventvPersonalEmotes = filterEmoteMap(searchText, *map);
+            auto seventvPersonalEmotes = filterEmoteMap(searchWord, tags, *map);
             if (!seventvPersonalEmotes.empty())
             {
                 addEmotes(*searchChannel, seventvPersonalEmotes,
@@ -1113,7 +1113,7 @@ void EmotePopup::filterTwitchEmotes(std::shared_ptr<Channel> searchChannel,
          getApp()->getSeventvPersonalEmotes()->getEmoteSetsForTwitchUser(
              getApp()->getAccounts()->twitch.getCurrent()->getUserId()))
     {
-        auto seventvPersonalEmotes = filterEmoteMap(searchText, *map);
+        auto seventvPersonalEmotes = filterEmoteMap(searchWord, tags, *map);
         if (!seventvPersonalEmotes.empty())
         {
             addEmotes(*searchChannel, seventvPersonalEmotes,
