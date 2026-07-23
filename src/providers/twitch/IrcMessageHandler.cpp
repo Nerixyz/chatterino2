@@ -109,7 +109,7 @@ int stripLeadingReplyMention(const QVariantMap &tags, QString &content)
         return 0;
     }
 
-    if (const auto it = tags.find("reply-parent-display-name");
+    if (const auto it = tags.find(u"reply-parent-display-name"_s);
         it != tags.end())
     {
         auto displayName = parseTagString(it.value().toString());
@@ -1107,15 +1107,16 @@ void IrcMessageHandler::addMessage(Communi::IrcMessage *message,
 
     const auto &tags = message->tags();
     QString rewardId;
-    if (const auto it = tags.find("custom-reward-id"); it != tags.end())
+    if (const auto it = tags.find(u"custom-reward-id"_s); it != tags.end())
     {
         rewardId = it.value().toString();
     }
-    else if (const auto typeIt = tags.find("msg-id"); typeIt != tags.end())
+    else if (const auto typeIt = tags.find(u"msg-id"_s); typeIt != tags.end())
     {
         // slight hack to treat bits power-ups as channel point redemptions
         const auto msgId = typeIt.value().toString();
-        if (msgId == "animated-message" || msgId == "gigantified-emote-message")
+        if (msgId == u"animated-message" ||
+            msgId == u"gigantified-emote-message")
         {
             rewardId = msgId;
         }
@@ -1138,7 +1139,7 @@ void IrcMessageHandler::addMessage(Communi::IrcMessage *message,
 
     ReplyContext replyCtx;
 
-    if (const auto it = tags.find("reply-thread-parent-msg-id");
+    if (const auto it = tags.find(u"reply-thread-parent-msg-id"_s);
         it != tags.end())
     {
         const QString replyID = it.value().toString();
@@ -1169,7 +1170,7 @@ void IrcMessageHandler::addMessage(Communi::IrcMessage *message,
             }
         }
 
-        if (const auto parentIt = tags.find("reply-parent-msg-id");
+        if (const auto parentIt = tags.find(u"reply-parent-msg-id"_s);
             parentIt != tags.end())
         {
             const QString parentID = parentIt.value().toString();

@@ -9,35 +9,37 @@
 namespace {
 
 using namespace chatterino;
+using namespace Qt::Literals;
 
 QDateTime calculateMessageTimeBase(const Communi::IrcMessage *message)
 {
     // Check if message is from recent-messages API
-    if (message->tags().contains("historical"))
+    if (message->tags().contains(u"historical"_s))
     {
         bool customReceived = false;
-        auto ts =
-            message->tags().value("rm-received-ts").toLongLong(&customReceived);
+        auto ts = message->tags()
+                      .value(u"rm-received-ts"_s)
+                      .toLongLong(&customReceived);
         if (!customReceived)
         {
-            ts = message->tags().value("tmi-sent-ts").toLongLong();
+            ts = message->tags().value(u"tmi-sent-ts"_s).toLongLong();
         }
 
         return QDateTime::fromMSecsSinceEpoch(ts);
     }
 
     // If present, handle tmi-sent-ts tag and use it as timestamp
-    if (message->tags().contains("tmi-sent-ts"))
+    if (message->tags().contains(u"tmi-sent-ts"_s))
     {
-        auto ts = message->tags().value("tmi-sent-ts").toLongLong();
+        auto ts = message->tags().value(u"tmi-sent-ts"_s).toLongLong();
         return QDateTime::fromMSecsSinceEpoch(ts);
     }
 
     // Some IRC Servers might have server-time tag containing UTC date in ISO format, use it as timestamp
     // See: https://ircv3.net/irc/#server-time
-    if (message->tags().contains("time"))
+    if (message->tags().contains(u"time"_s))
     {
-        QString timedate = message->tags().value("time").toString();
+        QString timedate = message->tags().value(u"time"_s).toString();
 
         auto date = QDateTime::fromString(timedate, Qt::ISODate);
         date.setTimeZone(QTimeZone::utc());

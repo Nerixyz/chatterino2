@@ -750,7 +750,35 @@ TextElement::TextElement(const QString &text, MessageElementFlags flags,
     , color_(color)
     , style_(style)
 {
-    this->words_ = text.split(' ');
+    QStringView v(text);
+    while (v.startsWith(u' '))
+    {
+        v = v.sliced(1);
+    }
+
+    qsizetype idx = v.indexOf(u' ');
+    if (idx >= 0)
+    {
+        while (idx >= 0)
+        {
+            QStringView sub = v.sliced(0, idx);
+            v = v.sliced(idx + 1);
+            while (v.startsWith(u' '))
+            {
+                v = v.sliced(1);
+            }
+            idx = v.indexOf(u' ');
+            this->words_.emplace_back(sub.toString());
+        }
+        if (!v.empty())
+        {
+            this->words_.emplace_back(v.toString());
+        }
+    }
+    else
+    {
+        this->words_ = {text};
+    }
     // fourtf: add logic to store multiple spaces after message
 }
 TextElement::TextElement(TextElement::CloneTag /*hack*/, QStringList words,

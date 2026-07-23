@@ -93,25 +93,21 @@ namespace chatterino {
 template <std::ranges::bidirectional_range T>
 void setSimilarityFlags(const MessagePtr &message, const T &messages)
 {
-    if (getSettings()->similarityEnabled)
+    bool isMyself = message->loginName ==
+                    getApp()->getAccounts()->twitch.getCurrent()->getUserName();
+    bool hideMyself = getSettings()->hideSimilarMyself;
+
+    if (isMyself && !hideMyself)
     {
-        bool isMyself =
-            message->loginName ==
-            getApp()->getAccounts()->twitch.getCurrent()->getUserName();
-        bool hideMyself = getSettings()->hideSimilarMyself;
+        return;
+    }
 
-        if (isMyself && !hideMyself)
+    if (inMessages(message, messages) > getSettings()->similarityPercentage)
+    {
+        message->flags.set(MessageFlag::Similar);
+        if (getSettings()->colorSimilarDisabled)
         {
-            return;
-        }
-
-        if (inMessages(message, messages) > getSettings()->similarityPercentage)
-        {
-            message->flags.set(MessageFlag::Similar);
-            if (getSettings()->colorSimilarDisabled)
-            {
-                message->flags.set(MessageFlag::Disabled);
-            }
+            message->flags.set(MessageFlag::Disabled);
         }
     }
 }

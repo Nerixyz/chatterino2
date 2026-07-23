@@ -74,7 +74,10 @@ void VectorMessageSink::disableAllMessages()
 
 void VectorMessageSink::applySimilarityFilters(const MessagePtr &message) const
 {
-    setSimilarityFlags(message, this->messages_);
+    if (getSettings()->similarityEnabled)
+    {
+        setSimilarityFlags(message, this->messages_);
+    }
 }
 
 MessagePtr VectorMessageSink::findMessageByID(QStringView id)

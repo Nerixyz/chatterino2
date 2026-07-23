@@ -475,7 +475,10 @@ MessagePtr Channel::findMessageByID(QStringView messageID)
 
 void Channel::applySimilarityFilters(const MessagePtr &message) const
 {
-    setSimilarityFlags(message, this->messages_.getSnapshot());
+    if (getSettings()->similarityEnabled)
+    {
+        setSimilarityFlags(message, this->messages_.getSnapshot());
+    }
 }
 
 MessageSinkTraits Channel::sinkTraits() const

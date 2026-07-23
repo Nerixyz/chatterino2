@@ -14,6 +14,7 @@
 namespace {
 
 using namespace chatterino;
+using namespace Qt::Literals;
 
 void appendTwitchEmoteOccurrences(const QString &emote,
                                   std::vector<TwitchEmoteOccurrence> &vec,
@@ -94,7 +95,7 @@ std::unordered_map<QString, QString> parseBadgeInfoTag(const QVariantMap &tags)
 {
     std::unordered_map<QString, QString> infoMap;
 
-    auto infoIt = tags.constFind("badge-info");
+    auto infoIt = tags.constFind(u"badge-info"_s);
     if (infoIt == tags.end())
     {
         return infoMap;
@@ -144,7 +145,7 @@ std::vector<TwitchEmoteOccurrence> parseTwitchEmotes(const QVariantMap &tags,
     // Twitch emotes
     std::vector<TwitchEmoteOccurrence> twitchEmotes;
 
-    auto emotesTag = tags.find("emotes");
+    auto emotesTag = tags.find(u"emotes"_s);
 
     if (emotesTag == tags.end())
     {

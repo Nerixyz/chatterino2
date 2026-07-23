@@ -323,10 +323,9 @@ void SeventvEmotes::loadChannelEmotes(
 
     getApp()->getSeventvAPI()->getUserByTwitchID(
         channelId,
-        [callback = std::move(callback), channel, channelId,
-         manualRefresh](const auto &json) {
-            writeProviderEmotesCache(channelId, "seventv",
-                                     QJsonDocument(json).toJson());
+        [callback = std::move(callback), channel, channelId, manualRefresh](
+            const auto &json, const auto &raw) {
+            writeProviderEmotesCache(channelId, "seventv", raw);
             const auto emoteSet = json["emote_set"].toObject();
             const auto parsedEmotes = emoteSet["emotes"].toArray();
 
@@ -424,9 +423,9 @@ void SeventvEmotes::loadKickChannelEmotes(
     getApp()->getSeventvAPI()->getUserByKickID(
         userID,
         [callback = std::move(callback), channel, manualRefresh,
-         userID](const auto &json) {
+         userID](const auto &json, const auto&raw) {
             writeProviderEmotesCache(u"kick." % QString::number(userID),
-                                     "seventv", QJsonDocument(json).toJson());
+                                     "seventv", raw);
             const auto emoteSet = json["emote_set"].toObject();
             const auto parsedEmotes = emoteSet["emotes"].toArray();
 
