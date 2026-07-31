@@ -8,6 +8,7 @@
 #    include "Application.hpp"
 #    include "common/QLogging.hpp"
 #    include "controllers/commands/CommandController.hpp"
+#    include "controllers/plugins/DialogGuard.hpp"
 #    include "controllers/plugins/PluginPermission.hpp"
 #    include "controllers/plugins/SignalCallback.hpp"
 
@@ -83,6 +84,12 @@ Plugin::~Plugin()
            "This must be empty or destructor of sol::protected_function would "
            "explode malloc structures later");
 }
+
+lua::PluginWeakRef Plugin::weakRef() const
+{
+    return this->selfRef_.weak();
+}
+
 int Plugin::addTimeout(QTimer *timer)
 {
     this->activeTimeouts.push_back(timer);
@@ -156,6 +163,16 @@ void Plugin::log(lua_State *L, lua::api::LogLevel level, QDebug stream,
     }
 
     this->onLog.invoke(level, fullMessage);
+}
+
+std::optional<lua::DialogGuard> Plugin::openDialog()
+{
+    if (this->openDialogs >= 3)
+    {
+        return std::nullopt;
+    }
+    this->openDialogs++;
+    return {lua::DialogGuard(this->weakRef())};
 }
 
 sol::state_view Plugin::state()

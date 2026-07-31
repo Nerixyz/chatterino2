@@ -283,12 +283,16 @@ set(SOURCE_FILES
         controllers/plugins/api/JSONStringify.hpp
         controllers/plugins/api/Message.cpp
         controllers/plugins/api/Message.hpp
+        controllers/plugins/api/Ui.cpp
+        controllers/plugins/api/Ui.hpp
         controllers/plugins/api/WebSocket.cpp
         controllers/plugins/api/WebSocket.hpp
         controllers/plugins/api/WindowManager.cpp
         controllers/plugins/api/WindowManager.hpp
         controllers/plugins/ConnectionManager.cpp
         controllers/plugins/ConnectionManager.hpp
+        controllers/plugins/DialogGuard.cpp
+        controllers/plugins/DialogGuard.hpp
         controllers/plugins/LuaAPI.cpp
         controllers/plugins/LuaAPI.hpp
         controllers/plugins/LuaUtilities.cpp

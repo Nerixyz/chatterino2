@@ -16,6 +16,7 @@
 namespace {
 
 using namespace chatterino;
+using namespace chatterino::lua;
 
 QDateTime datetimeFromOffset(qint64 offset)
 {
@@ -29,18 +30,6 @@ QDateTime datetimeFromOffset(qint64 offset)
 #    endif
 
     return dt;
-}
-
-template <typename T>
-T requiredGet(const sol::table &tbl, auto &&key)
-{
-    auto v = tbl.get<sol::optional<T>>(std::forward<decltype(key)>(key));
-    if (!v)
-    {
-        throw std::runtime_error(std::string{"Missing required property: "} +
-                                 key);
-    }
-    return *std::move(v);
 }
 
 std::unique_ptr<TextElement> textElementFromTable(const sol::table &tbl)

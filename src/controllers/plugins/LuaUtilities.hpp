@@ -141,6 +141,18 @@ void fail(lua_State *L, const char *fmt, auto &&...args)
     std::terminate();
 }
 
+template <typename T>
+T requiredGet(const sol::table &tbl, auto &&key)
+{
+    auto v = tbl.get<sol::optional<T>>(std::forward<decltype(key)>(key));
+    if (!v)
+    {
+        throw std::runtime_error(std::string{"Missing required property: "} +
+                                 key);
+    }
+    return *std::move(v);
+}
+
 }  // namespace chatterino::lua
 
 #endif

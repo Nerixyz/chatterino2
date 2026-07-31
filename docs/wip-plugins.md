@@ -1274,3 +1274,85 @@ local obj = json.parse(str)
 assert(obj.baz == json.null)
 assert(obj.baz ~= nil)
 ```
+
+### UI API
+
+Chatterino includes the `chatterino.ui` module for showing user interfaces:
+
+```lua
+local ui = require('chatterino.ui')
+
+ui.dialogs.text_input({ label = "Your Name:" }, function(value)
+	-- do something with the value
+end)
+```
+
+#### Dialogs
+
+##### `dialogs.message_box(init, cb)`
+
+Show a message with some content.
+
+- `init`: a table with the following fields:
+  - `title?` (`string`) Title of the dialog.
+  - `text` (`string`) The contents of the dialog.
+  - `buttons?` (`ui.dialogs.MessageBoxButton`) The buttons to show (bit flags, default: Ok).
+  - `icon?` (`ui.dialogs.MessageBoxIcon`) The icon on the message box (default: Information).
+  - `text_format?` (`'markdown'|'qt-html'|'plain'`) The format of the dialog text (default: plain).
+  - `clickable_links?` (`boolean`) Hyperlinks in the dialog text will be opened when clicked (default: false).
+  - `default_button?` (`dialogs.MessageBoxButton`) Button to select by default.
+  - `escape_button?` (`dialogs.MessageBoxButton`) Activated button when the escape key is pressed.
+- `cb`: A callback that receives the clicked button.
+
+##### `dialogs.number_input(init, cb)`
+
+Show a dialog requesting a number to be input.
+
+- `init`: a table with the following fields:
+  - `title?` (`string`) Title of the dialog.
+  - `label` (`string`) Label on what needs to be input.
+  - `ok_button_text?` (`string`) Text on the "OK" button.
+  - `cancel_button_text?` (`string`) Text on the "Cancel" button.
+  - `decimals?` (`number`) Number of decimals (default: 0).
+  - `min?` (`number`) Minimum value.
+  - `max?` (`number`) Maximum value.
+  - `init_value?` (`number`) Initial value.
+  - `step?` (`number`) Step by which the value is increased/decreased.
+- `cb`: A callback that receives the value or `nil`.
+
+##### `dialogs.text_input(init, cb)`
+
+Show a dialog requesting text input.
+
+- `init`: a table with the following fields:
+  - `title?` (`string`) Title of the dialog.
+  - `label` (`string`) Label on what needs to be input.
+  - `ok_button_text?` (`string`) Text on the "OK" button.
+  - `cancel_button_text?` (`string`) Text on the "Cancel" button.
+  - `init_value?` (`string?`) Initial value.
+  - `is_password?` (`boolean?`) True if this input is a password or similar (default: false, incompatible with is_multiline).
+  - `is_multiline?` (`boolean?`) True if this input is a multiline input (default: false. incompatible with is_password).
+- `cb`: A callback that receives the value or `nil`.
+
+##### `dialogs.item_input(init, cb)`
+
+Show a dialog requesting text input.
+
+- `init`: a table with the following fields:
+  - `title?` (`string`) Title of the dialog.
+  - `label` (`string`) Label on what needs to be input.
+  - `ok_button_text?` (`string`) Text on the "OK" button.
+  - `cancel_button_text?` (`string`) Text on the "Cancel" button.
+  - `items` (`string[]`) List of possible items.
+  - `editable?` (`boolean`) Items are editable or not (default: true).
+  - `init_index?` (`number`) Initial item index (default: 1).
+- `cb`: A callback that receives the value or `nil`.
+
+##### `dialogs.MessageBoxButton`
+
+Bit flags of message box buttons. A table with the following elements:
+`NoButton`, `Ok`, `Save`, `SaveAll`, `Open`, `Yes`, `YesToAll`, `No`, `NoToAll`, `Abort`, `Retry`, `Ignore`, `Close`, `Cancel`, `Discard`, `Help`, `Apply`, `Reset`, and `RestoreDefaults`.
+
+##### `dialogs.MessageBoxIcon`
+
+An enum table with the following elements: `NoIcon`, `Question`, `Information`, `Warning`, and `Critical`.

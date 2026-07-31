@@ -698,3 +698,78 @@ declare module "chatterino.json" {
     };
     export = exports;
 }
+
+declare module "chatterino.ui" {
+    export namespace dialogs {
+        enum MessageBoxButton {
+            NoButton = 0,
+            Ok = 0,
+            Save = 0,
+            SaveAll = 0,
+            Open = 0,
+            Yes = 0,
+            YesToAll = 0,
+            No = 0,
+            NoToAll = 0,
+            Abort = 0,
+            Retry = 0,
+            Ignore = 0,
+            Close = 0,
+            Cancel = 0,
+            Discard = 0,
+            Help = 0,
+            Apply = 0,
+            Reset = 0,
+            RestoreDefaults = 0,
+        }
+        enum MessageBoxIcon {
+            NoIcon,
+            Question,
+            Information,
+            Warning,
+            Critical,
+        }
+
+        interface MessageBoxInit {
+            title?: string;
+            text: string;
+            buttons?: MessageBoxButton;
+            icon?: MessageBoxIcon;
+            text_format?: 'markdown' | 'qt-html' |'plain';
+            clickable_links?: boolean;
+            default_button?: MessageBoxButton;
+            escape_button?: MessageBoxButton;
+        }
+        function message_box(init: MessageBoxInit, cb: (button: MessageBoxButton) => void): void;
+
+        interface CommonInputDialogInit {
+            title?: string;
+            label: string;
+            ok_button_text?: string;
+            cancel_button_text?: string;
+        }
+
+        interface NumberInputInit extends CommonInputDialogInit {
+            decimals?: number;
+            min?: number;
+            max?: number;
+            init_value?: number;
+            step?: number;
+        }
+        function number_input(init: NumberInputInit, cb: (res: number|null) => void): void;
+
+        interface TextInputInit extends CommonInputDialogInit {
+            init_value?: string;
+            is_password?: boolean;
+            is_multiline?: boolean;
+        }
+        function text_input(init: TextInputInit, cb: (res: string|null) => void): void;
+
+        interface ItemInputInit extends CommonInputDialogInit {
+            items: string[];
+            editable?: boolean;
+            init_index?: number;
+        }
+        function item_input(init: ItemInputInit, cb: (res: string|null) => void): void;
+    }
+}

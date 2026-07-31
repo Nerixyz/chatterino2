@@ -33,6 +33,7 @@ enum class LogLevel;
 
 namespace chatterino::lua {
 struct SignalCallback;
+class DialogGuard;
 }  // namespace chatterino::lua
 
 namespace chatterino {
@@ -120,6 +121,8 @@ public:
     void log(lua_State *L, lua::api::LogLevel level, QDebug stream,
              const sol::variadic_args &args);
 
+    std::optional<lua::DialogGuard> openDialog();
+
     sol::state_view state();
 
     std::map<lua::api::EventType, sol::protected_function> callbacks;
@@ -145,8 +148,11 @@ private:
     std::vector<QTimer *> activeTimeouts;
     int lastTimerId = 0;
 
+    uint8_t openDialogs = 0;
+
     friend class PluginController;
     friend class PluginControllerAccess;  // this is for tests
+    friend class lua::DialogGuard;
 };
 }  // namespace chatterino
 #endif
