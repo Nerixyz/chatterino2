@@ -15,6 +15,10 @@ list(APPEND CMAKE_MODULE_PATH
     "${CMAKE_SOURCE_DIR}/cmake"
     )
 
+if(WIN32 AND NOT MINGW)
+    include(EnableSegmentHeap)
+endif()
+
 option(BUILD_APP "Build Chatterino" ON)
 option(BUILD_TESTS "Build the tests for Chatterino" OFF)
 option(BUILD_BENCHMARKS "Build the benchmarks for Chatterino" OFF)
@@ -101,12 +105,14 @@ else()
     set(MAJOR_QT_VERSION "5")
 endif()
 
-find_program(CCACHE_PROGRAM ccache)
 find_program(SCCACHE_PROGRAM sccache)
 if(SCCACHE_PROGRAM)
     set(_compiler_launcher ${SCCACHE_PROGRAM})
-elseif(CCACHE_PROGRAM)
-    set(_compiler_launcher ${CCACHE_PROGRAM})
+else()
+    find_program(CCACHE_PROGRAM ccache)
+    if(CCACHE_PROGRAM)
+        set(_compiler_launcher ${CCACHE_PROGRAM})
+    endif()
 endif()
 
 if(USE_ALTERNATE_LINKER)

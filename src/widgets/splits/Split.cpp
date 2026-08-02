@@ -38,6 +38,7 @@
 #include "widgets/OverlayWindow.hpp"
 #include "widgets/Scrollbar.hpp"
 #include "widgets/splits/DraggedSplit.hpp"
+#include "widgets/splits/PinnedMessageWidget.hpp"
 #include "widgets/splits/SplitContainer.hpp"
 #include "widgets/splits/SplitHeader.hpp"
 #include "widgets/splits/SplitInput.hpp"
@@ -57,6 +58,8 @@
 #include <QVBoxLayout>
 
 #include <functional>
+
+using namespace Qt::Literals;
 
 namespace chatterino {
 namespace {
@@ -92,6 +95,7 @@ Split::Split(QWidget *parent)
     , channel_(Channel::getEmpty())
     , vbox_(new QVBoxLayout(this))
     , header_(new SplitHeader(this))
+    , pinnedBanner_(new PinnedMessageWidget(this))
     , view_(new ChannelView(this, this, ChannelView::Context::None,
                             getSettings()->scrollbackSplitLimit))
     , input_(new SplitInput(this))
@@ -106,6 +110,7 @@ Split::Split(QWidget *parent)
     this->vbox_->setContentsMargins(1, 1, 1, 1);
 
     this->vbox_->addWidget(this->header_);
+    this->vbox_->addWidget(this->pinnedBanner_);
     this->vbox_->addWidget(this->view_, 1);
     this->vbox_->addWidget(this->input_);
 
@@ -779,6 +784,11 @@ SplitInput &Split::getInput()
     return *this->input_;
 }
 
+PinnedMessageWidget *Split::getPinnedBanner() const
+{
+    return this->pinnedBanner_;
+}
+
 void Split::updateInputPlaceholder()
 {
     auto channel = this->getChannel();
@@ -991,13 +1001,17 @@ void Split::updateChannelConnections()
     this->usermodeChangedConnection_.disconnect();
     this->roomModeChangedConnection_.disconnect();
     this->sendWaitConnection_ = pajlada::Signals::ScopedConnection{};
+    this->sharedChatConnection_ = pajlada::Signals::ScopedConnection{};
     this->getInput().setSendWaitStatus({});
 
     auto *channel = this->channel_.get().get();
     auto *mc = dynamic_cast<MultiChannel *>(channel);
     if (mc)
     {
-        channel = mc->activeChannel()->channel.get();
+        if (const auto *active = mc->activeChannel())
+        {
+            channel = active->channel.get();
+        }
     }
 
     auto *tc = dynamic_cast<TwitchChannel *>(channel);
@@ -1017,6 +1031,12 @@ void Split::updateChannelConnections()
             tc->sendWaitUpdate.connect([this](const QString &text) {
                 this->getInput().setSendWaitStatus(text);
             });
+
+        this->sharedChatConnection_ = tc->sharedChatStatusChanged.connect(
+            [this](const std::vector<HelixMinimalUser> &) {
+                this->header_->updateChannelText();
+            });
+        this->pinnedBanner_->setChannel(tc);
     }
     else if (kc != nullptr)
     {
@@ -1033,6 +1053,11 @@ void Split::updateChannelConnections()
             kc->sendWaitUpdate.connect([this](const QString &text) {
                 this->getInput().setSendWaitStatus(text);
             });
+        this->pinnedBanner_->setChannel(nullptr);
+    }
+    else
+    {
+        this->pinnedBanner_->setChannel(nullptr);
     }
 }
 
@@ -1233,7 +1258,7 @@ void Split::explainSplitting()
 void Split::popup()
 {
     auto *app = getApp();
-    Window &window = app->getWindows()->createWindow(WindowType::Popup);
+    Window &window = app->getWindows()->createWindow(WindowType::Popup, {});
 
     auto *split = new Split(window.getNotebook().getOrAddSelectedPage());
 
@@ -1435,6 +1460,11 @@ void Split::reconnect()
     this->getChannel()->reconnect();
 }
 
+void Split::togglePinnedBanner()
+{
+    this->pinnedBanner_->toggleUserPinned();
+}
+
 void Split::dragEnterEvent(QDragEnterEvent *event)
 {
     if (getSettings()->imageUploaderEnabled &&
@@ -1495,6 +1525,65 @@ void Split::setInputReply(const MessagePtr &reply,
                           std::weak_ptr<Channel> channel)
 {
     this->input_->setReply(reply, std::move(channel));
+}
+
+SplitDescriptor Split::buildDescriptor() const
+{
+    SplitDescriptor descriptor;
+    descriptor.moderationMode_ = this->getModerationMode();
+    descriptor.filters_ = this->getFilters();
+    descriptor.spellCheckOverride = this->checkSpellingOverride();
+
+    auto chan = this->getChannel();
+    descriptor.type_ = qmagicenum::enumNameString(chan->getType());
+    switch (chan->getType())
+    {
+        case Channel::Type::Twitch:
+        case Channel::Type::Misc:
+            descriptor.channelName_ = chan->getName();
+            break;
+
+        case Channel::Type::Kick: {
+            descriptor.channelName_ = chan->getName();
+            auto *kc = dynamic_cast<KickChannel *>(chan.get());
+            if (kc)
+            {
+                descriptor.kickChannelID = kc->channelID();
+                descriptor.kickRoomID = kc->roomID();
+                descriptor.kickUserID = kc->userID();
+            }
+        }
+        break;
+
+        case Channel::Type::Multi: {
+            descriptor.channelName_ = chan->getName();
+            auto *mc = dynamic_cast<MultiChannel *>(chan.get());
+            if (mc)
+            {
+                for (const auto &child : mc->channels())
+                {
+                    descriptor.children.emplace_back(child.descriptor());
+                }
+                descriptor.mcIndicator = mc->indicatorMode();
+                descriptor.mcIndex = mc->activeChannelIndex();
+            }
+        }
+        break;
+
+        case Channel::Type::TwitchWhispers:
+        case Channel::Type::TwitchWatching:
+        case Channel::Type::TwitchMentions:
+        case Channel::Type::TwitchLive:
+        case Channel::Type::TwitchAutomod:
+
+        // FIXME: Remove these (#5703)
+        case Channel::Type::None:
+        case Channel::Type::Direct:
+        case Channel::Type::TwitchEnd:
+            break;
+    }
+
+    return descriptor;
 }
 
 void Split::unpause()

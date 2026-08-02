@@ -23,8 +23,11 @@ class SplitHeader;
 class SplitInput;
 class SplitContainer;
 class SplitOverlay;
+class PinnedMessageWidget;
 class SelectChannelDialog;
 class OverlayWindow;
+
+struct SplitDescriptor;
 
 // Each ChatWidget consists of three sub-elements that handle their own part of
 // the chat widget: ChatWidgetHeader
@@ -54,6 +57,7 @@ public:
 
     ChannelView &getChannelView();
     SplitInput &getInput();
+    [[nodiscard]] PinnedMessageWidget *getPinnedBanner() const;
 
     IndirectChannel getIndirectChannel();
     ChannelPtr getChannel() const;
@@ -84,6 +88,8 @@ public:
     void setContainer(SplitContainer *container);
 
     void setInputReply(const MessagePtr &reply, std::weak_ptr<Channel> channel);
+
+    SplitDescriptor buildDescriptor() const;
 
     // This is called on window focus lost
     void unpause();
@@ -168,6 +174,7 @@ private:
 
     QVBoxLayout *const vbox_;
     SplitHeader *const header_;
+    PinnedMessageWidget *const pinnedBanner_;
     ChannelView *const view_;
     SplitInput *const input_;
     SplitOverlay *const overlay_;
@@ -180,6 +187,7 @@ private:
     pajlada::Signals::Connection usermodeChangedConnection_;
     pajlada::Signals::Connection roomModeChangedConnection_;
     pajlada::Signals::ScopedConnection sendWaitConnection_;
+    pajlada::Signals::ScopedConnection sharedChatConnection_;
 
     pajlada::Signals::Connection indirectChannelChangedConnection_;
 
@@ -208,6 +216,7 @@ public Q_SLOTS:
     void openChatterList();
     void openSubPage();
     void reconnect();
+    void togglePinnedBanner();
 };
 
 }  // namespace chatterino

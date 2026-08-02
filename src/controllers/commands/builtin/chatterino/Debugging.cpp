@@ -71,6 +71,16 @@ bool restartChatterino(const QProcessEnvironment &env)
     return false;
 }
 
+QString dequoteFilePath(QString filePath)
+{
+    if (filePath.startsWith('"') && filePath.endsWith('"') &&
+        filePath.length() > 2)
+    {
+        return filePath.mid(1, filePath.length() - 2);
+    }
+    return filePath;
+}
+
 QProcessEnvironment setUpEnvironmentForLogging(const QStringList &loggingRules)
 {
     static constexpr QLatin1String loggingRulesEnv("QT_LOGGING_RULES");
@@ -396,7 +406,7 @@ QString enableLogfile(const CommandContext &ctx)
         return {};
     }
 
-    QString logFilePath = ctx.words.mid(1).join(" ");
+    QString logFilePath = dequoteFilePath(ctx.words.mid(1).join(" "));
     auto result = FileLogger::instance().enable(logFilePath);
     if (result.has_value())
     {
