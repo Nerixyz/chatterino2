@@ -352,7 +352,7 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, Split *split)
                             [loginName] {
                                 auto *app = getApp();
                                 auto &window = app->getWindows()->createWindow(
-                                    WindowType::Popup, true);
+                                    WindowType::Popup, {});
                                 auto *split = window.getNotebook()
                                                   .getOrAddSelectedPage()
                                                   ->appendNewSplit(false);
@@ -1682,11 +1682,12 @@ void UserInfoPopup::onKickProfilePictureClick(Qt::MouseButton button)
             menu->addAction(
                 "Open channel in a new popup window", this, [username] {
                     auto *app = getApp();
-                    auto *split = app->getWindows()
-                                      ->createWindow(WindowType::Popup, true)
-                                      .getNotebook()
-                                      .getOrAddSelectedPage()
-                                      ->appendNewSplit(false);
+                    auto *split =
+                        app->getWindows()
+                            ->createWindow(WindowType::Popup, {.show = true})
+                            .getNotebook()
+                            .getOrAddSelectedPage()
+                            ->appendNewSplit(false);
                     split->setChannel(
                         app->getKickChatServer()->getOrCreate(username));
                 });
