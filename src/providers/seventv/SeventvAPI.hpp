@@ -9,6 +9,7 @@
 
 class QString;
 class QJsonObject;
+class QByteArray;
 
 namespace chatterino {
 
