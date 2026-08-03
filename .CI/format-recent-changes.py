@@ -1,6 +1,59 @@
 from datetime import datetime, timezone
 import os
 import subprocess
+import re
+import argparse
+
+
+ROOT_DOWNLOAD_URL = (
+    "https://github.com/SevenTV/chatterino7/releases/download/nightly-build"
+)
+WIN_X64_INSTALLERS = ["Chatterino7TV.Nightly.Installer.exe"]
+WIN_ARM64_INSTALLERS = ["Experimental-ARM64-Chatterino7TV.Nightly.Installer.exe"]
+
+
+def create_artifacts_table(artifact_dir: str, include_installer: bool):
+    artifacts = os.listdir(artifact_dir)
+
+    def get(r: str):
+        return [n for n in artifacts if re.search(r, n, re.IGNORECASE)]
+
+    model = {
+        "Windows": {
+            "x86_64": get(r"-windows-.*x86.*\.zip$")
+            + (WIN_X64_INSTALLERS if include_installer else []),
+            "ARM64<br>(Experimental)": get(r"arm64.*-windows-.*\.zip$")
+            + (WIN_ARM64_INSTALLERS if include_installer else []),
+        },
+        "macOS": {
+            "Universal (x86_64, ARM64)": get(r"\.dmg$"),
+        },
+        "Linux": {"x86_64": get(r"\.flatpak")},
+    }
+
+    # Cleanup
+    s = """<table align="center">
+        <thead>
+            <tr>
+            <th scope="col">OS</th>
+            <th scope="col">Arch</th>
+            <th scope="col">File</th>
+            </tr>
+        </thead>
+        <tbody>
+    """
+    for os_name, archs in model.items():
+        for io, (arch, files) in enumerate(archs.items()):
+            for ia, file in enumerate(files):
+                s += "<tr>"
+                if io == 0 and ia == 0:
+                    s += f'<td rowspan="{sum(len(f) for f in archs.values())}" colspan="1">{os_name}</td>'
+                if ia == 0:
+                    s += f'<td rowspan="{len(files)}" colspan="1">{arch}</td>'
+                s += f'<td><a href="{ROOT_DOWNLOAD_URL}/{file}">{file}</a></td>'
+                s += "</tr>"
+    s += "</tbody></table>"
+    return s
 
 
 def run_git_command(args: list[str]) -> str:
@@ -56,6 +109,14 @@ def get_unreleased_commits():
 
 
 unreleased_lines = get_unreleased_commits()
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--artifacts", required=True)
+parser.add_argument("--include-installer", action="store_true")
+args = parser.parse_args()
+
+print(create_artifacts_table(args.artifacts, args.include_installer))
+print("\n### What's Changed\n")
 
 if len(unreleased_lines) == 0:
     print("No changes since last release.")
