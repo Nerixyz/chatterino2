@@ -1536,7 +1536,7 @@ SplitDescriptor Split::buildDescriptor() const
 
     auto chan = this->getChannel();
     descriptor.type_ = qmagicenum::enumNameString(chan->getType());
-    switch (chan->getType())
+    switch (this->channel_.getType())
     {
         case Channel::Type::Twitch:
         case Channel::Type::Misc:
