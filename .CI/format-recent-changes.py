@@ -108,12 +108,33 @@ def get_unreleased_commits():
     return unreleased
 
 
+def get_current_stable():
+    p = subprocess.run(
+        ["git", "describe", "--tags", "--abbrev=0", "--match", "v7.*.[0-9]"],
+        cwd=os.path.dirname(os.path.realpath(__file__)),
+        text=True,
+        check=True,
+        capture_output=True,
+    )
+    return p.stdout.strip()
+
+
 unreleased_lines = get_unreleased_commits()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--artifacts", required=True)
 parser.add_argument("--include-installer", action="store_true")
 args = parser.parse_args()
+
+
+print("> [!WARNING]")
+print(
+    "> This is an experimental version that may break. "
+    "If you're looking for the latest stable release, see "
+    f"https://github.com/SevenTV/chatterino7/releases/tag/{get_current_stable()}.\n"
+)
+
+print("### Downloads\n")
 
 print(create_artifacts_table(args.artifacts, args.include_installer))
 print("\n### What's Changed\n")
