@@ -1339,7 +1339,7 @@ void Split::openInStreamlink()
     auto *kc = dynamic_cast<KickChannel *>(chan.get());
     if (kc)
     {
-        openStreamlinkForChannel(kc->slug(), u"kick.com/");
+        openStreamlinkForChannelOrUrl(kc->slug(), u"kick.com/");
         return;
     }
     this->openChannelInStreamlink(chan->getName());
