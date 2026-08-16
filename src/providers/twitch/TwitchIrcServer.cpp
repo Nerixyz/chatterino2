@@ -185,7 +185,17 @@ void TwitchIrcServer::initialize()
     this->signalHolder.managedConnect(
         getApp()->getAccounts()->twitch.currentUserChanged, [this]() {
             postToThread([this] {
-                this->connect();
+                if (getSettings()->twitchReadConnectionMode ==
+                    TwitchReadConnectionMode::Authenticated)
+                {
+                    this->connect();
+                }
+                else
+                {
+                    this->writeConnection_->close();
+                    TwitchIrcServer::initializeConnection(
+                        this->writeConnection_.get(), ConnectionType::Write);
+                }
             });
         });
 
