@@ -163,7 +163,7 @@ void TwitchReadConnectionPoolSingle::onChannelCreated(TwitchChannel &channel)
     this->signalHolder.managedConnect(
         channel.destroyed, [this, name = channel.getName()] {
             this->channels.erase(name);
-            qCDebug(chatterinoIrc) << "Parting" << name;
+            qCDebug(chatterinoIrc) << "[read] parting" << name;
             this->connection->sendRaw("PART #" + name);
         });
 }
@@ -331,7 +331,7 @@ void TwitchReadConnectionPoolMulti::onChannelCreated(TwitchChannel &channel)
     conn->channels.emplace(channel.getName(), channel.weakFromThis());
     if (conn->connection.isConnected())
     {
-        qCDebug(chatterinoIrc) << "Joining" << channel.getName();
+        qCDebug(chatterinoIrc) << "[read] joining" << channel.getName();
         conn->connection.sendRaw("JOIN #" + channel.getName());
     }
     this->signalHolder.managedConnect(
@@ -342,7 +342,7 @@ void TwitchReadConnectionPoolMulti::onChannelCreated(TwitchChannel &channel)
             {
                 return;
             }
-            qCDebug(chatterinoIrc) << "Parting" << name;
+            qCDebug(chatterinoIrc) << "[read] parting" << name;
             it->second->connection.sendRaw("PART #" + name);
             it->second->channels.erase(name);
             if (it->second->channels.empty())
@@ -365,6 +365,7 @@ void TwitchReadConnectionPoolMulti::reconnect()
     {
         conn->reconnect();
     }
+    this->everConnected = true;
 }
 
 void TwitchReadConnectionPoolMulti::close()
@@ -442,7 +443,7 @@ TwitchReadConnectionPoolMulti::Connection::Connection(
                      });
     QObject::connect(&this->connection, &Communi::IrcConnection::disconnected,
                      &this->connection, [this] {
-                         this->onConnected();
+                         this->onDisconnected();
                      });
     QObject::connect(&this->connection,
                      &IrcConnection::connectAndInitializeRequested, [this] {
@@ -508,7 +509,7 @@ void TwitchReadConnectionPoolMulti::Connection::onConnected()
     // join channels
     for (const auto &channel : activeChannels)
     {
-        qCDebug(chatterinoIrc) << "Joining" << channel->getName();
+        qCDebug(chatterinoIrc) << "[read] joining" << channel->getName();
         this->connection.sendRaw("JOIN #" + channel->getName());
     }
 
