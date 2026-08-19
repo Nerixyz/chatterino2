@@ -1048,16 +1048,22 @@ void IrcMessageHandler::handlePartMessage(Communi::IrcMessage *message)
         return;
     }
 
-    const auto selfAccountName =
-        getApp()->getAccounts()->twitch.getCurrent()->getUserName();
-    if (message->nick() != selfAccountName &&
-        getSettings()->showParts.getValue())
+    bool ownUser = [&] {
+        if (getSettings()->twitchReadConnectionMode ==
+            TwitchReadConnectionMode::Authenticated)
+        {
+            return message->nick() ==
+                   getApp()->getAccounts()->twitch.getCurrent()->getUserName();
+        }
+        return message->nick() == ANONYMOUS_USERNAME;
+    }();
+    if (ownUser && getSettings()->showParts.getValue())
     {
         twitchChannel->addPartedUser(message->nick(), twitchChannel->isMod(),
                                      twitchChannel->isBroadcaster());
     }
 
-    if (message->nick() == selfAccountName)
+    if (ownUser)
     {
         channel->addMessage(generateBannedMessage(false),
                             MessageContext::Original);
