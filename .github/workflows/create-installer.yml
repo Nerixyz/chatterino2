@@ -219,16 +219,6 @@ jobs:
           path: build/
           merge-multiple: true
 
-      - name: Fix Directories
-        working-directory: build
-        run: |
-          for file in */ ; do 
-            mv "$file$(find "$file" -type f -printf '%f')" ".tmp.${file%/}";
-            rm -rf "$file";
-            mv ".tmp.${file%/}" "${file%/}";
-          done
-        shell: bash
-
       - name: Fix paths
         working-directory: build
         run: |
