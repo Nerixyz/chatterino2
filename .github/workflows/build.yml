@@ -138,7 +138,7 @@ jobs:
 
       - name: Upload artifact - AppImage (Ubuntu)
         if: matrix.build-appimage
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: Chatterino-x86_64-Qt-6.7.2.AppImage
           path: build/Chatterino_7TV-x86_64.AppImage
@@ -162,11 +162,12 @@ jobs:
       image: ghcr.io/flathub-infra/flatpak-github-actions:kde-6.10
       options: --privileged
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           submodules: recursive
           fetch-depth: 0 # tag access
-      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+          persist-credentials: false
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@79327416609af08178ad73b352877e51450790b3 # v6.8
         with:
           bundle: chatterino.flatpak
           manifest-path: .CI/com.chatterino.chatterino.yml
@@ -269,7 +270,7 @@ jobs:
           path: ~/.conan2/
 
       - name: Setup Python (Windows)
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         if: startsWith(matrix.os, 'windows')
         with:
           python-version: "3.13"
