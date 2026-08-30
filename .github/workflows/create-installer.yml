@@ -223,9 +223,7 @@ jobs:
         working-directory: build
         run: |
           ls -l
-          mv Chatterino-x86_64-Qt-6.7.2.AppImage Chatterino-x86_64-Qt6.AppImage
-
-          mv chatterino-macos-Qt-6.9.3-universal.dmg Chatterino.dmg
+          mv chatterino-macos-Qt-*-universal.dmg Chatterino.dmg
 
       - name: Hash files
         working-directory: build
