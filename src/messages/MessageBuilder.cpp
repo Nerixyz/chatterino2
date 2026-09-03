@@ -1825,10 +1825,13 @@ std::pair<MessagePtrMut, HighlightAlert> MessageBuilder::makeIrcMessage(
             builder->flags.set(MessageFlag::AsciiArt);
         }
 
-        // words
-        QStringList splits = content.split(' ');
-
-        builder.addWords(splits, twitchEmotes, textState);
+        // FIXME(c7TV): This is temporary until upstream merges the support.
+        if (!builder.tryAddGif(tags, content))
+        {
+            // words
+            QStringList splits = content.split(' ');
+            builder.addWords(splits, twitchEmotes, textState);
+        }
 
         QString stylizedUsername =
             stylizeUsername(builder->loginName, builder.message());
@@ -1907,6 +1910,77 @@ void MessageBuilder::addTextOrEmote(TextState &state, QString string)
         return;
     }
     this->addWordFromUserMessage(string, state.twitchChannel);
+}
+
+// FIXME(c7TV): This is temporary until upstream merges the support.
+bool MessageBuilder::tryAddGif(Communi::TagsRef tags, QStringView content)
+{
+    if (!getSettings()->showTwitchGifs)
+    {
+        return false;
+    }
+
+    auto gifsTag = tags.getOrEmpty("gifs");
+    if (gifsTag.isEmpty())
+    {
+        return false;
+    }
+    auto [gifTag, rest] = splitOnce(gifsTag, ',');
+    if (!rest.empty())
+    {
+        return false;  // More than one gif.
+    }
+    auto [range, idAndLink] = splitOnce(gifTag, '|');
+    auto [id, link] = splitOnce(idAndLink, '|');
+    if (link.empty())
+    {
+        return false;  // Invalid format.
+    }
+
+    auto [startStr, endStr] = splitOnce(range, '-');
+    bool startOk = false;
+    bool endOk = false;
+    auto start = startStr.toULongLong(&startOk);
+    auto end = endStr.toULongLong(&endOk);
+    if (!startOk || !endOk || end <= start || start != 0)
+    {
+        return false;
+    }
+
+    quint64 nUnicodeChars = 0;
+    for (auto c : content)
+    {
+        if (!c.isLowSurrogate())
+        {
+            ++nUnicodeChars;
+        }
+    }
+    if (end + 1 != nUnicodeChars)
+    {
+        return false;  // Doesn't cover the whole range.
+    }
+
+    if (content.startsWith(u'['))
+    {
+        content.slice(1);
+    }
+    if (content.endsWith(u']'))
+    {
+        content.slice(0, content.size() - 1);
+    }
+    QString baseLink = link.toString();
+    QString link100 = baseLink.replace("giphy.gif"_L1, "100.webp"_L1);
+    QString link200 = baseLink.replace("giphy.gif"_L1, "200.webp"_L1);
+    ImageSet set{
+        Image::fromUrl(Url{link100}, 1.0, {100, 100}),
+        Image::fromUrl(Url{link200}, 0.5, {200, 200}),
+    };
+    this->emplace<LinebreakElement>(MessageElementFlag::Emote);
+    this->emplace<ScalingImageElement>(set, MessageElementFlag::Emote)
+        ->setLink(Link{Link::Url, baseLink})
+        ->setTooltip(content.toString().toHtmlEscaped());
+
+    return true;
 }
 
 void MessageBuilder::addWordFromUserMessage(QStringView string,
