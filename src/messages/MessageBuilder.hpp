@@ -7,7 +7,9 @@
 #include "common/Aliases.hpp"
 #include "common/Outcome.hpp"
 #include "messages/MessageColor.hpp"
+#include "messages/MessageElement.hpp"
 #include "messages/MessageFlag.hpp"
+#include "messages/MessageParseArgs.hpp"
 
 #include <IrcMessage>
 #include <IrcTagsRef>
@@ -77,17 +79,6 @@ const ImageUploaderResultTag imageUploaderResultMessage{};
 
 MessagePtr makeSystemMessage(const QString &text);
 MessagePtr makeSystemMessage(const QString &text, const QTime &time);
-
-struct MessageParseArgs {
-    bool disablePingSounds = false;
-    bool isReceivedWhisper = false;
-    bool isSentWhisper = false;
-    bool trimSubscriberUsername = false;
-    bool isSubscriptionMessage = false;
-    bool allowIgnore = true;
-    bool isAction = false;
-    QString channelPointRewardId = "";
-};
 
 struct HighlightAlert {
     QUrl customSound;
@@ -159,7 +150,9 @@ public:
         return pointer;
     }
 
-    void appendOrEmplaceText(const QString &text, MessageColor color);
+    MessageElement *appendOrEmplaceText(
+        const QString &text, MessageColor color,
+        MessageElementFlags messageFlags = MessageElementFlag::Text);
     void appendOrEmplaceSystemTextAndUpdate(const QString &text,
                                             QString &toUpdate);
 
@@ -248,7 +241,8 @@ public:
     static MessagePtrMut makeSystemMessageWithUser(
         const QString &text, const QString &loginName,
         const QString &displayName, const MessageColor &userColor,
-        const QTime &time, const Communi::IrcMessage &ircMessage);
+        const QTime &time, const Communi::IrcMessage &ircMessage,
+        TwitchChannel *channel);
 
     static MessagePtrMut makeSubgiftMessage(Communi::TagsRef tags,
                                             const QTime &time,
@@ -282,9 +276,11 @@ private:
     void addEmoji(const EmotePtr &emote);
     void addTextOrEmote(TextState &state, QString string);
 
+    bool tryAddGif(Communi::TagsRef tags, QStringView content);
+
     Outcome tryAppendCheermote(TextState &state, const QString &string);
     Outcome tryAppendEmote(TwitchChannel *twitchChannel, const QString &userID,
-                           const EmoteName &name);
+                           EmoteNameView name);
 
     bool isEmpty() const;
     MessageElement &back();
@@ -296,8 +292,14 @@ private:
                        TwitchChannel *twitchChannel,
                        bool trimSubscriberUsername);
     void parseMessageID(Communi::TagsRef tags);
-    /// Parses most of them message flags based on the given tags
-    void parseMessageTags(Communi::TagsRef tags);
+    void appendOrEmplaceTextWithUser(
+        TwitchChannel *channel, const QString &userID,
+        const QString &userLoginName, const QString &userDisplayName,
+        const QString &userColorString, const QString &messageText,
+        MessageElementFlags mentionFlags, MessageElementFlags textFlags);
+    /// Parses most of the message flags based on the given tags
+    void parseMessageTags(Communi::TagsRef tags, TwitchChannel *channel,
+                          bool hasContent);
 
     /// Parses the room-ID this message was received in
     ///
