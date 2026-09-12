@@ -286,7 +286,7 @@ ExpectedStr<WindowLayout> WindowLayout::loadFromFile(const QString &path)
         return makeUnexpected(std::move(rootArray).error());
     }
 
-    for (const auto windowVal : *rootArray)
+    for (const auto windowVal : std::as_const(*rootArray))
     {
         const QJsonObject windowObj = windowVal.toObject();
 
