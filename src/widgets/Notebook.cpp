@@ -926,12 +926,12 @@ void Notebook::performHorizontalLayout(const LayoutContext &ctx, bool animated)
     if (this->showTabs_)
     {
         auto layoutWrappedLine = [&](std::span<Item> line, int x, const int y,
-                                     int availableWidth, int accumulatedWidth) {
+                                     int notebookWidth, int accumulatedWidth) {
             if (line.empty() || !this->growWrappedNotebookLines)
             {
                 return;
             }
-            int widthPerItem = (availableWidth - accumulatedWidth) /
+            int widthPerItem = (notebookWidth - x - accumulatedWidth) /
                                static_cast<int>(line.size());
 
             for (Item &item : line.subspan(0, line.size() - 1))
@@ -944,7 +944,7 @@ void Notebook::performHorizontalLayout(const LayoutContext &ctx, bool animated)
 
             Item &lastItem = line.back();
             // The last item gets all the breadcrumbs from rounding down.
-            int lastItemWidth = availableWidth - x;
+            int lastItemWidth = notebookWidth - x;
             lastItem.tab->growWidth(lastItemWidth);
             lastItem.tab->queueMove(QPoint(x, y), animated);
         };
@@ -962,10 +962,9 @@ void Notebook::performHorizontalLayout(const LayoutContext &ctx, bool animated)
 
             if (!isFirst && !fitsInLine)
             {
-                int availableWidth = this->width() - rowXStart;
                 int accumulatedWidth = x - rowXStart;
                 layoutWrappedLine({rowStart, &item}, rowXStart, y,
-                                  availableWidth, accumulatedWidth);
+                                  this->width(), accumulatedWidth);
                 y += item.tab->height() * reverse;
                 x = ctx.left;
                 rowXStart = x;
