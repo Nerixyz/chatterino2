@@ -342,17 +342,19 @@ std::optional<WindowLayout> Args::makeCustomChannelLayout(
 
     // Load main window layout from config file so we can use the same geometry
     const QRect configMainLayout = [windowLayoutFile] {
-        const WindowLayout configLayout =
-            WindowLayout::loadFromFile(windowLayoutFile);
+        const auto configLayout = WindowLayout::loadFromFile(windowLayoutFile);
 
-        for (const WindowDescriptor &window : configLayout.windows_)
+        if (configLayout)
         {
-            if (window.type_ != WindowType::Main)
+            for (const WindowDescriptor &window : configLayout->windows_)
             {
-                continue;
-            }
+                if (window.type_ != WindowType::Main)
+                {
+                    continue;
+                }
 
-            return window.geometry_;
+                return window.geometry_;
+            }
         }
 
         return QRect(-1, -1, -1, -1);
