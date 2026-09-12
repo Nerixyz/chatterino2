@@ -1356,18 +1356,18 @@ MessagePtr MessageBuilder::makeChannelPointRewardMessage(
     return builder.release();
 }
 
-MessagePtr MessageBuilder::makeLiveMessage(const QString &channelName,
-                                           const QString &channelID,
+MessagePtr MessageBuilder::makeLiveMessage(const HelixMinimalUser &channel,
                                            const QString &title,
                                            MessageFlags extraFlags)
 {
     MessageBuilder builder;
 
+    const auto channelName =
+        channel.formatted(getSettings()->usernameDisplayMode.getEnum());
     builder.emplace<TimestampElement>();
-    builder
-        .emplace<TextElement>(channelName, MessageElementFlag::Username,
-                              MessageColor::Text, FontStyle::ChatMediumBold)
-        ->setLink({Link::UserInfo, channelName});
+    builder.emplace<MentionElement>(channelName, channel.login,
+                                    MessageColor::Text, MessageColor::Text,
+                                    MessageElementFlag::Username);
 
     QString text;
     if (getSettings()->showTitleInLiveMessage)
@@ -1387,7 +1387,7 @@ MessagePtr MessageBuilder::makeLiveMessage(const QString &channelName,
 
     builder.message().messageText = text;
     builder.message().searchText = text;
-    builder.message().id = channelID;
+    builder.message().id = channel.id;
 
     if (!extraFlags.isEmpty())
     {
@@ -1397,23 +1397,24 @@ MessagePtr MessageBuilder::makeLiveMessage(const QString &channelName,
     return builder.release();
 }
 
-MessagePtr MessageBuilder::makeOfflineSystemMessage(const QString &channelName,
-                                                    const QString &channelID)
+MessagePtr MessageBuilder::makeOfflineSystemMessage(
+    const HelixMinimalUser &channel)
 {
     MessageBuilder builder;
+    const auto channelName =
+        channel.formatted(getSettings()->usernameDisplayMode.getEnum());
     builder.emplace<TimestampElement>();
     builder.message().flags.set(MessageFlag::System);
     builder.message().flags.set(MessageFlag::DoNotTriggerNotification);
-    builder
-        .emplace<TextElement>(channelName, MessageElementFlag::Username,
-                              MessageColor::System, FontStyle::ChatMediumBold)
-        ->setLink({Link::UserInfo, channelName});
+    builder.emplace<MentionElement>(channelName, channel.login,
+                                    MessageColor::System, MessageColor::System,
+                                    MessageElementFlag::Username);
     builder.emplace<TextElement>("is now offline.", MessageElementFlag::Text,
                                  MessageColor::System);
     auto text = QString("%1 is now offline.").arg(channelName);
     builder.message().messageText = text;
     builder.message().searchText = text;
-    builder.message().id = channelID;
+    builder.message().id = channel.id;
 
     return builder.release();
 }
