@@ -79,6 +79,8 @@ using SplitNode = SplitContainer::Node;
 void WindowManager::showSettingsDialog(QWidget *parent,
                                        SettingsDialogPreference preference)
 {
+    using namespace std::chrono_literals;
+
     if (this->appArgs.dontSaveSettings)
     {
         QMessageBox::critical(parent, "Chatterino - Editing Settings Forbidden",
@@ -87,8 +89,9 @@ void WindowManager::showSettingsDialog(QWidget *parent,
     }
     else
     {
-        QTimer::singleShot(80, [parent, preference] {
-            SettingsDialog::showDialog(parent, preference);
+        auto *mainWindow = &this->getMainWindow();
+        QTimer::singleShot(80ms, mainWindow, [mainWindow, preference] {
+            SettingsDialog::showDialog(mainWindow, preference);
         });
     }
 }
