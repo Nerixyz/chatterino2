@@ -22,6 +22,7 @@
 #include "providers/seventv/SeventvAPI.hpp"
 #include "providers/seventv/SeventvEmotes.hpp"
 #include "providers/seventv/SeventvEventAPI.hpp"
+#include "providers/twitch/api/Helix.hpp"
 #include "providers/twitch/TwitchIrcServer.hpp"
 #include "singletons/Settings.hpp"
 #include "util/BoostJsonWrap.hpp"
@@ -380,19 +381,25 @@ void KickChannel::updateStreamData(const KickChannelInfo &info)
 
         if (this->streamData_.isLive)
         {
-            this->addMessage(
-                MessageBuilder::makeLiveMessage(
-                    this->getDisplayName(), QString::number(this->userID()),
-                    info.streamTitle,
-                    {MessageFlag::System,
-                     MessageFlag::DoNotTriggerNotification}),
-                MessageContext::Original);
+            this->addMessage(MessageBuilder::makeLiveMessage(
+                                 HelixMinimalUser{
+                                     .id = QString::number(this->userID()),
+                                     .login = this->getDisplayName(),
+                                     .displayName = this->getDisplayName(),
+                                 },
+                                 info.streamTitle,
+                                 {MessageFlag::System,
+                                  MessageFlag::DoNotTriggerNotification}),
+                             MessageContext::Original);
         }
         else
         {
             this->addMessage(
-                MessageBuilder::makeOfflineSystemMessage(
-                    this->getDisplayName(), QString::number(this->userID())),
+                MessageBuilder::makeOfflineSystemMessage(HelixMinimalUser{
+                    .id = QString::number(this->userID()),
+                    .login = this->getDisplayName(),
+                    .displayName = this->getDisplayName(),
+                }),
                 MessageContext::Original);
         }
         this->liveStatusChanged.invoke();
@@ -849,10 +856,10 @@ bool KickChannel::tryReplaceLastSeventvAddOrRemove(MessageFlag op,
                                                    const QString &actor,
                                                    const QString &emoteName)
 {
+    auto now = QDateTime::currentDateTime();
     auto last = this->lastSeventvMessage_.lock();
     if (!last || !last->flags.has(op) ||
-        last->parseTime < QTime::currentTime().addSecs(-5) ||
-        last->loginName != actor)
+        last->serverReceivedTime < now.addSecs(-5) || last->loginName != actor)
     {
         return false;
     }
